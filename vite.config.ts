@@ -459,6 +459,19 @@ const manifest: Partial<VitePWAOptions> = {
         sizes: "1024x1024",
       },
     ],
+    screenshots: [
+      {
+        src: "screenshots/mobile.jpg",
+        sizes: "1024x1024",
+        type: "image/jpeg",
+        form_factor: "wide",
+      },
+      {
+        src: "screenshots/mobile.jpg",
+        sizes: "1024x1024",
+        type: "image/jpeg",
+      },
+    ],
   },
   registerType: "autoUpdate",
   devOptions: {
