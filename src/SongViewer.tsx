@@ -7,9 +7,8 @@ import { AuthContext } from "./AuthContextProvider";
 function SongViewer() {
   const { songId } = useParams();
   const [song, setSong] = useState<Song>();
-  const [editedSong, setEditedSong] = useState<Song>();
-  const [editing, setEditing] = useState(false);
   const user = useContext(AuthContext);
+  console.log(user);
 
   useEffect(() => {
     supabase
@@ -19,7 +18,6 @@ function SongViewer() {
       .then(({ data }) => {
         if (data && data.length > 0) {
           setSong(data[0]);
-          setEditedSong(data[0]);
         }
       });
   }, []);
@@ -45,9 +43,6 @@ function SongViewer() {
             ))}
           </div>
         </div>
-      )}
-      {false && user && (
-        <button onClick={() => setEditing(true)}>Modifier</button>
       )}
     </div>
   );
