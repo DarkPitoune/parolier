@@ -6,6 +6,7 @@ import { Index } from "./Index";
 import { SongViewer } from "./SongViewer";
 import { Login } from "./Login";
 import { AuthContextProvider } from "./AuthContextProvider";
+import { Toaster } from "react-hot-toast";
 
 const router = createBrowserRouter([
   {
@@ -24,6 +25,7 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
+    <Toaster position="bottom-right" />
     <AuthContextProvider>
       <RouterProvider router={router} />
     </AuthContextProvider>
