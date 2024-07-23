@@ -7,7 +7,7 @@ const manifest: Partial<VitePWAOptions> = {
     name: "Chants Jubilate",
     theme_color: "#002e5d",
     background_color: "white",
-    display: "fullscreen",
+    display: "standalone",
     start_url: "/",
     icons: [
       {
@@ -477,6 +477,7 @@ const manifest: Partial<VitePWAOptions> = {
   devOptions: {
     enabled: true,
   },
+  injectRegister: "auto",
 };
 
 // https://vitejs.dev/config/
