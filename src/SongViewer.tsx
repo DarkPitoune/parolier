@@ -66,7 +66,7 @@ function SongViewer() {
       </div>
 
       <button
-        className="hidden md:block bg-jubilateBlue-500 text-white p-4 m-4 hover:bg-jubilateBlue-700 text-xl"
+        className="hidden md:block bg-jubilateBlue-500 text-white p-4 m-4 hover:bg-jubilateBlue-700 text-xl w-fit h-fit"
         onClick={() => {
           setSlideShow(true);
           document.body.requestFullscreen();

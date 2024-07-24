@@ -55,7 +55,7 @@ function Index() {
             placeholder="Vite, une idée..."
           ></input>
         </div>
-        <img className="h-12" src="public/svg/logo.svg"></img>
+        <img className="h-12" src="/svg/logo.svg"></img>
       </div>
 
       <div className="flex flex-col items-stretch px-10 divide-y divide-jubilateBlue-300">
