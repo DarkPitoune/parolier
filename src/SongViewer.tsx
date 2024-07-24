@@ -3,6 +3,8 @@ import supabase from "./utils/supabase";
 import { Song, Strophe } from "./assets/types";
 import { useEffect, useState } from "react";
 import { SlideShow } from "./SlideShow";
+import { ChevronLeft } from "./svg components/ChevronLeftIcon";
+import { EditionIcon } from "./svg components/EditIcon";
 
 function SongViewer() {
   const { songId } = useParams();
@@ -35,27 +37,36 @@ function SongViewer() {
   return slideShow ? (
     <SlideShow strophes={song.strophes} />
   ) : (
-    <>
-      <Link className="px-4 py-2 rounded bg-gray-100 hover:bg-gray-200" to="/">
-        Retour à l'index
-      </Link>
-      <div className="flex flex-col gap-8">
-        <h1>{song.title}</h1>
-        <div className="flex flex-col gap-4">
+    <div className="flex flex-col">
+      <div className="grid grid-cols-6 my-4 mx-6">
+        <Link className="w-fit h-fit col-span-1" to="/">
+          <ChevronLeft className="w-10 fill-jubilateBlue-500 hover:fill-jubilateBlue-700 place-self-begin" />
+        </Link>
+
+        <div className="col-span-4" />
+
+        <EditionIcon className="w-10 fill-jubilateBlue-200 col-span-1 place-self-end" />
+      </div>
+      <div className="bg-jubilateBlue-500 h-1 w-full" />
+
+      <div className="flex flex-col gap-8 p-4">
+        <h1 className="font-flame text-3xl">{song.title}</h1>
+        <div className="flex flex-col gap-8">
           {newStrophes.map((strophe, index) => (
             <div
               data-type={strophe.type}
-              className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold flex gap-8"
+              className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold grid grid-cols-3 gap-2"
               key={strophe.text + index} // oops that may be hot garbage...
             >
-              <div className="flex-1">{strophe.text}</div>
-              <div className="flex-1">{strophe.chords}</div>
+              <div className="col-span-2">{strophe.text}</div>
+              <div className="col-span-1">{strophe.chords}</div>
             </div>
           ))}
         </div>
       </div>
 
       <button
+        className="hidden md:block bg-jubilateBlue-500 text-white p-4 m-4 hover:bg-jubilateBlue-700 text-xl w-fit h-fit"
         onClick={() => {
           setSlideShow(true);
           document.body.requestFullscreen();
@@ -63,7 +74,7 @@ function SongViewer() {
       >
         Slides
       </button>
-    </>
+    </div>
   );
 }
 export { SongViewer };
