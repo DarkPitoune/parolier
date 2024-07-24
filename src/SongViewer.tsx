@@ -21,6 +21,7 @@ function SongViewer() {
         if (data && data.length > 0) {
           setSong(data[0]);
           setNewStrophes(data[0].strophes);
+          console.log(data);
         }
       });
   }, []);
@@ -55,11 +56,15 @@ function SongViewer() {
           {newStrophes.map((strophe, index) => (
             <div
               data-type={strophe.type}
-              className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold grid grid-cols-3 gap-2"
-              key={strophe.text + index} // oops that may be hot garbage...
+              className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold"
+              key={index}
             >
-              <div className="col-span-2">{strophe.text}</div>
-              <div className="col-span-1">{strophe.chords}</div>
+              {Object.keys(strophe.text).map((lineIndex) => (
+                <div className="grid grid-cols-3 gap-2" key={lineIndex}>
+                  <div className="col-span-2">{strophe.text[lineIndex]}</div>
+                  <div className="col-span-1">{strophe.chords[lineIndex]}</div>
+                </div>
+              ))}
             </div>
           ))}
         </div>
