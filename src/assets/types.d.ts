@@ -5,7 +5,11 @@ export interface Song {
 }
 
 export interface Strophe {
-  type: "verse" | "bridge" | "chorus";
-  text: { [key: string]: string };
-  chords: { [key: string]: string };
+  content: Line[];
+  type: "verse" | "chorus" | "bridge";
+}
+
+export interface Line {
+  text: string;
+  chords: string;
 }

@@ -59,10 +59,10 @@ function SongViewer() {
               className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold"
               key={index}
             >
-              {Object.keys(strophe.text).map((lineIndex) => (
+              {strophe.content.map((line, lineIndex) => (
                 <div className="grid grid-cols-3 gap-2" key={lineIndex}>
-                  <div className="col-span-2">{strophe.text[lineIndex]}</div>
-                  <div className="col-span-1">{strophe.chords[lineIndex]}</div>
+                  <div className="col-span-2">{line.text}</div>
+                  <div className="col-span-1">{line.chords}</div>
                 </div>
               ))}
             </div>
