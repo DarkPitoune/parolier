@@ -9,6 +9,7 @@ import supabase from "./utils/supabase";
 import { Song } from "./assets/types";
 import { Link } from "react-router-dom";
 import Fuse from "fuse.js";
+import { SearchIcon } from "./svg components/SearchIcon";
 
 function Index() {
   const [songs, setSongs] = useState<Omit<Song, "strophes">[]>([]);
@@ -44,17 +45,23 @@ function Index() {
 
   return (
     <div className="flex flex-col">
-      <div className="bg-gray-200 sticky top-0 p-4">
-        <input
-          className="border border-blue-50 w-full"
-          type="search"
-          onChange={search}
-        ></input>
+      <div className="bg-jubilateBlue-500 sticky top-0 p-4 gap-4 flex items-center">
+        <div className="flex bg-white rounded-full h-fit w-fit pl-2 gap-1 items-center">
+          <SearchIcon className="w-5 fill-jubilateBlue-500" />
+          <input
+            className="w-full h-9 rounded-full px-2 outline-none"
+            type="search"
+            onChange={search}
+            placeholder="Vite, une idée..."
+          ></input>
+        </div>
+        <img className="h-12" src="public/svg/logo.svg"></img>
       </div>
-      <div className="flex flex-col items-stretch">
+
+      <div className="flex flex-col items-stretch px-10 divide-y divide-jubilateBlue-300">
         {filteredSongs.map((song) => (
           <Link
-            className="px-2 py-4 border border-gray-100 hover:bg-gray-50"
+            className="px-2 py-4 hover:bg-jubilateBlue-100"
             key={song.id}
             to={`/songs/${song.id}`}
           >
