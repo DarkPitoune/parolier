@@ -474,10 +474,32 @@ const manifest: Partial<VitePWAOptions> = {
     ],
   },
   registerType: "autoUpdate",
+  workbox: {
+    mode: "generateSW",
+    globPatterns: ["**/*.{js,css,html,png,jpg,svg}"], // Precache assets
+    swDest: "service-worker.js", // Output service worker file
+    clientsClaim: true,
+    skipWaiting: true,
+    runtimeCaching: [
+      {
+        urlPattern: "/rest/v1/**", // Match Supabase REST API calls
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "supabase-api-cache",
+          expiration: {
+            maxEntries: 50,
+            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+          },
+          cacheableResponse: {
+            statuses: [200],
+          },
+        },
+      },
+    ],
+  },
   devOptions: {
     enabled: true,
   },
-  injectRegister: "auto",
 };
 
 // https://vitejs.dev/config/

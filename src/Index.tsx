@@ -43,12 +43,14 @@ function Index() {
   );
 
   return (
-    <div className="flex flex-col gap-8">
-      <input
-        className="border border-blue-50"
-        type="search"
-        onChange={search}
-      ></input>
+    <div className="flex flex-col">
+      <div className="bg-gray-200 sticky top-0 p-4">
+        <input
+          className="border border-blue-50 w-full"
+          type="search"
+          onChange={search}
+        ></input>
+      </div>
       <div className="flex flex-col items-stretch">
         {filteredSongs.map((song) => (
           <Link
