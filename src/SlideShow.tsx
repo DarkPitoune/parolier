@@ -6,6 +6,7 @@ function SlideShow({ strophes }: { strophes: Strophe[] }) {
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
+      console.log(strophes[step]);
       if (e.key === "ArrowRight")
         setStep((s) => Math.min(s + 1, strophes.length - 1));
       if (e.key === "ArrowLeft") setStep((s) => Math.max(0, s - 1));
@@ -15,8 +16,15 @@ function SlideShow({ strophes }: { strophes: Strophe[] }) {
   }, []);
 
   return (
-    <div className="whitespace-pre-wrap absolute inset-0 flex justify-center items-center text-6xl text-center text-white">
-      {strophes[step].text}
+    <div
+      data-type={strophes[step].type}
+      className="whitespace-pre-wrap absolute inset-0 flex flex-col justify-center items-center text-6xl text-center text-white bg-gray-950 data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold"
+    >
+      {strophes[step].content.map((line, lineIndex) => (
+        <div className="col-span-2" key={lineIndex}>
+          {line.text}
+        </div>
+      ))}
     </div>
   );
 }

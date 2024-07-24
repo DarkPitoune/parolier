@@ -96,20 +96,20 @@ define(['./workbox-1b24e8e1'], (function (workbox) { 'use strict';
     "url": "android/android-launchericon-96-96.png",
     "revision": "cac678e465069477829ca9a46b8fcaf1"
   }, {
-    "url": "assets/browser-CeFnEsxi.js",
+    "url": "assets/browser-Ct4KpuAM.js",
     "revision": null
   }, {
-    "url": "assets/index-DCXwM4Ni.js",
+    "url": "assets/index-Bra5V29H.css",
     "revision": null
   }, {
-    "url": "assets/index-DwZDbzmd.css",
+    "url": "assets/index-BVIusUwN.js",
     "revision": null
   }, {
     "url": "favicon.png",
     "revision": "c0dcd189d80d6f1e9d86ea62a63327a5"
   }, {
     "url": "index.html",
-    "revision": "bf3888309374d33692ab0cb4c2271b6d"
+    "revision": "87117b27fcba39b1e91513ab59963c7e"
   }, {
     "url": "ios/100.png",
     "revision": "41310455f6bb716ebfa06476c3da9e0d"
@@ -194,6 +194,42 @@ define(['./workbox-1b24e8e1'], (function (workbox) { 'use strict';
   }, {
     "url": "screenshots/mobile.jpg",
     "revision": "e2af888ea7bdc19b43f33272b2286f9f"
+  }, {
+    "url": "svg/child-reaching-solid.svg",
+    "revision": "3235061b08e6c804197066f5dc137cae"
+  }, {
+    "url": "svg/circle-chevron-left-solid.svg",
+    "revision": "289cdd2bc52a38e0546968504473917b"
+  }, {
+    "url": "svg/compact-disc-solid.svg",
+    "revision": "9d21e799e69798583a1c64c838acf494"
+  }, {
+    "url": "svg/dove-solid.svg",
+    "revision": "2a3a5f0d5893af05532fda68d6008bb3"
+  }, {
+    "url": "svg/logo.svg",
+    "revision": "9cd0d7b83a062530c69e2ef49583e3ce"
+  }, {
+    "url": "svg/magnifying-glass-solid.svg",
+    "revision": "8f11471ef56e7fc023470b39b0cdcb43"
+  }, {
+    "url": "svg/pen-to-square-solid.svg",
+    "revision": "fac58efeb37022b280e79e39ca4e2cb3"
+  }, {
+    "url": "svg/person-pregnant-solid.svg",
+    "revision": "4604e59a15c3e6af4f530cf0f2af241a"
+  }, {
+    "url": "svg/sort-up-solid.svg",
+    "revision": "167dab2966385765a8953aced0283209"
+  }, {
+    "url": "svg/star-solid.svg",
+    "revision": "150643394d7d39ac5f3f7ba4abac10d7"
+  }, {
+    "url": "svg/sun-solid.svg",
+    "revision": "f1831b0f791ba19b5c754b65cb0ec482"
+  }, {
+    "url": "svg/tents-solid.svg",
+    "revision": "60bc946861de7396d2711709277a28dc"
   }, {
     "url": "windows11/LargeTile.scale-100.png",
     "revision": "73d82b568578225e2658475d2c29e590"
