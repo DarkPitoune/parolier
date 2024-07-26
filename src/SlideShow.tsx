@@ -6,7 +6,6 @@ function SlideShow({ strophes }: { strophes: Strophe[] }) {
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      console.log(strophes[step]);
       if (e.key === "ArrowRight")
         setStep((s) => Math.min(s + 1, strophes.length - 1));
       if (e.key === "ArrowLeft") setStep((s) => Math.max(0, s - 1));
