@@ -96,20 +96,20 @@ define(['./workbox-1b24e8e1'], (function (workbox) { 'use strict';
     "url": "android/android-launchericon-96-96.png",
     "revision": "cac678e465069477829ca9a46b8fcaf1"
   }, {
-    "url": "assets/browser-Ct4KpuAM.js",
+    "url": "assets/browser-tbRb9Gdb.js",
     "revision": null
   }, {
-    "url": "assets/index-Bra5V29H.css",
+    "url": "assets/index-BgygBX1w.js",
     "revision": null
   }, {
-    "url": "assets/index-BVIusUwN.js",
+    "url": "assets/index-Dr98Ohbi.css",
     "revision": null
   }, {
     "url": "favicon.png",
     "revision": "c0dcd189d80d6f1e9d86ea62a63327a5"
   }, {
     "url": "index.html",
-    "revision": "87117b27fcba39b1e91513ab59963c7e"
+    "revision": "5ea62f934d169ad158fbc9c7e797b376"
   }, {
     "url": "ios/100.png",
     "revision": "41310455f6bb716ebfa06476c3da9e0d"
@@ -195,6 +195,12 @@ define(['./workbox-1b24e8e1'], (function (workbox) { 'use strict';
     "url": "screenshots/mobile.jpg",
     "revision": "e2af888ea7bdc19b43f33272b2286f9f"
   }, {
+    "url": "svg/arrow-rotate-left-solid.svg",
+    "revision": "1297bf9eb73500b30ce357e579caca62"
+  }, {
+    "url": "svg/bars-solid.svg",
+    "revision": "0567f0f689db4735bbba2f5fc24a241b"
+  }, {
     "url": "svg/child-reaching-solid.svg",
     "revision": "3235061b08e6c804197066f5dc137cae"
   }, {
@@ -213,11 +219,17 @@ define(['./workbox-1b24e8e1'], (function (workbox) { 'use strict';
     "url": "svg/magnifying-glass-solid.svg",
     "revision": "8f11471ef56e7fc023470b39b0cdcb43"
   }, {
+    "url": "svg/minus-solid.svg",
+    "revision": "75ead807addda80c384812d4f5156a1f"
+  }, {
     "url": "svg/pen-to-square-solid.svg",
     "revision": "fac58efeb37022b280e79e39ca4e2cb3"
   }, {
     "url": "svg/person-pregnant-solid.svg",
     "revision": "4604e59a15c3e6af4f530cf0f2af241a"
+  }, {
+    "url": "svg/plus-solid.svg",
+    "revision": "eda27bee94d2f21e5c9d88be53e668bc"
   }, {
     "url": "svg/sort-up-solid.svg",
     "revision": "167dab2966385765a8953aced0283209"

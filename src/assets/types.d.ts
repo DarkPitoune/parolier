@@ -13,3 +13,8 @@ export interface Line {
   text: string;
   chords: string;
 }
+
+export interface Settings {
+  fontSize: number; // 0-10
+  showChords: boolean;
+}

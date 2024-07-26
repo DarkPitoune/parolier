@@ -10,6 +10,7 @@ import { Song } from "./assets/types";
 import { Link } from "react-router-dom";
 import Fuse from "fuse.js";
 import { SearchIcon } from "./svg components/SearchIcon";
+import DynamicText from "./components/DynamicText";
 
 function Index() {
   const [songs, setSongs] = useState<Omit<Song, "strophes">[]>([]);
@@ -65,7 +66,7 @@ function Index() {
             key={song.id}
             to={`/songs/${song.id}`}
           >
-            {song.title}
+            <DynamicText text={song.title} />
           </Link>
         ))}
       </div>
