@@ -476,33 +476,43 @@ const manifest: Partial<VitePWAOptions> = {
   registerType: "autoUpdate",
   workbox: {
     mode: "generateSW",
-    globPatterns: ["**/*.{js,css,html,png,jpg,svg}"], // Precache assets
-    swDest: "service-worker.js", // Output service worker file
+    globPatterns: ["**/*.{js,css,html,png,jpg,svg}"],
     clientsClaim: true,
     skipWaiting: true,
     runtimeCaching: [
       {
-        urlPattern: "/rest/v1/**", // Match Supabase REST API calls
+        urlPattern: ({ url }) => url.href.includes("/rest/v1/"), // Match Supabase REST API calls
         handler: "NetworkFirst",
         options: {
           cacheName: "supabase-api-cache",
           expiration: {
-            maxEntries: 50,
+            maxEntries: 500,
             maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
           },
           cacheableResponse: {
             statuses: [200],
           },
+          plugins: [
+            {
+              requestWillFetch: async ({ request }: { request: Request }) => {
+                const modifiedRequest = new Request(request);
+                modifiedRequest.headers.set(
+                  "Apikey",
+                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpcmVhdmxrdGRpeG1udGhhcGN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjE2NjE4MDEsImV4cCI6MjAzNzIzNzgwMX0.fjbXW06ea9v5OHg4dzoKaY3WUBEh4ZJFcrIuHg_dXBw"
+                );
+                return modifiedRequest;
+              },
+            },
+          ],
         },
       },
     ],
   },
-  devOptions: {
-    enabled: true,
-  },
 };
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [react(), VitePWA(manifest)],
-});
+export default () => {
+  return defineConfig({
+    plugins: [react(), VitePWA(manifest)],
+  });
+};
