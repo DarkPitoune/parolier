@@ -5,12 +5,15 @@ import { useEffect, useState } from "react";
 import { SlideShow } from "./SlideShow";
 import { ChevronLeft } from "./svg components/ChevronLeftIcon";
 import { EditionIcon } from "./svg components/EditIcon";
+import { MenuIcon } from "./svg components/MenuIcon";
+import { SidePanel } from "./components/SidePanel";
 
 function SongViewer() {
   const { songId } = useParams();
   const [song, setSong] = useState<Song>();
   const [newStrophes, setNewStrophes] = useState<Strophe[]>([]);
   const [slideShow, setSlideShow] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     supabase
@@ -39,6 +42,7 @@ function SongViewer() {
     <SlideShow strophes={song.strophes} />
   ) : (
     <div className="flex flex-col">
+      <SidePanel open={open} setOpen={setOpen} />
       <div className="grid grid-cols-6 my-4 mx-6">
         <Link className="w-fit h-fit col-span-1" to="/">
           <ChevronLeft className="w-10 fill-jubilateBlue-500 hover:fill-jubilateBlue-700 place-self-begin" />
@@ -46,7 +50,14 @@ function SongViewer() {
 
         <div className="col-span-4" />
 
-        <EditionIcon className="w-10 fill-jubilateBlue-200 col-span-1 place-self-end" />
+        <button
+          className="w-fit h-fit"
+          onClick={() => {
+            setOpen(!open);
+          }}
+        >
+          <MenuIcon className="w-10 fill-jubilateBlue-500 col-span-1 place-self-end" />
+        </button>
       </div>
       <div className="bg-jubilateBlue-500 h-1 w-full" />
 
