@@ -6,6 +6,12 @@ import {
   DialogPanel,
   DialogTitle,
 } from "@headlessui/react";
+import DynamicText from "./DynamicText";
+import { PlusIcon } from "../svg components/PlusIcon";
+import { SettingsContext } from "../SettingsContextProvider";
+import { useContext } from "react";
+import { MinusIcon } from "../svg components/MinusIcon";
+import { ResetIcon } from "../svg components/ResetIcon";
 
 function SidePanel({
   open,
@@ -14,6 +20,19 @@ function SidePanel({
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
+  const [settings, setSettings] = useContext(SettingsContext);
+
+  function handleFontChange(increment: number) {
+    if (!settings) return;
+    setSettings({
+      ...settings,
+      fontSize:
+        increment === 0
+          ? (settings.fontSize = 2)
+          : settings.fontSize + increment,
+    });
+  }
+
   return (
     <Dialog open={open} onClose={setOpen} className="relative z-10">
       <DialogBackdrop
@@ -34,8 +53,54 @@ function SidePanel({
                     Préférences
                   </DialogTitle>
                 </div>
-                <div className="relative mt-6 flex-1 px-4 sm:px-6">
-                  <p>Là il y aura de supers préférences</p>
+                <div className="relative mt-6 flex-1 px-4 sm:px-6 flex flex-col gap-6">
+                  <div className="flex flex-col">
+                    <div className="flex justify-between">
+                      <h1 className="font-flame text-3xl text-jubilateBlue-500">
+                        Police
+                      </h1>
+                      <div className="flex gap-4">
+                        <PlusIcon
+                          className="w-6 fill-jubilateBlue-500"
+                          onClick={() => {
+                            handleFontChange(1);
+                          }}
+                        />
+                        <MinusIcon
+                          className="w-6 fill-jubilateBlue-500"
+                          onClick={() => {
+                            handleFontChange(-1);
+                          }}
+                        />
+                        <ResetIcon
+                          className="w-6 fill-jubilateBlue-500"
+                          onClick={() => {
+                            handleFontChange(0);
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <DynamicText
+                      text="Ceci et un texte"
+                      className="place-self-center pt-2"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-4">
+                    <h1 className="font-flame text-3xl text-jubilateBlue-500">
+                      Accords
+                    </h1>
+
+                    <div className="flex justify-between">
+                      <p className="texte-base">Afficher</p>
+                      <input
+                        id="chordsCheckbox"
+                        type="checkbox"
+                        value=""
+                        className="w-5 h-5 border-jubilateBlue-700 rounded-2xl"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </DialogPanel>

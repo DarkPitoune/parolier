@@ -6,6 +6,7 @@ import { SlideShow } from "./SlideShow";
 import { ChevronLeft } from "./svg components/ChevronLeftIcon";
 import { MenuIcon } from "./svg components/MenuIcon";
 import { SidePanel } from "./components/SidePanel";
+import DynamicText from "./components/DynamicText";
 
 function SongViewer() {
   const { songId } = useParams();
@@ -71,8 +72,8 @@ function SongViewer() {
             >
               {strophe.content.map((line, lineIndex) => (
                 <div className="grid grid-cols-3 gap-2" key={lineIndex}>
-                  <div className="col-span-2">{line.text}</div>
-                  <div className="col-span-1">{line.chords}</div>
+                  <DynamicText className="col-span-2" text={line.text} />
+                  <DynamicText className="col-span-1" text={line.chords} />
                 </div>
               ))}
             </div>
