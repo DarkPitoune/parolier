@@ -2,13 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  @font-face {
-    font-family: "Flame-Regular";
-    font-style: normal;
-    src: url(public/font/Flame-Regular.ttf) format("ttf");
-  }
+
+@font-face {
+  font-family: "Flame";
+  src: url('./assets/Flame-Regular.ttf');
 }
+
 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -29,11 +28,6 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
 }
 
 #root {
