@@ -7,6 +7,7 @@ import { SongViewer } from "./SongViewer";
 import { Login } from "./Login";
 import { AuthContextProvider } from "./AuthContextProvider";
 import { Toaster } from "react-hot-toast";
+import { SettingsContextProvider } from "./SettingsContextProvider";
 
 const router = createBrowserRouter([
   {
@@ -27,7 +28,9 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <Toaster position="bottom-right" />
     <AuthContextProvider>
-      <RouterProvider router={router} />
+      <SettingsContextProvider>
+        <RouterProvider router={router} />
+      </SettingsContextProvider>
     </AuthContextProvider>
   </React.StrictMode>
 );
