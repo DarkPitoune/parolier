@@ -5,9 +5,7 @@ import {
   DialogBackdrop,
   DialogPanel,
   DialogTitle,
-  TransitionChild,
 } from "@headlessui/react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
 
 function SidePanel({
   open,
