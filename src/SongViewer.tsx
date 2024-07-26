@@ -50,12 +50,12 @@ function SongViewer() {
         <div className="col-span-4" />
 
         <button
-          className="w-fit h-fit"
+          className="w-fit h-fit col-span-1 place-self-end"
           onClick={() => {
             setOpen(!open);
           }}
         >
-          <MenuIcon className="w-10 fill-jubilateBlue-500 col-span-1 place-self-end" />
+          <MenuIcon className="w-10 fill-jubilateBlue-500 " />
         </button>
       </div>
       <div className="bg-jubilateBlue-500 h-1 w-full" />
