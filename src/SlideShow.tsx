@@ -4,11 +4,13 @@ import { Strophe } from "./assets/types";
 function SlideShow({ strophes }: { strophes: Strophe[] }) {
   const [step, setStep] = useState(0);
 
+  const plus1 = () => setStep((s) => Math.min(s + 1, strophes.length - 1));
+  const minus1 = () => setStep((s) => Math.max(0, s - 1));
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight")
-        setStep((s) => Math.min(s + 1, strophes.length - 1));
-      if (e.key === "ArrowLeft") setStep((s) => Math.max(0, s - 1));
+      if (e.key === "ArrowRight") plus1();
+      if (e.key === "ArrowLeft") minus1();
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
@@ -24,6 +26,10 @@ function SlideShow({ strophes }: { strophes: Strophe[] }) {
           {line.text}
         </div>
       ))}
+      <div className="absolute inset-0 flex items-stretch justify-stretch">
+        <button className="grow" onClick={minus1}></button>
+        <button className="grow" onClick={plus1}></button>
+      </div>
     </div>
   );
 }
