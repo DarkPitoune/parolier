@@ -47,7 +47,7 @@ function Index() {
   return (
     <div className="flex flex-col">
       <div className="bg-jubilateBlue-500 sticky top-0 p-4 gap-4 flex justify-between items-center">
-        <div className="flex bg-white rounded-full h-fit w-fit pl-2 gap-1 items-center">
+        <div className="flex bg-white flex-1 rounded-full h-fit w-fit pl-2 gap-1 items-center">
           <SearchIcon className="w-5 fill-jubilateBlue-500" />
           <input
             className="w-full h-9 rounded-full px-2 outline-none"
