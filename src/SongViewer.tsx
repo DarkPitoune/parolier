@@ -4,7 +4,6 @@ import { Song, Strophe } from "./assets/types";
 import { useEffect, useState } from "react";
 import { SlideShow } from "./SlideShow";
 import { ChevronLeft } from "./svg components/ChevronLeftIcon";
-import { EditionIcon } from "./svg components/EditIcon";
 import { MenuIcon } from "./svg components/MenuIcon";
 import { SidePanel } from "./components/SidePanel";
 
