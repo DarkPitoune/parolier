@@ -18,3 +18,13 @@ export interface Settings {
   fontSize: number; // 0-10
   showChords: boolean;
 }
+export interface Tag {
+  id: number;
+  name: string;
+  svg: string;
+  color: string;
+}
+
+export interface TaggedSong extends Song {
+  tags: Tag[];
+}
