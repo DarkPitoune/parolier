@@ -41,14 +41,14 @@ function SongViewer() {
     <div>
       <SidePanel open={open} setOpen={setOpen} />
       <div className="grid grid-cols-6 py-4 px-6 border-b-4 border-jubilateBlue-500">
-        <Link className="w-fit h-fit col-span-1" to="/">
+        <Link className="w-fit col-span-1" to="/">
           <ChevronLeft className="w-10 fill-jubilateBlue-500 hover:fill-jubilateBlue-700 place-self-begin" />
         </Link>
 
         <div className="col-span-4" />
 
         <button
-          className="w-fit h-fit col-span-1 place-self-end"
+          className="w-fit col-span-1 place-self-end"
           onClick={() => {
             setOpen(!open);
           }}
