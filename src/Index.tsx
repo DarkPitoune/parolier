@@ -37,7 +37,10 @@ function Index() {
       .select("title, id, tags (id, name, svg, color)")
       .then(({ data }) => {
         if (data && data.length > 0) {
-          data.sort((a, b) => (a.title < b.title ? -1 : 1));
+          data.sort(
+            (a, b) =>
+              a.title.normalize("NFD") < b.title.normalize("NFD") ? -1 : 1 // remove accents
+          );
           setSongs(data);
           setFilteredSongs(data);
           fuse.setCollection(data);
@@ -82,7 +85,7 @@ function Index() {
           </div>
           <img className="h-12" src="/svg/logo.svg"></img>
         </div>
-        <div className="px-6 py-4 flex flex-col items-stretch shadow">
+        <div className="px-6 py-4 flex flex-col items-stretch shadow font-flame">
           <button
             className="flex gap-2 text-jubilateBlue-500 items-center"
             onClick={() => setTagTabOpen((v) => !v)}

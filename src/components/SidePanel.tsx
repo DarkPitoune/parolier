@@ -49,7 +49,7 @@ function SidePanel({
             >
               <div className="flex h-full flex-col overflow-y-scroll bg-white py-6 shadow-xl">
                 <div className="px-4 sm:px-6">
-                  <DialogTitle className="text-lg font-flame leading-6 text-jubilateBlue-500">
+                  <DialogTitle className="text-5xl font-flame text-jubilateBlue-500">
                     Préférences
                   </DialogTitle>
                 </div>
