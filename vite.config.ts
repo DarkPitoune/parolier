@@ -498,7 +498,7 @@ const manifest: Partial<VitePWAOptions> = {
                 const modifiedRequest = new Request(request);
                 modifiedRequest.headers.set(
                   "Apikey",
-                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpcmVhdmxrdGRpeG1udGhhcGN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjE2NjE4MDEsImV4cCI6MjAzNzIzNzgwMX0.fjbXW06ea9v5OHg4dzoKaY3WUBEh4ZJFcrIuHg_dXBw"
+                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHBiY3RsZWpyempqdmttY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjIwMDU0ODksImV4cCI6MjAzNzU4MTQ4OX0.aOrgMlTl_1Odj5Z0ssCsa0879UaSDrtUTIpNbXbaaOg"
                 );
                 return modifiedRequest;
               },

@@ -99,7 +99,13 @@ function SidePanel({
                       <input
                         id="chordsCheckbox"
                         type="checkbox"
-                        value=""
+                        checked={settings.showChords}
+                        onChange={(e) => {
+                          setSettings({
+                            ...settings,
+                            showChords: e.target.checked,
+                          });
+                        }}
                         className="w-5 h-5 border-jubilateBlue-700 rounded-2xl"
                       />
                     </div>
