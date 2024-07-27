@@ -17,6 +17,7 @@ export interface Line {
 export interface Settings {
   fontSize: number; // 0-10
   showChords: boolean;
+  addChorus: boolean;
 }
 export interface Tag {
   id: number;

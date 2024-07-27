@@ -4,6 +4,7 @@ import { Settings } from "./assets/types";
 const initialSettings: Settings = {
   fontSize: 2,
   showChords: true,
+  addChorus: false,
 };
 
 const SettingsContext = createContext<
@@ -28,6 +29,10 @@ function SettingsContextProvider({ children }: { children: ReactNode }) {
       "settings.showChords",
       newSettings.showChords ? "true" : "false"
     );
+    localStorage.setItem(
+      "settings.addChorus",
+      newSettings.addChorus ? "true" : "false"
+    );
   };
 
   useEffect(() => {
@@ -37,9 +42,11 @@ function SettingsContextProvider({ children }: { children: ReactNode }) {
       ? initialSettings.fontSize
       : parseInt(localStorage.getItem("settings.fontSize") || "");
     const showChords = localStorage.getItem("settings.showChords") === "true";
+    const addChorus = localStorage.getItem("settings.addChorus") === "true";
     setSettings({
       fontSize,
       showChords,
+      addChorus,
     });
   }, []);
 
