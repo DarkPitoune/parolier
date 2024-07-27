@@ -37,10 +37,7 @@ function Index() {
       .select("title, id, tags (id, name, svg, color)")
       .then(({ data }) => {
         if (data && data.length > 0) {
-          data.sort(
-            (a, b) =>
-              a.title.normalize("NFD") < b.title.normalize("NFD") ? -1 : 1 // remove accents
-          );
+          data.sort((a, b) => a.id - b.id);
           setSongs(data);
           setFilteredSongs(data);
           fuse.setCollection(data);
@@ -134,11 +131,12 @@ function Index() {
       <div className="flex flex-col items-stretch px-10 divide-y divide-jubilateBlue-300">
         {filteredSongs.filter(isCorrectTag).map((song) => (
           <Link
-            className="px-2 py-4 hover:bg-jubilateBlue-100 flex justify-between"
+            className="px-2 py-4 hover:bg-jubilateBlue-100 flex items-baseline gap-3"
             key={song.id}
             to={`/songs/${song.id}`}
           >
-            <DynamicText text={song.title} />
+            <div className="w-10 text-center border-r font-bold">{song.id}</div>
+            <DynamicText className="grow" text={song.title} />
             <div className="flex gap-2">
               {song.tags.map((tag) => (
                 <div

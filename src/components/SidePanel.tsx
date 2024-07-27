@@ -110,6 +110,28 @@ function SidePanel({
                       />
                     </div>
                   </div>
+
+                  <div className="flex flex-col gap-4">
+                    <h1 className="font-flame text-3xl text-jubilateBlue-500">
+                      Refrains
+                    </h1>
+
+                    <div className="flex justify-between">
+                      <p className="texte-base">Afficher</p>
+                      <input
+                        id="chordsCheckbox"
+                        type="checkbox"
+                        checked={settings.addChorus}
+                        onChange={(e) => {
+                          setSettings({
+                            ...settings,
+                            addChorus: e.target.checked,
+                          });
+                        }}
+                        className="w-5 h-5 border-jubilateBlue-700 rounded-2xl"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </DialogPanel>

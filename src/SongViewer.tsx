@@ -1,19 +1,21 @@
 import { Link, useParams } from "react-router-dom";
 import supabase from "./utils/supabase";
-import { Strophe, TaggedSong } from "./assets/types";
-import { useEffect, useState } from "react";
+import { TaggedSong } from "./assets/types";
+import { Fragment, useContext, useEffect, useState } from "react";
 import { SlideShow } from "./SlideShow";
 import { ChevronLeft } from "./svg components/ChevronLeftIcon";
 import { MenuIcon } from "./svg components/MenuIcon";
 import { SidePanel } from "./components/SidePanel";
 import DynamicText from "./components/DynamicText";
+import { addChorus } from "./utils/addChorus";
+import { SettingsContext } from "./SettingsContextProvider";
 
 function SongViewer() {
   const { songId } = useParams();
   const [song, setSong] = useState<TaggedSong>();
-  const [newStrophes, setNewStrophes] = useState<Strophe[]>([]);
   const [slideShow, setSlideShow] = useState(false);
   const [open, setOpen] = useState(false);
+  const [settings] = useContext(SettingsContext);
 
   useEffect(() => {
     supabase
@@ -23,7 +25,6 @@ function SongViewer() {
       .then(({ data }) => {
         if (data && data.length > 0) {
           setSong(data[0]);
-          setNewStrophes(data[0].strophes);
         }
       });
   }, []);
@@ -36,11 +37,11 @@ function SongViewer() {
   }, []);
 
   return slideShow ? (
-    <SlideShow strophes={song?.strophes || []} />
+    <SlideShow strophes={addChorus(song?.strophes || [], settings.addChorus)} />
   ) : (
     <div>
       <SidePanel open={open} setOpen={setOpen} />
-      <div className="grid grid-cols-6 py-4 px-6 border-b-4 border-jubilateBlue-500">
+      <div className="grid grid-cols-6 py-4 px-6 border-b-4 border-jubilateBlue-500 sticky top-0 bg-white">
         <Link className="w-fit col-span-1" to="/">
           <ChevronLeft className="w-10 fill-jubilateBlue-500 hover:fill-jubilateBlue-700 place-self-begin" />
         </Link>
@@ -75,20 +76,23 @@ function SongViewer() {
             ))}
           </div>
           <div className="flex flex-col gap-8">
-            {newStrophes.map((strophe, index) => (
-              <div
-                data-type={strophe.type}
-                className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold"
-                key={index}
-              >
-                {strophe.content.map((line, lineIndex) => (
-                  <div className="grid grid-cols-3 gap-2" key={lineIndex}>
-                    <DynamicText className="col-span-2" text={line.text} />
-                    <DynamicText className="col-span-1" text={line.chords} />
-                  </div>
-                ))}
-              </div>
-            ))}
+            {addChorus(song.strophes, settings.addChorus).map(
+              (strophe, index) => (
+                <div
+                  data-type={strophe.type}
+                  className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold grid"
+                  style={{ gridTemplateColumns: "1fr 200px" }}
+                  key={index}
+                >
+                  {strophe.content.map((line, lineIndex) => (
+                    <Fragment key={lineIndex}>
+                      <DynamicText className="" text={line.text} />
+                      <DynamicText className="" text={line.chords} />
+                    </Fragment>
+                  ))}
+                </div>
+              )
+            )}
           </div>
         </div>
       )}

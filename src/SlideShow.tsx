@@ -19,7 +19,7 @@ function SlideShow({ strophes }: { strophes: Strophe[] }) {
   return (
     <div
       data-type={strophes[step].type}
-      className="whitespace-pre-wrap absolute inset-0 flex flex-col justify-center items-center text-6xl text-center text-white bg-gray-950 data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold"
+      className="absolute inset-0 flex flex-col justify-center items-center text-6xl text-center text-white bg-gray-950 data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold"
     >
       {strophes[step].content.map((line, lineIndex) => (
         <div className="col-span-2" key={lineIndex}>
