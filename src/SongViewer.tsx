@@ -81,13 +81,19 @@ function SongViewer() {
                 <div
                   data-type={strophe.type}
                   className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold grid"
-                  style={{ gridTemplateColumns: "1fr 200px" }}
+                  style={{
+                    gridTemplateColumns: settings.showChords
+                      ? "1fr 200px"
+                      : "1fr",
+                  }}
                   key={index}
                 >
                   {strophe.content.map((line, lineIndex) => (
                     <Fragment key={lineIndex}>
                       <DynamicText className="" text={line.text} />
-                      <DynamicText className="" text={line.chords} />
+                      {settings.showChords && (
+                        <DynamicText className="" text={line.chords} />
+                      )}
                     </Fragment>
                   ))}
                 </div>

@@ -47,17 +47,22 @@ function Index() {
       .from("tags")
       .select()
       .then(({ data }) => {
-        if (data && data.length > 0) setTags(data);
+        if (data && data.length > 0) {
+          data.sort((a, b) => a.id - b.id);
+          setTags(data);
+        }
       });
   }, []);
 
   const search: ChangeEventHandler<HTMLInputElement> = useCallback(
     (event) => {
       if (event.target.value.length === 0) setFilteredSongs(songs);
-      else
+      else {
+        window.scrollTo(0, 0);
         setFilteredSongs(
           fuse.search(event.target.value).map((hit) => hit.item)
         );
+      }
     },
     [songs]
   );
@@ -112,7 +117,7 @@ function Index() {
                       ? tag.color
                       : "white",
                   }}
-                  className="rounded-full border-2 font-semibold px-3 py-0.5 mx-2 inline-flex items-center gap-2"
+                  className="rounded-full border-2 font-semibold px-3 py-0.5 inline-flex items-center gap-2 m-0.5"
                 >
                   <div
                     dangerouslySetInnerHTML={{ __html: tag.svg }}
