@@ -12,6 +12,7 @@ import Fuse from "fuse.js";
 import { SearchIcon } from "./svg components/SearchIcon";
 import DynamicText from "./components/DynamicText";
 import { ChevronUpIcon } from "@heroicons/react/16/solid";
+import toast from "react-hot-toast";
 
 function Index() {
   const [songs, setSongs] = useState<Omit<TaggedSong, "strophes">[]>([]);
@@ -67,6 +68,17 @@ function Index() {
     [songs]
   );
 
+  const loadAllSongs = useCallback(() => {
+    const promises = songs.map(({ id }) =>
+      supabase
+        .from("songs")
+        .select("*, tags(name, id, svg, color)")
+        .eq("id", id)
+    );
+
+    Promise.all(promises).then(() => toast.success("Morceaux mis à jour !"));
+  }, [songs]);
+
   const isCorrectTag = (song: Omit<TaggedSong, "strophes">) => {
     if (selectedTags.length === 0) return true;
     return song.tags.some(({ id }) => selectedTags.includes(id));
@@ -85,9 +97,11 @@ function Index() {
               placeholder="Vite, une idée..."
             ></input>
           </div>
-          <img className="h-12" src="/svg/logo.svg"></img>
+          <button onClick={loadAllSongs}>
+            <img className="h-12" src="/svg/logo.svg"></img>
+          </button>
         </div>
-        <div className="px-6 py-4 flex flex-col items-stretch shadow font-flame">
+        <div className="px-6 py-2 flex flex-col items-stretch shadow font-flame">
           <button
             className="flex gap-2 text-jubilateBlue-500 items-center"
             onClick={() => setTagTabOpen((v) => !v)}
@@ -133,7 +147,7 @@ function Index() {
         </div>
       </div>
 
-      <div className="flex flex-col items-stretch px-10 divide-y divide-jubilateBlue-300">
+      <div className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300">
         {filteredSongs.filter(isCorrectTag).map((song) => (
           <Link
             className="px-2 py-4 hover:bg-jubilateBlue-100 flex items-baseline gap-3"
