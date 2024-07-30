@@ -81,7 +81,11 @@ function Index() {
         .eq("id", id)
     );
 
-    Promise.all(promises).then(() => toast.success("Morceaux mis à jour !"));
+    Promise.all(promises).then((res) => {
+      if (res.every((res) => res.data != undefined))
+        toast.success("Morceaux mis à jour !");
+      else toast.error("Erreur !");
+    });
   }, [songs]);
 
   const isCorrectTag = (song: Omit<TaggedSong, "strophes">) => {

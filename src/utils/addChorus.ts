@@ -9,11 +9,14 @@ export const addChorus = (strophes: Strophe[], apply: boolean) => {
   const chorus = strophes[chorusIndex];
 
   const result = chorusIndex === 0 ? [chorus] : [];
+  const length = strophes.filter((s) => s.type !== "chorus").length;
   strophes
     .filter((s) => s.type !== "chorus")
-    .forEach((strophe) => {
+    .forEach((strophe, index) => {
       result.push(strophe);
-      result.push(chorus);
+      if (!(strophe.type === "bridge" && index < length - 1))
+        // it is NOT a bridge that is in the song
+        result.push(chorus);
     });
   return result;
 };

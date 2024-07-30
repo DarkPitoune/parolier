@@ -60,7 +60,12 @@ function SongViewer() {
 
       {song && (
         <div className="flex flex-col gap-4 p-4">
-          <h1 className="font-flame text-3xl">{song.title}</h1>
+          <div className="flex gap-4 items-baseline">
+            <h1 className="font-flame text-3xl text-jubilateBlue-500">
+              {song.id}.
+            </h1>
+            <h1 className="font-flame text-3xl">{song.title}</h1>
+          </div>
           <div className="flex gap-8 px-4 font-flame">
             {song.tags.map((tag) => (
               <div className="flex gap-1" key={tag.id}>
@@ -80,10 +85,10 @@ function SongViewer() {
               (strophe, index) => (
                 <div
                   data-type={strophe.type}
-                  className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold grid"
+                  className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold grid gap-x-3"
                   style={{
                     gridTemplateColumns: settings.showChords
-                      ? "1fr 200px"
+                      ? "5fr 3fr"
                       : "1fr",
                   }}
                   key={index}

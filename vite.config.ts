@@ -476,7 +476,7 @@ const manifest: Partial<VitePWAOptions> = {
   registerType: "autoUpdate",
   workbox: {
     mode: "generateSW",
-    globPatterns: ["**/*.{js,css,html,png,jpg,svg}"],
+    globPatterns: ["**/*.{js,css,html,png,jpg,svg,ttf}"],
     clientsClaim: true,
     skipWaiting: true,
     runtimeCaching: [
@@ -487,7 +487,7 @@ const manifest: Partial<VitePWAOptions> = {
           cacheName: "supabase-api-cache",
           expiration: {
             maxEntries: 500,
-            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+            maxAgeSeconds: 365 * 24 * 60 * 60, // 365 days
           },
           cacheableResponse: {
             statuses: [200],
