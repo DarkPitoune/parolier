@@ -9,15 +9,15 @@ import { SidePanel } from "./components/SidePanel";
 import DynamicText from "./components/DynamicText";
 import { addChorus } from "./utils/addChorus";
 import { SettingsContext } from "./SettingsContextProvider";
-import { transposeSong } from "./utils/tonalManipulation";
+import { transposeLine } from "./utils/tonalManipulation";
 
 function SongViewer() {
   const { songId } = useParams();
-  const [originalSong, setOriginalSong] = useState<TaggedSong>();
+  const [tonality, setTonality] = useState(0);
   const [song, setSong] = useState<TaggedSong>();
   const [slideShow, setSlideShow] = useState(false);
   const [open, setOpen] = useState(false);
-  const [settings, setSettings] = useContext(SettingsContext);
+  const [settings] = useContext(SettingsContext);
 
   useEffect(() => {
     supabase
@@ -26,15 +26,10 @@ function SongViewer() {
       .eq("id", songId)
       .then(({ data }) => {
         if (data && data.length > 0) {
-          setOriginalSong(data[0]);
           setSong(data[0]);
         }
       });
   }, []);
-
-  useEffect(() => {
-    setSong(transposeSong(originalSong, settings.transpositionStep));
-  }, [settings.transpositionStep]);
 
   useEffect(() => {
     const handleQuit = () => {
@@ -47,18 +42,14 @@ function SongViewer() {
     <SlideShow strophes={addChorus(song?.strophes || [], settings.addChorus)} />
   ) : (
     <div>
-      <SidePanel open={open} setOpen={setOpen} />
+      <SidePanel
+        open={open}
+        setOpen={setOpen}
+        tonality={tonality}
+        setTonality={setTonality}
+      />
       <div className="grid grid-cols-6 py-4 px-6 border-b-4 border-jubilateBlue-500 sticky top-0 bg-white">
-        <Link
-          className="w-fit col-span-1"
-          to="/"
-          onClick={() => {
-            setSettings({
-              ...settings,
-              transpositionStep: (settings.transpositionStep = 0),
-            });
-          }}
-        >
+        <Link className="w-fit col-span-1" to="/">
           <ChevronLeft className="w-10 fill-jubilateBlue-500 hover:fill-jubilateBlue-700 place-self-begin" />
         </Link>
 
@@ -115,7 +106,7 @@ function SongViewer() {
                       {settings.showChords && (
                         <DynamicText
                           className="bg-jubilateBlue-100 outline-8 border-jubilateBlue-100 border-4"
-                          text={line.chords}
+                          text={transposeLine(line.chords, tonality)}
                         />
                       )}
                       <DynamicText className="" text={line.text} />

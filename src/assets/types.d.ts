@@ -18,7 +18,6 @@ export interface Settings {
   fontSize: number; // 0-10
   showChords: boolean;
   addChorus: boolean;
-  transpositionStep: number;
 }
 export interface Tag {
   id: number;

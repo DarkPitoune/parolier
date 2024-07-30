@@ -2,7 +2,7 @@ import { Chord, Interval } from "tonal";
 import { TaggedSong } from "../assets/types";
 
 // Fonction pour transposer une ligne d'accords
-function transposeLine(chords: string, step: number) {
+export function transposeLine(chords: string, step: number) {
   const chordsList = chords.split(" ");
   const transposedChords = chordsList.map((chord) =>
     Chord.transpose(chord, Interval.fromSemitones(step))

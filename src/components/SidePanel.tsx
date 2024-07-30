@@ -16,9 +16,13 @@ import { ResetIcon } from "../svg components/ResetIcon";
 function SidePanel({
   open,
   setOpen,
+  tonality,
+  setTonality,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
+  tonality: number;
+  setTonality: (newT: number) => void;
 }) {
   const [settings, setSettings] = useContext(SettingsContext);
 
@@ -30,17 +34,6 @@ function SidePanel({
         increment === 0
           ? (settings.fontSize = 2)
           : settings.fontSize + increment,
-    });
-  }
-
-  function handleTransposition(step: number) {
-    if (!settings) return;
-    setSettings({
-      ...settings,
-      transpositionStep:
-        step === 0
-          ? (settings.transpositionStep = 0)
-          : settings.transpositionStep + step,
     });
   }
 
@@ -150,23 +143,15 @@ function SidePanel({
                         Transposer
                       </h1>
                       <div className="flex gap-4">
-                        <button
-                          onClick={() => {
-                            handleTransposition(-1);
-                          }}
-                        >
+                        <button onClick={() => setTonality(tonality - 1)}>
                           <MinusIcon className="w-6 fill-jubilateBlue-500" />
                         </button>
-                        <button
-                          onClick={() => {
-                            handleTransposition(1);
-                          }}
-                        >
+                        <button onClick={() => setTonality(tonality + 1)}>
                           <PlusIcon className="w-6 fill-jubilateBlue-500" />
                         </button>
                         <button
                           onClick={() => {
-                            handleTransposition(0);
+                            setTonality(0);
                           }}
                         >
                           <ResetIcon className="w-6 fill-jubilateBlue-500" />
@@ -174,7 +159,7 @@ function SidePanel({
                       </div>
                     </div>
                     <DynamicText
-                      text={settings.transpositionStep.toString()}
+                      text={tonality.toString()}
                       className="place-self-center pt-2"
                     />
                   </div>

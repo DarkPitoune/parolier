@@ -5,7 +5,6 @@ const initialSettings: Settings = {
   fontSize: 2,
   showChords: true,
   addChorus: false,
-  transpositionStep: 0,
 };
 
 const SettingsContext = createContext<
@@ -34,10 +33,6 @@ function SettingsContextProvider({ children }: { children: ReactNode }) {
       "settings.addChorus",
       newSettings.addChorus ? "true" : "false"
     );
-    localStorage.setItem(
-      "settings.transpositionStep",
-      "" + newSettings.transpositionStep
-    );
   };
 
   useEffect(() => {
@@ -48,16 +43,10 @@ function SettingsContextProvider({ children }: { children: ReactNode }) {
       : parseInt(localStorage.getItem("settings.fontSize") || "");
     const showChords = localStorage.getItem("settings.showChords") === "true";
     const addChorus = localStorage.getItem("settings.addChorus") === "true";
-    const transpositionStep = isNaN(
-      parseInt(localStorage.getItem("settings.transpositionStep") || "")
-    )
-      ? initialSettings.transpositionStep
-      : parseInt(localStorage.getItem("settings.transpositionStep") || "");
     setSettings({
       fontSize,
       showChords,
       addChorus,
-      transpositionStep,
     });
   }, []);
 
