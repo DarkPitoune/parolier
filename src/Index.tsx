@@ -100,7 +100,7 @@ function Index() {
           <div className="flex bg-white flex-1 rounded-full w-fit pl-2 gap-1 items-center">
             <SearchIcon className="w-5 fill-jubilateBlue-500" />
             <input
-              className="w-full h-9 rounded-full px-2 outline-none bg-white"
+              className="w-full h-9 rounded-full px-2 outline-none bg-white dark:bg-white"
               type="search"
               onChange={search}
               placeholder="Vite, une idée..."
@@ -140,7 +140,7 @@ function Index() {
                       ? tag.color
                       : "white",
                   }}
-                  className="rounded-full border-2 font-semibold px-3 py-0.5 inline-flex items-center gap-2 m-0.5"
+                  className="rounded-full border-2 font-semibold px-3 py-0.5 inline-flex items-center gap-2 m-1"
                 >
                   <div
                     dangerouslySetInnerHTML={{ __html: tag.svg }}

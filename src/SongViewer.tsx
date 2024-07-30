@@ -9,9 +9,11 @@ import { SidePanel } from "./components/SidePanel";
 import DynamicText from "./components/DynamicText";
 import { addChorus } from "./utils/addChorus";
 import { SettingsContext } from "./SettingsContextProvider";
+import { transposeLine } from "./utils/tonalManipulation";
 
 function SongViewer() {
   const { songId } = useParams();
+  const [tonality, setTonality] = useState(0);
   const [song, setSong] = useState<TaggedSong>();
   const [slideShow, setSlideShow] = useState(false);
   const [open, setOpen] = useState(false);
@@ -40,7 +42,12 @@ function SongViewer() {
     <SlideShow strophes={addChorus(song?.strophes || [], settings.addChorus)} />
   ) : (
     <div>
-      <SidePanel open={open} setOpen={setOpen} />
+      <SidePanel
+        open={open}
+        setOpen={setOpen}
+        tonality={tonality}
+        setTonality={setTonality}
+      />
       <div className="grid grid-cols-6 py-4 px-6 border-b-4 border-jubilateBlue-500 sticky top-0 bg-white">
         <Link className="w-fit col-span-1" to="/">
           <ChevronLeft className="w-10 fill-jubilateBlue-500 hover:fill-jubilateBlue-700 place-self-begin" />
@@ -59,7 +66,7 @@ function SongViewer() {
       </div>
 
       {song && (
-        <div className="flex flex-col gap-4 p-4">
+        <div className="flex flex-col gap-4 px-4">
           <div className="flex gap-4 items-baseline">
             <h1 className="font-flame text-3xl text-jubilateBlue-500">
               {song.id}.
@@ -80,25 +87,28 @@ function SongViewer() {
               </div>
             ))}
           </div>
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-4">
             {addChorus(song.strophes, settings.addChorus).map(
               (strophe, index) => (
                 <div
                   data-type={strophe.type}
-                  className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold grid gap-x-3"
+                  className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold grid gap-x-2"
                   style={{
                     gridTemplateColumns: settings.showChords
-                      ? "5fr 3fr"
+                      ? "1fr 3fr"
                       : "1fr",
                   }}
                   key={index}
                 >
                   {strophe.content.map((line, lineIndex) => (
                     <Fragment key={lineIndex}>
-                      <DynamicText className="" text={line.text} />
                       {settings.showChords && (
-                        <DynamicText className="" text={line.chords} />
+                        <DynamicText
+                          className="bg-jubilateBlue-100 outline-8 border-jubilateBlue-100 border-4"
+                          text={transposeLine(line.chords, tonality)}
+                        />
                       )}
+                      <DynamicText className="" text={line.text} />
                     </Fragment>
                   ))}
                 </div>

@@ -16,9 +16,13 @@ import { ResetIcon } from "../svg components/ResetIcon";
 function SidePanel({
   open,
   setOpen,
+  tonality,
+  setTonality,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
+  tonality: number;
+  setTonality: (newT: number) => void;
 }) {
   const [settings, setSettings] = useContext(SettingsContext);
 
@@ -53,44 +57,32 @@ function SidePanel({
                     Préférences
                   </DialogTitle>
                 </div>
-                <div className="relative mt-6 flex-1 px-4 sm:px-6 flex flex-col gap-6">
+                <div className="relative mt-6 flex-1 px-4 mr-1 sm:px-6 flex flex-col gap-6">
                   <div className="flex flex-col">
                     <div className="flex justify-between">
-                      <h1 className="font-flame text-3xl text-jubilateBlue-500">
+                      <h1 className="font-flame text-2xl text-jubilateBlue-500">
                         Police
                       </h1>
                       <div className="flex gap-4">
-                        <button
-                          onClick={() => {
-                            handleFontChange(-1);
-                          }}
-                        >
+                        <button onClick={() => handleFontChange(-1)}>
                           <MinusIcon className="w-6 fill-jubilateBlue-500" />
                         </button>
-                        <button
-                          onClick={() => {
-                            handleFontChange(1);
-                          }}
-                        >
+                        <button onClick={() => handleFontChange(1)}>
                           <PlusIcon className="w-6 fill-jubilateBlue-500" />
                         </button>
-                        <button
-                          onClick={() => {
-                            handleFontChange(0);
-                          }}
-                        >
+                        <button onClick={() => handleFontChange(0)}>
                           <ResetIcon className="w-6 fill-jubilateBlue-500" />
                         </button>
                       </div>
                     </div>
                     <DynamicText
-                      text="Ceci et un texte"
+                      text="Ceci est un texte"
                       className="place-self-center pt-2"
                     />
                   </div>
 
                   <div className="flex flex-col gap-4">
-                    <h1 className="font-flame text-3xl text-jubilateBlue-500">
+                    <h1 className="font-flame text-2xl text-jubilateBlue-500">
                       Accords
                     </h1>
 
@@ -112,7 +104,7 @@ function SidePanel({
                   </div>
 
                   <div className="flex flex-col gap-4">
-                    <h1 className="font-flame text-3xl text-jubilateBlue-500">
+                    <h1 className="font-flame text-2xl text-jubilateBlue-500">
                       Refrains
                     </h1>
 
@@ -131,6 +123,33 @@ function SidePanel({
                         className="w-5 h-5 border-jubilateBlue-700 rounded-2xl"
                       />
                     </div>
+                  </div>
+
+                  <div className="flex flex-col">
+                    <div className="flex justify-between">
+                      <h1 className="font-flame text-2xl text-jubilateBlue-500">
+                        Transposer
+                      </h1>
+                      <div className="flex gap-4">
+                        <button onClick={() => setTonality(tonality - 1)}>
+                          <MinusIcon className="w-6 fill-jubilateBlue-500" />
+                        </button>
+                        <button onClick={() => setTonality(tonality + 1)}>
+                          <PlusIcon className="w-6 fill-jubilateBlue-500" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setTonality(0);
+                          }}
+                        >
+                          <ResetIcon className="w-6 fill-jubilateBlue-500" />
+                        </button>
+                      </div>
+                    </div>
+                    <DynamicText
+                      text={tonality.toString()}
+                      className="place-self-center pt-2"
+                    />
                   </div>
                 </div>
               </div>
