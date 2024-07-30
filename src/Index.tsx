@@ -60,9 +60,14 @@ function Index() {
       if (event.target.value.length === 0) setFilteredSongs(songs);
       else {
         window.scrollTo(0, 0);
-        setFilteredSongs(
-          fuse.search(event.target.value).map((hit) => hit.item)
-        );
+        if (!isNaN(parseInt(event.target.value))) {
+          const song = songs.find((s) => s.id === parseInt(event.target.value));
+          setFilteredSongs(song ? [song] : []);
+        } else {
+          setFilteredSongs(
+            fuse.search(event.target.value).map((hit) => hit.item)
+          );
+        }
       }
     },
     [songs]
