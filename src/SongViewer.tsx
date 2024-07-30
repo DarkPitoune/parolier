@@ -9,13 +9,15 @@ import { SidePanel } from "./components/SidePanel";
 import DynamicText from "./components/DynamicText";
 import { addChorus } from "./utils/addChorus";
 import { SettingsContext } from "./SettingsContextProvider";
+import { transposeSong } from "./utils/tonalManipulation";
 
 function SongViewer() {
   const { songId } = useParams();
+  const [originalSong, setOriginalSong] = useState<TaggedSong>();
   const [song, setSong] = useState<TaggedSong>();
   const [slideShow, setSlideShow] = useState(false);
   const [open, setOpen] = useState(false);
-  const [settings] = useContext(SettingsContext);
+  const [settings, setSettings] = useContext(SettingsContext);
 
   useEffect(() => {
     supabase
@@ -24,10 +26,15 @@ function SongViewer() {
       .eq("id", songId)
       .then(({ data }) => {
         if (data && data.length > 0) {
+          setOriginalSong(data[0]);
           setSong(data[0]);
         }
       });
   }, []);
+
+  useEffect(() => {
+    setSong(transposeSong(originalSong, settings.transpositionStep));
+  }, [settings.transpositionStep]);
 
   useEffect(() => {
     const handleQuit = () => {
@@ -42,7 +49,16 @@ function SongViewer() {
     <div>
       <SidePanel open={open} setOpen={setOpen} />
       <div className="grid grid-cols-6 py-4 px-6 border-b-4 border-jubilateBlue-500 sticky top-0 bg-white">
-        <Link className="w-fit col-span-1" to="/">
+        <Link
+          className="w-fit col-span-1"
+          to="/"
+          onClick={() => {
+            setSettings({
+              ...settings,
+              transpositionStep: (settings.transpositionStep = 0),
+            });
+          }}
+        >
           <ChevronLeft className="w-10 fill-jubilateBlue-500 hover:fill-jubilateBlue-700 place-self-begin" />
         </Link>
 
@@ -59,7 +75,7 @@ function SongViewer() {
       </div>
 
       {song && (
-        <div className="flex flex-col gap-4 p-4">
+        <div className="flex flex-col gap-4 px-4">
           <div className="flex gap-4 items-baseline">
             <h1 className="font-flame text-3xl text-jubilateBlue-500">
               {song.id}.
@@ -67,6 +83,7 @@ function SongViewer() {
             <h1 className="font-flame text-3xl">{song.title}</h1>
           </div>
           <div className="flex gap-8 px-4 font-flame">
+            <div></div>
             {song.tags.map((tag) => (
               <div className="flex gap-1" key={tag.id}>
                 <div
@@ -80,25 +97,28 @@ function SongViewer() {
               </div>
             ))}
           </div>
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-4">
             {addChorus(song.strophes, settings.addChorus).map(
               (strophe, index) => (
                 <div
                   data-type={strophe.type}
-                  className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold grid gap-x-3"
+                  className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold grid gap-x-2"
                   style={{
                     gridTemplateColumns: settings.showChords
-                      ? "5fr 3fr"
+                      ? "1fr 3fr"
                       : "1fr",
                   }}
                   key={index}
                 >
                   {strophe.content.map((line, lineIndex) => (
                     <Fragment key={lineIndex}>
-                      <DynamicText className="" text={line.text} />
                       {settings.showChords && (
-                        <DynamicText className="" text={line.chords} />
+                        <DynamicText
+                          className="bg-jubilateBlue-100 outline-8 border-jubilateBlue-100 border-4"
+                          text={line.chords}
+                        />
                       )}
+                      <DynamicText className="" text={line.text} />
                     </Fragment>
                   ))}
                 </div>
