@@ -64,25 +64,13 @@ function SidePanel({
                         Police
                       </h1>
                       <div className="flex gap-4">
-                        <button
-                          onClick={() => {
-                            handleFontChange(-1);
-                          }}
-                        >
+                        <button onClick={() => handleFontChange(-1)}>
                           <MinusIcon className="w-6 fill-jubilateBlue-500" />
                         </button>
-                        <button
-                          onClick={() => {
-                            handleFontChange(1);
-                          }}
-                        >
+                        <button onClick={() => handleFontChange(1)}>
                           <PlusIcon className="w-6 fill-jubilateBlue-500" />
                         </button>
-                        <button
-                          onClick={() => {
-                            handleFontChange(0);
-                          }}
-                        >
+                        <button onClick={() => handleFontChange(0)}>
                           <ResetIcon className="w-6 fill-jubilateBlue-500" />
                         </button>
                       </div>

@@ -74,7 +74,6 @@ function SongViewer() {
             <h1 className="font-flame text-3xl">{song.title}</h1>
           </div>
           <div className="flex gap-8 px-4 font-flame">
-            <div></div>
             {song.tags.map((tag) => (
               <div className="flex gap-1" key={tag.id}>
                 <div
