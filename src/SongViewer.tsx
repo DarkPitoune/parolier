@@ -64,7 +64,7 @@ function SongViewer() {
               document.body.requestFullscreen();
             }}
           >
-            <DisplaylIcon className="w-4 fill-white" />
+            <DisplaylIcon className="w-4 h-4 fill-white" />
           </button>
           <button
             className="w-fit place-self-end"
@@ -80,8 +80,10 @@ function SongViewer() {
       {song && (
         <div className="flex flex-col gap-4 px-4 bg-white dark:bg-gray-800 pt-4">
           <div className="flex gap-4 items-center">
-            <h1 className="font-flame text-3xl dark:text-white">{song.id}.</h1>
-            <h1 className="font-flame text-3xl dark:text-white">
+            <h1 className="font-flame text-3xl text-black dark:text-white">
+              {song.id}.
+            </h1>
+            <h1 className="font-flame text-3xl text-black dark:text-white">
               {song.title}
             </h1>
           </div>
@@ -116,12 +118,12 @@ function SongViewer() {
                     <Fragment key={lineIndex}>
                       {settings.showChords && (
                         <DynamicText
-                          className="bg-jubilateBlue-100 dark:bg-slate-600 outline-8 border-jubilateBlue-100 dark:border-slate-600 border-4 dark:text-white"
+                          className="bg-jubilateBlue-100 dark:bg-slate-600 outline-8 border-jubilateBlue-100 dark:border-slate-600 border-4 text-black dark:text-white"
                           text={transposeLine(line.chords, tonality)}
                         />
                       )}
                       <DynamicText
-                        className="dark:text-white"
+                        className=" text-black dark:text-white"
                         text={line.text}
                       />
                     </Fragment>

@@ -162,13 +162,11 @@ function Index() {
             key={song.id}
             to={`/songs/${song.id}`}
           >
-            <a
-              className="w-10 text-center border-r font-bold"
-              id={`#${song.id}`}
-            >
-              {song.id}
-            </a>
-            <DynamicText className="grow dark:text-white" text={song.title} />
+            <a className="w-10 text-center border-r font-bold">{song.id}</a>
+            <DynamicText
+              className="grow text-black dark:text-white"
+              text={song.title}
+            />
             <div className="flex gap-2">
               {song.tags.map((tag) => (
                 <div
