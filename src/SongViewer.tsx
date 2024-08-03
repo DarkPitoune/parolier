@@ -80,10 +80,10 @@ function SongViewer() {
       {song && (
         <div className="flex flex-col gap-4 px-4 bg-white dark:bg-gray-800 pt-4">
           <div className="flex gap-4 items-center">
-            <h1 className="font-flame text-3xl text-black dark:text-white">
+            <h1 className="font-flame text-3xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
               {song.id}.
             </h1>
-            <h1 className="font-flame text-3xl text-black dark:text-white">
+            <h1 className="font-flame text-3xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
               {song.title}
             </h1>
           </div>

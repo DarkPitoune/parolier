@@ -158,7 +158,7 @@ function Index() {
       <div className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300 dark:bg-gray-800">
         {filteredSongs.filter(isCorrectTag).map((song) => (
           <Link
-            className="px-2 py-4 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 flex items-baseline gap-3 dark:text-jubilateBlue-400"
+            className="px-2 py-4 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 flex items-baseline gap-3 text-black dark:text-jubilateBlue-400"
             key={song.id}
             to={`/songs/${song.id}`}
           >
