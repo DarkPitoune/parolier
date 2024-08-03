@@ -5,6 +5,7 @@ const initialSettings: Settings = {
   fontSize: 2,
   showChords: true,
   addChorus: false,
+  darkMode: false,
 };
 
 const SettingsContext = createContext<
@@ -23,6 +24,7 @@ function SettingsContextProvider({ children }: { children: ReactNode }) {
       // go get better googles
       newSettings.fontSize = 10;
     }
+
     setSettings(newSettings);
     localStorage.setItem("settings.fontSize", "" + newSettings.fontSize);
     localStorage.setItem(
@@ -32,6 +34,10 @@ function SettingsContextProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(
       "settings.addChorus",
       newSettings.addChorus ? "true" : "false"
+    );
+    localStorage.setItem(
+      "settings.darkMode",
+      newSettings.darkMode ? "true" : "false"
     );
   };
 
@@ -43,10 +49,12 @@ function SettingsContextProvider({ children }: { children: ReactNode }) {
       : parseInt(localStorage.getItem("settings.fontSize") || "");
     const showChords = localStorage.getItem("settings.showChords") === "true";
     const addChorus = localStorage.getItem("settings.addChorus") === "true";
+    const darkMode = localStorage.getItem("settings.darkMode") === "true";
     setSettings({
       fontSize,
       showChords,
       addChorus,
+      darkMode,
     });
   }, []);
 

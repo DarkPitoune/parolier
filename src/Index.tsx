@@ -21,7 +21,7 @@ function Index() {
   >([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
-  const [tagTabOpen, setTagTabOpen] = useState(false);
+  const [tagTabOpen, setTagTabOpen] = useState(true);
   const fuseOptions = { keys: ["title"] };
   const fuse = useMemo(() => new Fuse(songs, fuseOptions), [songs]);
 
@@ -94,11 +94,11 @@ function Index() {
   };
 
   return (
-    <div>
-      <div className="sticky top-0 bg-white">
-        <div className="bg-jubilateBlue-500 px-6 py-4 gap-4 flex justify-between items-center">
+    <div className="bg-white dark:bg-gray-800">
+      <div className="sticky top-0 bg-white dark:bg-gray-800">
+        <div className="bg-jubilateBlue-500 dark:bg-slate-900 px-6 py-4 gap-4 flex justify-between items-center">
           <div className="flex bg-white flex-1 rounded-full w-fit pl-2 gap-1 items-center">
-            <SearchIcon className="w-5 fill-jubilateBlue-500" />
+            <SearchIcon className="w-5 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
             <input
               className="w-full h-9 rounded-full px-2 outline-none bg-white dark:bg-white"
               type="search"
@@ -112,14 +112,14 @@ function Index() {
         </div>
         <div className="px-6 py-2 flex flex-col items-stretch shadow font-flame">
           <button
-            className="flex gap-2 text-jubilateBlue-500 items-center"
+            className="flex gap-2 text-jubilateBlue-500 dark:text-jubilateBlue-400 items-center"
             onClick={() => setTagTabOpen((v) => !v)}
           >
             <ChevronUpIcon
               data-tabopen={tagTabOpen}
               className="size-10 data-[tabopen=false]:rotate-180 transition"
             />
-            <h3 className="text-2xl font-bold">Tags</h3>
+            <h3 className="text-2xl font-bold">Filtres</h3>
             {selectedTags.length > 0 && (
               <div className="bg-jubilateBlue-500 rounded-full text-white font-bold w-6">
                 {selectedTags.length}
@@ -133,21 +133,20 @@ function Index() {
                   onClick={() => toggleTag(tag.id)}
                   key={tag.id}
                   aria-checked={selectedTags.includes(tag.id)}
-                  style={{
-                    borderColor: tag.color,
-                    color: selectedTags.includes(tag.id) ? "white" : tag.color,
-                    backgroundColor: selectedTags.includes(tag.id)
-                      ? tag.color
-                      : "white",
-                  }}
-                  className="rounded-full border-2 font-semibold px-3 py-0.5 inline-flex items-center gap-2 m-1"
+                  className={`rounded-full border-2 font-semibold px-3 py-0.5 inline-flex items-center gap-2 m-1
+        ${
+          selectedTags.includes(tag.id)
+            ? "text-white bg-[var(--tag-color)] border-[var(--tag-color)]"
+            : "text-[var(--tag-color)] bg-transparent border-[var(--tag-color)] border-2"
+        }`}
+                  style={{ "--tag-color": tag.color } as React.CSSProperties}
                 >
                   <div
                     dangerouslySetInnerHTML={{ __html: tag.svg }}
                     style={{
                       fill: selectedTags.includes(tag.id) ? "white" : tag.color,
                     }}
-                    className="size-4"
+                    className="w-4 h-4"
                   />
                   {tag.name}
                 </button>
@@ -156,20 +155,25 @@ function Index() {
         </div>
       </div>
 
-      <div className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300">
+      <div className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300 dark:bg-gray-800">
         {filteredSongs.filter(isCorrectTag).map((song) => (
           <Link
-            className="px-2 py-4 hover:bg-jubilateBlue-100 flex items-baseline gap-3"
+            className="px-2 py-4 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 flex items-baseline gap-3 dark:text-jubilateBlue-400"
             key={song.id}
             to={`/songs/${song.id}`}
           >
-            <div className="w-10 text-center border-r font-bold">{song.id}</div>
-            <DynamicText className="grow" text={song.title} />
+            <a
+              className="w-10 text-center border-r font-bold"
+              id={`#${song.id}`}
+            >
+              {song.id}
+            </a>
+            <DynamicText className="grow dark:text-white" text={song.title} />
             <div className="flex gap-2">
               {song.tags.map((tag) => (
                 <div
                   style={{ fill: tag.color }}
-                  className="size-6"
+                  className="size-6 "
                   key={tag.id}
                   dangerouslySetInnerHTML={{ __html: tag.svg }}
                 ></div>

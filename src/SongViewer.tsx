@@ -10,6 +10,7 @@ import DynamicText from "./components/DynamicText";
 import { addChorus } from "./utils/addChorus";
 import { SettingsContext } from "./SettingsContextProvider";
 import { transposeLine } from "./utils/tonalManipulation";
+import { DisplaylIcon } from "./svg components/DisplayIcon";
 
 function SongViewer() {
   const { songId } = useParams();
@@ -41,37 +42,48 @@ function SongViewer() {
   return slideShow ? (
     <SlideShow strophes={addChorus(song?.strophes || [], settings.addChorus)} />
   ) : (
-    <div>
+    <div className="dark:bg-gray-800">
       <SidePanel
         open={open}
         setOpen={setOpen}
         tonality={tonality}
         setTonality={setTonality}
       />
-      <div className="grid grid-cols-6 py-4 px-6 border-b-4 border-jubilateBlue-500 sticky top-0 bg-white">
-        <Link className="w-fit col-span-1" to="/">
-          <ChevronLeft className="w-10 fill-jubilateBlue-500 hover:fill-jubilateBlue-700 place-self-begin" />
+      <div className="grid grid-cols-6 items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky top-0 bg-white dark:bg-gray-900">
+        <Link className="w-fit col-span-1" to={`/#${songId}`}>
+          <ChevronLeft className="w-12 fill-jubilateBlue-500 dark:fill-jubilateBlue-400 hover:fill-jubilateBlue-700 place-self-begin" />
         </Link>
 
         <div className="col-span-4" />
 
-        <button
-          className="w-fit col-span-1 place-self-end"
-          onClick={() => {
-            setOpen(!open);
-          }}
-        >
-          <MenuIcon className="w-10 fill-jubilateBlue-500 " />
-        </button>
+        <div className="col-span-1 flex items-center gap-4 place-self-end">
+          <button
+            className="rounded-full place-self-end hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-4  text-xl w-fit h-fit"
+            onClick={() => {
+              setSlideShow(true);
+              document.body.requestFullscreen();
+            }}
+          >
+            <DisplaylIcon className="w-4 fill-white" />
+          </button>
+          <button
+            className="w-fit place-self-end"
+            onClick={() => {
+              setOpen(!open);
+            }}
+          >
+            <MenuIcon className="w-10 fill-jubilateBlue-500 dark:fill-jubilateBlue-400 " />
+          </button>
+        </div>
       </div>
 
       {song && (
-        <div className="flex flex-col gap-4 px-4">
-          <div className="flex gap-4 items-baseline">
-            <h1 className="font-flame text-3xl text-jubilateBlue-500">
-              {song.id}.
+        <div className="flex flex-col gap-4 px-4 bg-white dark:bg-gray-800 pt-4">
+          <div className="flex gap-4 items-center">
+            <h1 className="font-flame text-3xl dark:text-white">{song.id}.</h1>
+            <h1 className="font-flame text-3xl dark:text-white">
+              {song.title}
             </h1>
-            <h1 className="font-flame text-3xl">{song.title}</h1>
           </div>
           <div className="flex gap-8 px-4 font-flame">
             {song.tags.map((tag) => (
@@ -104,11 +116,14 @@ function SongViewer() {
                     <Fragment key={lineIndex}>
                       {settings.showChords && (
                         <DynamicText
-                          className="bg-jubilateBlue-100 outline-8 border-jubilateBlue-100 border-4"
+                          className="bg-jubilateBlue-100 dark:bg-slate-600 outline-8 border-jubilateBlue-100 dark:border-slate-600 border-4 dark:text-white"
                           text={transposeLine(line.chords, tonality)}
                         />
                       )}
-                      <DynamicText className="" text={line.text} />
+                      <DynamicText
+                        className="dark:text-white"
+                        text={line.text}
+                      />
                     </Fragment>
                   ))}
                 </div>
@@ -117,16 +132,6 @@ function SongViewer() {
           </div>
         </div>
       )}
-
-      <button
-        className="hidden md:block bg-jubilateBlue-500 text-white p-4 m-4 hover:bg-jubilateBlue-700 text-xl w-fit h-fit"
-        onClick={() => {
-          setSlideShow(true);
-          document.body.requestFullscreen();
-        }}
-      >
-        Slides
-      </button>
     </div>
   );
 }

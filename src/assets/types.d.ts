@@ -18,6 +18,7 @@ export interface Settings {
   fontSize: number; // 0-10
   showChords: boolean;
   addChorus: boolean;
+  darkMode: boolean;
 }
 export interface Tag {
   id: number;

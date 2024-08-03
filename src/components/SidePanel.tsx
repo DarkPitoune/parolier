@@ -51,104 +51,116 @@ function SidePanel({
               transition
               className="pointer-events-auto relative w-screen max-w-md transform transition duration-500 ease-in-out data-[closed]:translate-x-full sm:duration-700"
             >
-              <div className="flex h-full flex-col overflow-y-scroll bg-white py-6 shadow-xl">
+              <div className="flex h-full flex-col overflow-y-scroll bg-white dark:bg-gray-800 py-6 shadow-xl">
                 <div className="px-4 sm:px-6">
-                  <DialogTitle className="text-5xl font-flame text-jubilateBlue-500">
+                  <DialogTitle className="text-5xl font-flame text-jubilateBlue-500 dark:text-jubilateBlue-400">
                     Préférences
                   </DialogTitle>
                 </div>
                 <div className="relative mt-6 flex-1 px-4 mr-1 sm:px-6 flex flex-col gap-6">
                   <div className="flex flex-col">
                     <div className="flex justify-between">
-                      <h1 className="font-flame text-2xl text-jubilateBlue-500">
+                      <h1 className="font-flame text-2xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
                         Police
                       </h1>
                       <div className="flex gap-4">
                         <button onClick={() => handleFontChange(-1)}>
-                          <MinusIcon className="w-6 fill-jubilateBlue-500" />
+                          <MinusIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
                         </button>
                         <button onClick={() => handleFontChange(1)}>
-                          <PlusIcon className="w-6 fill-jubilateBlue-500" />
+                          <PlusIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
                         </button>
                         <button onClick={() => handleFontChange(0)}>
-                          <ResetIcon className="w-6 fill-jubilateBlue-500" />
+                          <ResetIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
                         </button>
                       </div>
                     </div>
                     <DynamicText
                       text="Ceci est un texte"
-                      className="place-self-center pt-2"
+                      className="place-self-center pt-2 dark:text-white"
                     />
                   </div>
 
-                  <div className="flex flex-col gap-4">
-                    <h1 className="font-flame text-2xl text-jubilateBlue-500">
+                  <div className="flex justify-between gap-4">
+                    <h1 className="font-flame text-2xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
                       Accords
                     </h1>
 
-                    <div className="flex justify-between">
-                      <p className="texte-base">Afficher</p>
-                      <input
-                        id="chordsCheckbox"
-                        type="checkbox"
-                        checked={settings.showChords}
-                        onChange={(e) => {
-                          setSettings({
-                            ...settings,
-                            showChords: e.target.checked,
-                          });
-                        }}
-                        className="w-5 h-5 border-jubilateBlue-700 rounded-2xl"
-                      />
-                    </div>
+                    <input
+                      id="chordsCheckbox"
+                      type="checkbox"
+                      checked={settings.showChords}
+                      onChange={(e) => {
+                        setSettings({
+                          ...settings,
+                          showChords: e.target.checked,
+                        });
+                      }}
+                      className="w-5 h-5 accent-jubilateBlue-500 dark:accent-jubilateBlue-400 rounded-2xl"
+                    />
                   </div>
-
-                  <div className="flex flex-col gap-4">
-                    <h1 className="font-flame text-2xl text-jubilateBlue-500">
-                      Refrains
-                    </h1>
-
-                    <div className="flex justify-between">
-                      <p className="texte-base">Afficher</p>
-                      <input
-                        id="chordsCheckbox"
-                        type="checkbox"
-                        checked={settings.addChorus}
-                        onChange={(e) => {
-                          setSettings({
-                            ...settings,
-                            addChorus: e.target.checked,
-                          });
-                        }}
-                        className="w-5 h-5 border-jubilateBlue-700 rounded-2xl"
-                      />
-                    </div>
-                  </div>
-
                   <div className="flex flex-col">
                     <div className="flex justify-between">
-                      <h1 className="font-flame text-2xl text-jubilateBlue-500">
+                      <h1 className="font-flame text-2xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
                         Transposer
                       </h1>
                       <div className="flex gap-4">
                         <button onClick={() => setTonality(tonality - 1)}>
-                          <MinusIcon className="w-6 fill-jubilateBlue-500" />
+                          <MinusIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
                         </button>
                         <button onClick={() => setTonality(tonality + 1)}>
-                          <PlusIcon className="w-6 fill-jubilateBlue-500" />
+                          <PlusIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
                         </button>
                         <button
                           onClick={() => {
                             setTonality(0);
                           }}
                         >
-                          <ResetIcon className="w-6 fill-jubilateBlue-500" />
+                          <ResetIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
                         </button>
                       </div>
                     </div>
                     <DynamicText
                       text={tonality.toString()}
-                      className="place-self-center pt-2"
+                      className="place-self-center pt-2 dark:text-white"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between gap-4">
+                    <h1 className="font-flame text-2xl  text-jubilateBlue-500 dark:text-jubilateBlue-400">
+                      Refrains
+                    </h1>
+
+                    <input
+                      id="chordsCheckbox"
+                      type="checkbox"
+                      checked={settings.addChorus}
+                      onChange={(e) => {
+                        setSettings({
+                          ...settings,
+                          addChorus: e.target.checked,
+                        });
+                      }}
+                      className="w-5 h-5 rounded-2xl accent-jubilateBlue-500 dark:accent-jubilateBlue-400"
+                    />
+                  </div>
+
+                  <div className="flex gap-4 items-center justify-between">
+                    <h1 className="font-flame text-2xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
+                      Mode Sombre
+                    </h1>
+                    <input
+                      id="chordsCheckbox"
+                      type="checkbox"
+                      checked={settings.darkMode}
+                      onChange={(e) => {
+                        setSettings({
+                          ...settings,
+                          darkMode: e.target.checked,
+                        });
+                        document.body.classList.toggle("dark");
+                      }}
+                      className="w-5 h-5 rounded-2xl accent-jubilateBlue-500 dark:accent-jubilateBlue-400"
                     />
                   </div>
                 </div>
