@@ -12,7 +12,6 @@ import Fuse from "fuse.js";
 import { SearchIcon } from "./svg components/SearchIcon";
 import DynamicText from "./components/DynamicText";
 import { ChevronUpIcon } from "@heroicons/react/16/solid";
-import toast from "react-hot-toast";
 
 function Index() {
   const [songs, setSongs] = useState<Omit<TaggedSong, "strophes">[]>([]);
@@ -22,8 +21,7 @@ function Index() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [tagTabOpen, setTagTabOpen] = useState(true);
-  const fuseOptions = { keys: ["title"] };
-  const fuse = useMemo(() => new Fuse(songs, fuseOptions), [songs]);
+  const fuse = useMemo(() => new Fuse(songs, { keys: ["title"] }), [songs]);
 
   const toggleTag = (id: number) => {
     setSelectedTags((oldTags) => {
@@ -41,6 +39,9 @@ function Index() {
           data.sort((a, b) => a.id - b.id);
           setSongs(data);
           setFilteredSongs(data);
+          window.scroll({
+            top: parseInt(sessionStorage.getItem("indexScroll") || "0"),
+          });
           fuse.setCollection(data);
         }
       });
@@ -53,6 +54,15 @@ function Index() {
           setTags(data);
         }
       });
+  }, []);
+
+  useEffect(() => {
+    const setScrollY = () =>
+      sessionStorage.setItem("indexScroll", "" + window.scrollY);
+    window.addEventListener("scroll", setScrollY);
+    return () => {
+      window.removeEventListener("scroll", setScrollY);
+    };
   }, []);
 
   const search: ChangeEventHandler<HTMLInputElement> = useCallback(
@@ -70,23 +80,8 @@ function Index() {
         }
       }
     },
-    [songs]
+    [songs, fuse]
   );
-
-  const loadAllSongs = useCallback(() => {
-    const promises = songs.map(({ id }) =>
-      supabase
-        .from("songs")
-        .select("*, tags(name, id, svg, color)")
-        .eq("id", id)
-    );
-
-    Promise.all(promises).then((res) => {
-      if (res.every((res) => res.data != undefined))
-        toast.success("Morceaux mis à jour !");
-      else toast.error("Erreur !");
-    });
-  }, [songs]);
 
   const isCorrectTag = (song: Omit<TaggedSong, "strophes">) => {
     if (selectedTags.length === 0) return true;
@@ -106,9 +101,7 @@ function Index() {
               placeholder="Vite, une idée..."
             ></input>
           </div>
-          <button onClick={loadAllSongs}>
-            <img className="h-12" src="/svg/logo.svg"></img>
-          </button>
+          <img className="h-12" src="/svg/logo.svg"></img>
         </div>
         <div className="px-6 py-2 flex flex-col items-stretch shadow font-flame">
           <button
@@ -162,7 +155,7 @@ function Index() {
             key={song.id}
             to={`/songs/${song.id}`}
           >
-            <a className="w-10 text-center border-r font-bold">{song.id}</a>
+            <div className="w-10 text-center border-r font-bold">{song.id}</div>
             <DynamicText
               className="grow text-black dark:text-white"
               text={song.title}

@@ -37,6 +37,7 @@ function SongViewer() {
       if (!document.fullscreenElement) setSlideShow(false);
     };
     document.addEventListener("fullscreenchange", handleQuit);
+    return () => document.removeEventListener("fullscreenchange", handleQuit);
   }, []);
 
   return slideShow ? (
@@ -50,7 +51,7 @@ function SongViewer() {
         setTonality={setTonality}
       />
       <div className="grid grid-cols-6 items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky top-0 bg-white dark:bg-gray-900">
-        <Link className="w-fit col-span-1" to={`/#${songId}`}>
+        <Link className="w-fit col-span-1" to="/">
           <ChevronLeft className="w-12 fill-jubilateBlue-500 dark:fill-jubilateBlue-400 hover:fill-jubilateBlue-700 place-self-begin" />
         </Link>
 

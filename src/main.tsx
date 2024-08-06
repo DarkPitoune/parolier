@@ -8,6 +8,7 @@ import { Login } from "./Login";
 import { AuthContextProvider } from "./AuthContextProvider";
 import { Toaster } from "react-hot-toast";
 import { SettingsContextProvider } from "./SettingsContextProvider";
+import { CornerMenu } from "./components/CornerMenu";
 
 const router = createBrowserRouter([
   {
@@ -30,6 +31,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <AuthContextProvider>
       <SettingsContextProvider>
         <RouterProvider router={router} />
+        <CornerMenu />
       </SettingsContextProvider>
     </AuthContextProvider>
   </React.StrictMode>
