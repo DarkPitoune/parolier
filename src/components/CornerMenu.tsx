@@ -1,33 +1,30 @@
-import { ArrowPathIcon } from "@heroicons/react/24/outline";
-import { useCallback } from "react";
+import { ArrowPathIcon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
+import { useCallback, useContext } from "react";
 import toast from "react-hot-toast";
 import supabase from "../utils/supabase";
+import { SettingsContext } from "../SettingsContextProvider";
 
 export const CornerMenu = () => {
   const loadAllSongs = useCallback(() => {
-    supabase
+    const promise = supabase
       .from("songs")
       .select("title, id, tags (id, name, svg, color)")
-      .then(({ data }) => {
-        toast.success("Liste mise à jour");
-        return data || [];
-      })
-      .then((songs) =>
-        songs.map(({ id }) =>
+      .then(({data: songs}) =>
+        songs?.map(({ id }) =>
           supabase
             .from("songs")
             .select("*, tags(name, id, svg, color)")
             .eq("id", id)
         )
-      )
-      .then((promises) =>
-        Promise.all(promises).then((res) => {
-          if (res.every((res) => res.data != undefined))
-            toast.success("Paroles mis à jour !");
-          else toast.error("Erreur !");
-        })
       );
+      toast.promise(promise as Promise<void>, {
+        loading: "Chargement...",
+        success: "Liste mise à jour",
+        error: "Erreur !",
+      });
   }, [supabase]);
+
+  const [settings, setSettings] = useContext(SettingsContext);
 
   return (
     <div className="fixed bottom-0 right-0 size-24 group hover:size-64 transition-all ease-in-out overflow-clip z-10">
@@ -38,6 +35,13 @@ export const CornerMenu = () => {
           className="bg-green-500 absolute group-hover:-left-20 ease-in-out left-2 top-2 z-1 size-12 rounded-full transition-all -z-10 flex items-center justify-center"
         >
           <ArrowPathIcon color="white" className="size-8" />
+        </button>
+        <button
+          onClick={() => setSettings({ ...settings, darkMode: !settings.darkMode })}
+          className="bg-green-500 absolute group-hover:-top-20 ease-in-out left-2 top-2 z-1 size-12 rounded-full transition-all -z-10 flex items-center justify-center"
+          style={{backgroundColor: settings.darkMode ? "#FFEB3B" : "black"}}
+        >
+          {settings.darkMode ? <SunIcon color="white" className="size-8" /> : <MoonIcon color="white" className="size-8" />}
         </button>
       </div>
     </div>

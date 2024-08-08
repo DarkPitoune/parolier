@@ -16,6 +16,7 @@ function SettingsContextProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(initialSettings);
 
   const handleNewSettings = (newSettings: Settings) => {
+    // Validate values
     if (newSettings.fontSize < 0) {
       // stop saying you have good eyes
       newSettings.fontSize = 0;
@@ -26,6 +27,8 @@ function SettingsContextProvider({ children }: { children: ReactNode }) {
     }
 
     setSettings(newSettings);
+
+    // Save values
     localStorage.setItem("settings.fontSize", "" + newSettings.fontSize);
     localStorage.setItem(
       "settings.showChords",
@@ -60,7 +63,7 @@ function SettingsContextProvider({ children }: { children: ReactNode }) {
 
   return (
     <SettingsContext.Provider value={[settings, handleNewSettings]}>
-      {children}
+      <div className={settings.darkMode ? "dark" : ""}>{children}</div>
     </SettingsContext.Provider>
   );
 }

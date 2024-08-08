@@ -39,9 +39,6 @@ function Index() {
           data.sort((a, b) => a.id - b.id);
           setSongs(data);
           setFilteredSongs(data);
-          window.scroll({
-            top: parseInt(sessionStorage.getItem("indexScroll") || "0"),
-          });
           fuse.setCollection(data);
         }
       });
@@ -55,6 +52,12 @@ function Index() {
         }
       });
   }, []);
+
+  useEffect(() => {
+    window.scroll({
+      top: parseInt(sessionStorage.getItem("indexScroll") || "0"),
+    });
+  }, [songs]);
 
   useEffect(() => {
     const setScrollY = () =>

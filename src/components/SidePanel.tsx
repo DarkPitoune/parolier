@@ -158,7 +158,6 @@ function SidePanel({
                           ...settings,
                           darkMode: e.target.checked,
                         });
-                        document.body.classList.toggle("dark");
                       }}
                       className="w-5 h-5 rounded-2xl accent-jubilateBlue-500 dark:accent-jubilateBlue-400"
                     />
