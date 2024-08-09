@@ -50,7 +50,7 @@ function SongViewer() {
         tonality={tonality}
         setTonality={setTonality}
       />
-      <div className="grid grid-cols-6 items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky top-0 dark:bg-gray-900">
+      <div className="bg-white grid grid-cols-6 items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky top-0 dark:bg-gray-900">
         <Link className="w-fit col-span-1" to="/">
           <ChevronLeft className="w-12 fill-jubilateBlue-500 dark:fill-jubilateBlue-400 hover:fill-jubilateBlue-700 place-self-begin" />
         </Link>
