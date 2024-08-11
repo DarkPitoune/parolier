@@ -1,11 +1,12 @@
 import { createContext, ReactNode, useEffect, useState } from "react";
-import { Settings } from "./assets/types";
+import { Settings } from "../assets/types";
 
 const initialSettings: Settings = {
   fontSize: 2,
   showChords: true,
   addChorus: false,
   darkMode: false,
+  username: navigator.platform, // deprecated but idc
 };
 
 const SettingsContext = createContext<
@@ -32,32 +33,35 @@ function SettingsContextProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("settings.fontSize", "" + newSettings.fontSize);
     localStorage.setItem(
       "settings.showChords",
-      newSettings.showChords ? "true" : "false"
+      newSettings.showChords ? "true" : "false",
     );
     localStorage.setItem(
       "settings.addChorus",
-      newSettings.addChorus ? "true" : "false"
+      newSettings.addChorus ? "true" : "false",
     );
     localStorage.setItem(
       "settings.darkMode",
-      newSettings.darkMode ? "true" : "false"
+      newSettings.darkMode ? "true" : "false",
     );
+    localStorage.setItem("settings.username", newSettings.username);
   };
 
   useEffect(() => {
     const fontSize = isNaN(
-      parseInt(localStorage.getItem("settings.fontSize") || "")
+      parseInt(localStorage.getItem("settings.fontSize") || ""),
     )
       ? initialSettings.fontSize
       : parseInt(localStorage.getItem("settings.fontSize") || "");
     const showChords = localStorage.getItem("settings.showChords") === "true";
     const addChorus = localStorage.getItem("settings.addChorus") === "true";
     const darkMode = localStorage.getItem("settings.darkMode") === "true";
+    const username = localStorage.getItem("settings.username") || "";
     setSettings({
       fontSize,
       showChords,
       addChorus,
       darkMode,
+      username,
     });
   }, []);
 

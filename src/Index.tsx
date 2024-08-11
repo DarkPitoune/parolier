@@ -12,6 +12,7 @@ import Fuse from "fuse.js";
 import { SearchIcon } from "./svg components/SearchIcon";
 import DynamicText from "./components/DynamicText";
 import { ChevronUpIcon } from "@heroicons/react/16/solid";
+import { useLeader } from "./components/LeaderContext";
 
 function Index() {
   const [songs, setSongs] = useState<Omit<TaggedSong, "strophes">[]>([]);
@@ -22,6 +23,7 @@ function Index() {
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [tagTabOpen, setTagTabOpen] = useState(true);
   const fuse = useMemo(() => new Fuse(songs, { keys: ["title"] }), [songs]);
+  const { leader } = useLeader();
 
   const toggleTag = (id: number) => {
     setSelectedTags((oldTags) => {
@@ -93,7 +95,11 @@ function Index() {
 
   return (
     <div className="bg-white dark:bg-gray-800">
-      <div className="sticky top-0 bg-white dark:bg-gray-800">
+      <div
+        className={`transition-all sticky bg-white dark:bg-gray-800 ${
+          leader ? "top-6" : "top-0"
+        }`}
+      >
         <div className="bg-jubilateBlue-500 dark:bg-slate-900 px-6 py-4 gap-4 flex justify-between items-center">
           <div className="flex bg-white flex-1 rounded-full w-fit pl-2 gap-1 items-center">
             <SearchIcon className="w-5 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />

@@ -8,9 +8,10 @@ import { MenuIcon } from "./svg components/MenuIcon";
 import { SidePanel } from "./components/SidePanel";
 import DynamicText from "./components/DynamicText";
 import { addChorus } from "./utils/addChorus";
-import { SettingsContext } from "./SettingsContextProvider";
+import { SettingsContext } from "./components/SettingsContextProvider";
 import { transposeLine } from "./utils/tonalManipulation";
 import { DisplaylIcon } from "./svg components/DisplayIcon";
+import { useLeader } from "./components/LeaderContext";
 
 function SongViewer() {
   const { songId } = useParams();
@@ -19,6 +20,7 @@ function SongViewer() {
   const [slideShow, setSlideShow] = useState(false);
   const [open, setOpen] = useState(false);
   const [settings] = useContext(SettingsContext);
+  const { setLeaderSong } = useLeader();
 
   useEffect(() => {
     supabase
@@ -30,7 +32,8 @@ function SongViewer() {
           setSong(data[0]);
         }
       });
-  }, []);
+    setLeaderSong(Number(songId));
+  }, [songId]);
 
   useEffect(() => {
     const handleQuit = () => {
@@ -43,14 +46,14 @@ function SongViewer() {
   return slideShow ? (
     <SlideShow strophes={addChorus(song?.strophes || [], settings.addChorus)} />
   ) : (
-    <div className="dark:bg-gray-800">
+    <div className="bg-white dark:bg-gray-800">
       <SidePanel
         open={open}
         setOpen={setOpen}
         tonality={tonality}
         setTonality={setTonality}
       />
-      <div className="bg-white grid grid-cols-6 items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky top-0 dark:bg-gray-900">
+      <div className="grid grid-cols-6 items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky top-0 dark:bg-gray-900">
         <Link className="w-fit col-span-1" to="/">
           <ChevronLeft className="w-12 fill-jubilateBlue-500 dark:fill-jubilateBlue-400 hover:fill-jubilateBlue-700 place-self-begin" />
         </Link>
@@ -79,7 +82,7 @@ function SongViewer() {
       </div>
 
       {song && (
-        <div className="flex flex-col gap-4 px-4 pt-4">
+        <div className="flex flex-col gap-4 p-4">
           <div className="flex gap-4 items-center">
             <h1 className="font-flame text-3xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
               {song.id}.

@@ -8,7 +8,7 @@ import {
 } from "@headlessui/react";
 import DynamicText from "./DynamicText";
 import { PlusIcon } from "../svg components/PlusIcon";
-import { SettingsContext } from "../SettingsContextProvider";
+import { SettingsContext } from "./SettingsContextProvider";
 import { useContext } from "react";
 import { MinusIcon } from "../svg components/MinusIcon";
 import { ResetIcon } from "../svg components/ResetIcon";
@@ -38,7 +38,11 @@ function SidePanel({
   }
 
   return (
-    <Dialog open={open} onClose={setOpen} className="relative z-10">
+    <Dialog
+      open={open}
+      onClose={setOpen}
+      className={`relative z-10 ${settings.darkMode ? "dark" : ""}`}
+    >
       <DialogBackdrop
         transition
         className="fixed inset-0 bg-jubilateBlue-300 bg-opacity-75 transition-opacity duration-500 ease-in-out data-[closed]:opacity-0"
@@ -160,6 +164,23 @@ function SidePanel({
                         });
                       }}
                       className="w-5 h-5 rounded-2xl accent-jubilateBlue-500 dark:accent-jubilateBlue-400"
+                    />
+                  </div>
+                  <div className="flex gap-4 items-center justify-between">
+                    <h1 className="font-flame text-2xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
+                      Pseudo
+                    </h1>
+                    <input
+                      id="username"
+                      type="text"
+                      onChange={(e) => {
+                        setSettings({
+                          ...settings,
+                          username: e.target.value,
+                        });
+                      }}
+                      value={settings.username}
+                      className="rounded-2xl px-4 accent-jubilateBlue-500 dark:accent-jubilateBlue-400"
                     />
                   </div>
                 </div>

@@ -5,10 +5,11 @@ import "./index.css";
 import { Index } from "./Index";
 import { SongViewer } from "./SongViewer";
 import { Login } from "./Login";
-import { AuthContextProvider } from "./AuthContextProvider";
+import { AuthContextProvider } from "./components/AuthContextProvider";
 import { Toaster } from "react-hot-toast";
-import { SettingsContextProvider } from "./SettingsContextProvider";
+import { SettingsContextProvider } from "./components/SettingsContextProvider";
 import { CornerMenu } from "./components/CornerMenu";
+import { LeaderContextProvider } from "./components/LeaderContext";
 
 const router = createBrowserRouter([
   {
@@ -29,10 +30,12 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <Toaster position="bottom-right" />
     <AuthContextProvider>
-      <SettingsContextProvider>
-        <RouterProvider router={router} />
-        <CornerMenu />
-      </SettingsContextProvider>
+      <LeaderContextProvider navigate={router.navigate}>
+        <SettingsContextProvider>
+          <RouterProvider router={router} />
+          <CornerMenu />
+        </SettingsContextProvider>
+      </LeaderContextProvider>
     </AuthContextProvider>
   </React.StrictMode>
 );

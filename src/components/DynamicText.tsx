@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { SettingsContext } from "../SettingsContextProvider";
+import { SettingsContext } from "./SettingsContextProvider";
 
 const fontSizeTailwind = [
   "text-xs",

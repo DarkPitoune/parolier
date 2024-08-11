@@ -4,7 +4,7 @@ import { Chord, Interval } from "tonal";
 export function transposeLine(chords: string, step: number) {
   const chordsList = chords.split(" ");
   const transposedChords = chordsList.map((chord) =>
-    Chord.transpose(chord, Interval.fromSemitones(step))
+    Chord.transpose(chord, Interval.fromSemitones(step)),
   );
   return transposedChords.join(" ");
 }
