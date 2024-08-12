@@ -68,14 +68,18 @@ function LeaderContextProvider({
 			});
 			navigate(`/songs/${payload.new.song}`);
 		};
-		supabase
-			.channel("leaders")
+		const channel = supabase.channel("leaders");
+		channel
 			.on(
+				// here, it may be better to listen to broadcast instead of postgres_changes.. i coded this wrong
 				"postgres_changes",
 				{ event: "UPDATE", schema: "public", table: "leaders" },
 				handleInserts,
 			)
 			.subscribe();
+		return () => {
+			supabase.removeChannel(channel);
+		};
 	}, [leader, navigate]);
 
 	return (
