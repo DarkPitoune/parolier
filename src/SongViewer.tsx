@@ -11,6 +11,7 @@ import { SidePanel } from "./components/SidePanel/SidePanel";
 import { addChorus } from "./utils/addChorus";
 import supabase from "./utils/supabase";
 import { transposeLine } from "./utils/tonalManipulation";
+import clsx from "clsx";
 
 function SongViewer() {
 	const { songId } = useParams();
@@ -19,7 +20,7 @@ function SongViewer() {
 	const [slideShow, setSlideShow] = useState(false);
 	const [open, setOpen] = useState(false);
 	const [settings] = useContext(SettingsContext);
-	const { setLeaderSong } = useLeader();
+	const { setLeaderSong, leader } = useLeader();
 
 	useEffect(() => {
 		supabase
@@ -52,7 +53,12 @@ function SongViewer() {
 				tonality={tonality}
 				setTonality={setTonality}
 			/>
-			<div className="flex justify-between items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky top-0 dark:bg-gray-900">
+			<div
+				className={clsx(
+					"flex justify-between items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky dark:bg-gray-900",
+					leader ? "top-6" : "top-0",
+				)}
+			>
 				<Link
 					className="bg-jubilateBlue-500 dark:bg-jubilateBlue-400 rounded-full hover:bg-jubilateBlue-700"
 					to="/"
