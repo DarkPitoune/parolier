@@ -1,39 +1,39 @@
 export interface Song {
-	title: string;
-	id: number;
-	strophes: Strophe[];
+  title: string;
+  id: number;
+  strophes: Strophe[];
 }
 
 export interface Strophe {
-	content: Line[];
-	type: "verse" | "chorus" | "bridge";
+  content: Line[];
+  type: "verse" | "chorus" | "bridge";
 }
 
 export interface Line {
-	text: string;
-	chords: string;
+  text: string;
+  chords: string;
 }
 
 export interface Settings {
-	fontSize: number; // 0-10
-	showChords: boolean;
-	addChorus: boolean;
-	darkMode: boolean;
-	username: string;
+  fontSize: number; // 0-10
+  showChords: boolean;
+  addChorus: boolean;
+  darkMode: boolean;
+  username: string;
 }
 export interface Tag {
-	id: number;
-	name: string;
-	svg: string;
-	color: string;
+  id: number;
+  name: string;
+  svg: string;
+  color: string;
 }
 
 export interface TaggedSong extends Song {
-	tags: Tag[];
+  tags: Tag[];
 }
 
 export interface Leader {
-	name: string;
-	song: number;
-	status: "leader" | "follower";
+  name: string;
+  song?: number;
+  status: "leader" | "follower";
 }

@@ -9,7 +9,6 @@ import { SongViewer } from "./SongViewer";
 import { AuthContextProvider } from "./components/AuthContextProvider";
 import { CornerMenu } from "./components/CornerMenu";
 import { LeaderContextProvider } from "./components/LeaderContext";
-import { SettingsContextProvider } from "./components/SettingsContext";
 
 const router = createBrowserRouter([
 	{
@@ -31,12 +30,10 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 		<Toaster position="bottom-right" />
 		<AuthContextProvider>
 			<LeaderContextProvider navigate={router.navigate}>
-				<SettingsContextProvider>
-					<main>
-						<RouterProvider router={router} />
-						<CornerMenu />
-					</main>
-				</SettingsContextProvider>
+				<main>
+					<RouterProvider router={router} />
+					<CornerMenu />
+				</main>
 			</LeaderContextProvider>
 		</AuthContextProvider>
 	</React.StrictMode>,

@@ -6,10 +6,16 @@ import {
 } from "@headlessui/react";
 import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
 import clsx from "clsx";
-import { useContext } from "react";
 import DynamicText from "../DynamicText";
-import { SettingsContext } from "../SettingsContext";
+import {
+	addChorusAtom,
+	darkModeAtom,
+	fontSizeAtom,
+	showChordsAtom,
+	usernameAtom,
+} from "../SettingsContext";
 import { ResetIcon } from "./ResetIcon";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 
 function SidePanel({
 	open,
@@ -22,13 +28,18 @@ function SidePanel({
 	tonality: number;
 	setTonality: (newT: number) => void;
 }) {
-	const [settings, setSettings] = useContext(SettingsContext);
+	const setFontSize = useSetAtom(fontSizeAtom);
+	const [showChords, setShowChords] = useAtom(showChordsAtom);
+	const [addChorus, setAddChorus] = useAtom(addChorusAtom);
+	const [username, setUsername] = useAtom(usernameAtom);
+	const darkMode = useAtomValue(darkModeAtom);
 
 	function handleFontChange(increment: number) {
-		if (!settings) return;
-		setSettings({
-			...settings,
-			fontSize: increment === 0 ? 2 : settings.fontSize + increment,
+		setFontSize((fontSize) => {
+			if (increment === 0) return 2;
+			if (fontSize + increment < 0) return 0;
+			if (fontSize + increment > 9) return 9;
+			return fontSize + increment;
 		});
 	}
 
@@ -36,7 +47,7 @@ function SidePanel({
 		<Dialog
 			open={open}
 			onClose={setOpen}
-			className={clsx("relative z-10", settings.darkMode && "dark")}
+			className={clsx("relative z-10", darkMode && "dark")}
 		>
 			<DialogBackdrop
 				transition
@@ -88,12 +99,9 @@ function SidePanel({
 									<input
 										id="chordsCheckbox"
 										type="checkbox"
-										checked={settings.showChords}
+										checked={showChords}
 										onChange={(e) => {
-											setSettings({
-												...settings,
-												showChords: e.target.checked,
-											});
+											setShowChords(e.target.checked);
 										}}
 										className="w-5 h-5 accent-jubilateBlue-500 dark:accent-jubilateBlue-400 rounded-2xl"
 									/>
@@ -140,30 +148,9 @@ function SidePanel({
 									<input
 										id="chordsCheckbox"
 										type="checkbox"
-										checked={settings.addChorus}
+										checked={addChorus}
 										onChange={(e) => {
-											setSettings({
-												...settings,
-												addChorus: e.target.checked,
-											});
-										}}
-										className="size-5 rounded-2xl accent-jubilateBlue-500 dark:accent-jubilateBlue-400"
-									/>
-								</div>
-
-								<div className="flex gap-4 items-baseline justify-between">
-									<h1 className="font-flame text-2xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
-										Mode Sombre
-									</h1>
-									<input
-										id="chordsCheckbox"
-										type="checkbox"
-										checked={settings.darkMode}
-										onChange={(e) => {
-											setSettings({
-												...settings,
-												darkMode: e.target.checked,
-											});
+											setAddChorus(e.target.checked);
 										}}
 										className="size-5 rounded-2xl accent-jubilateBlue-500 dark:accent-jubilateBlue-400"
 									/>
@@ -176,12 +163,9 @@ function SidePanel({
 										id="username"
 										type="text"
 										onChange={(e) => {
-											setSettings({
-												...settings,
-												username: e.target.value,
-											});
+											setUsername(e.target.value);
 										}}
-										value={settings.username}
+										value={username}
 										className="rounded-2xl px-4 accent-jubilateBlue-500 dark:accent-jubilateBlue-400"
 									/>
 								</div>

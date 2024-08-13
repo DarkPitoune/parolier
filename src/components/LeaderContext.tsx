@@ -9,7 +9,8 @@ import {
 } from "react";
 import type { Leader } from "../assets/types";
 import supabase from "../utils/supabase";
-import { SettingsContext } from "./SettingsContext";
+import { useAtomValue } from "jotai";
+import { usernameAtom } from "./SettingsContext";
 
 const LeaderContext = createContext<
 	[Leader | null, (newLeader: Leader | null) => void]
@@ -17,18 +18,16 @@ const LeaderContext = createContext<
 
 const useLeader = () => {
 	const [leader, setLeader] = useContext(LeaderContext);
-	const [settings] = useContext(SettingsContext);
+	const username = useAtomValue(usernameAtom);
 	const takeLead = async () =>
 		supabase
 			.from("leaders")
-			.upsert({ name: settings.username, song: 4 })
-			.then(() =>
-				setLeader({ name: settings.username, song: 4, status: "leader" }),
-			);
+			.upsert({ name: username })
+			.then(() => setLeader({ name: username, status: "leader" }));
 
 	const setLeaderSong = async (song: number) => {
 		if (!leader || leader.status === "follower" || leader.song === song) return;
-		await supabase.from("leaders").upsert({ name: settings.username, song });
+		await supabase.from("leaders").upsert({ name: username, song });
 		setLeader({ ...leader, song });
 	};
 
@@ -104,6 +103,3 @@ function LeaderContextProvider({
 }
 
 export { useLeader, LeaderContextProvider };
-// here
-// make it so that the leader changing pages update the state
-// then make it possible to follow someone

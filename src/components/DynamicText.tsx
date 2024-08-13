@@ -1,12 +1,11 @@
 import clsx from "clsx";
-import { useContext } from "react";
-import { SettingsContext } from "./SettingsContext";
+import { fontSizeAtom } from "./SettingsContext";
+import { useAtomValue } from "jotai";
 
 const fontSizeTailwind = [
 	"text-xs",
 	"text-sm",
 	"text-base",
-	"text-md",
 	"text-lg",
 	"text-xl",
 	"text-2xl",
@@ -22,15 +21,9 @@ type DynamicTextProps = {
 };
 
 function DynamicText({ text, className }: DynamicTextProps) {
-	const [settings] = useContext(SettingsContext);
+	const fontSize = useAtomValue(fontSizeAtom);
 
-	if (!settings) {
-		return <p>Loading...</p>;
-	}
-
-	const fontSizeClass = fontSizeTailwind[settings.fontSize];
-
-	return <p className={clsx(fontSizeClass, className)}>{text}</p>;
+	return <p className={clsx(fontSizeTailwind[fontSize], className)}>{text}</p>;
 }
 
 export default DynamicText;

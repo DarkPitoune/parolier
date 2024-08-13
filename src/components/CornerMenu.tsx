@@ -1,12 +1,15 @@
 import { ArrowPathIcon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import supabase from "../utils/supabase";
 import { FollowButton, TakeLeadButton } from "./LeaderButtons";
-import { SettingsContext } from "./SettingsContext";
+import { darkModeAtom } from "./SettingsContext";
+import { useAtom } from "jotai";
 
 export const CornerMenu = () => {
+	const [darkMode, setDarkMode] = useAtom(darkModeAtom);
+
 	const loadAllSongs = useCallback(() => {
 		const promise = supabase
 			.from("songs")
@@ -26,7 +29,6 @@ export const CornerMenu = () => {
 		});
 	}, []);
 
-	const [settings, setSettings] = useContext(SettingsContext);
 	const [isExpanded, setIsExpanded] = useState(false);
 	const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -81,17 +83,15 @@ export const CornerMenu = () => {
 				<TakeLeadButton isExpanded={isExpanded} />
 				<FollowButton isExpanded={isExpanded} />
 				<button
-					onClick={() =>
-						setSettings({ ...settings, darkMode: !settings.darkMode })
-					}
+					onClick={() => setDarkMode(!darkMode)}
 					type="button"
 					className={clsx(
 						"absolute ease-in-out z-1 size-12 rounded-full transition-all -z-10 flex items-center justify-center",
 						isExpanded ? "-top-[3.5rem] -right-[3.5rem]" : "right-2 top-2",
 					)}
-					style={{ backgroundColor: settings.darkMode ? "#D4A021" : "black" }}
+					style={{ backgroundColor: darkMode ? "#D4A021" : "black" }}
 				>
-					{settings.darkMode ? (
+					{darkMode ? (
 						<SunIcon color="white" className="size-8" />
 					) : (
 						<MoonIcon color="white" className="size-8" />
