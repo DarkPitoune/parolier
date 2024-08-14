@@ -1,17 +1,18 @@
 import { Bars3Icon, ChevronLeftIcon } from "@heroicons/react/16/solid";
 import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
-import { Fragment, useContext, useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { SlideShow } from "./SlideShow";
 import type { TaggedSong } from "./assets/types";
 import DynamicText from "./components/DynamicText";
 import { useLeader } from "./components/LeaderContext";
-import { SettingsContext } from "./components/SettingsContext";
 import { SidePanel } from "./components/SidePanel/SidePanel";
 import { addChorus } from "./utils/addChorus";
 import supabase from "./utils/supabase";
 import { transposeLine } from "./utils/tonalManipulation";
 import clsx from "clsx";
+import { useAtomValue } from "jotai";
+import { addChorusAtom, showChordsAtom } from "./components/SettingsContext";
 
 function SongViewer() {
 	const { songId } = useParams();
@@ -19,8 +20,9 @@ function SongViewer() {
 	const [song, setSong] = useState<TaggedSong>();
 	const [slideShow, setSlideShow] = useState(false);
 	const [open, setOpen] = useState(false);
-	const [settings] = useContext(SettingsContext);
 	const { setLeaderSong, leader } = useLeader();
+	const addChorusSetting = useAtomValue(addChorusAtom);
+	const showChords = useAtomValue(showChordsAtom);
 
 	useEffect(() => {
 		supabase
@@ -44,7 +46,7 @@ function SongViewer() {
 	}, []);
 
 	return slideShow ? (
-		<SlideShow strophes={addChorus(song?.strophes || [], settings.addChorus)} />
+		<SlideShow strophes={addChorus(song?.strophes || [], addChorusSetting)} />
 	) : (
 		<div className="bg-white dark:bg-gray-800">
 			<SidePanel
@@ -114,19 +116,19 @@ function SongViewer() {
 						))}
 					</div>
 					<div className="flex flex-col gap-4">
-						{addChorus(song.strophes, settings.addChorus).map((strophe) => (
+						{addChorus(song.strophes, addChorusSetting).map((strophe) => (
 							<div
 								data-type={strophe.type}
 								className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold grid gap-x-2"
 								style={{
-									gridTemplateColumns: settings.showChords ? "1fr 3fr" : "1fr",
+									gridTemplateColumns: showChords ? "1fr 3fr" : "1fr",
 								}}
 								key={strophe.content[0].text} // very likely to be the number of the strophe ("1. Par toi Seigneur..")
 							>
 								{strophe.content.map((line, lineIndex) => (
 									// biome-ignore lint/suspicious/noArrayIndexKey: in this case, it's not that bad
 									<Fragment key={lineIndex}>
-										{settings.showChords && (
+										{showChords && (
 											<DynamicText
 												className="bg-jubilateBlue-100 dark:bg-slate-600 outline-8 border-jubilateBlue-100 dark:border-slate-600 border-4 text-black dark:text-white"
 												text={transposeLine(line.chords, tonality)}
