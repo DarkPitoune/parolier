@@ -4,7 +4,6 @@ import { Fragment, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import type { TaggedSong } from "@/assets/types";
 import {
-	SlideShow,
 	useLeader,
 	SidePanel,
 	DynamicText,
@@ -21,7 +20,6 @@ function SongViewer() {
 	const { songId } = useParams();
 	const [tonality, setTonality] = useState(0);
 	const [song, setSong] = useState<TaggedSong>();
-	const [slideShow, setSlideShow] = useState(false);
 	const [open, setOpen] = useState(false);
 	const { setLeaderSong, leader } = useLeader();
 	const addChorusSetting = useAtomValue(addChorusAtom);
@@ -37,17 +35,7 @@ function SongViewer() {
 		setLeaderSong(Number(songId));
 	}, [songId]);
 
-	useEffect(() => {
-		const handleQuit = () => {
-			if (!document.fullscreenElement) setSlideShow(false);
-		};
-		document.addEventListener("fullscreenchange", handleQuit);
-		return () => document.removeEventListener("fullscreenchange", handleQuit);
-	}, []);
-
-	return slideShow ? (
-		<SlideShow strophes={addChorus(song?.strophes || [], addChorusSetting)} />
-	) : (
+	return (
 		<div className="bg-white dark:bg-gray-800">
 			<SidePanel
 				open={open}
@@ -69,16 +57,12 @@ function SongViewer() {
 				</Link>
 
 				<div className="flex items-center gap-4">
-					<button
+					<Link
 						className="rounded-full hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-3"
-						type="button"
-						onClick={() => {
-							setSlideShow(true);
-							document.body.requestFullscreen();
-						}}
+						to={`/slides/${song?.id}`}
 					>
 						<ComputerDesktopIcon className="size-6 fill-white" />
-					</button>
+					</Link>
 					<button
 						type="button"
 						onClick={() => {
@@ -116,32 +100,35 @@ function SongViewer() {
 						))}
 					</div>
 					<div className="flex flex-col gap-4">
-						{addChorus(song.strophes, addChorusSetting).map((strophe) => (
-							<div
-								data-type={strophe.type}
-								className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold grid gap-x-2"
-								style={{
-									gridTemplateColumns: showChords ? "1fr 3fr" : "1fr",
-								}}
-								key={strophe.content[0].text} // very likely to be the number of the strophe ("1. Par toi Seigneur..")
-							>
-								{strophe.content.map((line, lineIndex) => (
+						{addChorus(song.strophes, addChorusSetting).map(
+							(strophe, index) => (
+								<div
+									data-type={strophe.type}
+									className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold grid gap-x-2"
+									style={{
+										gridTemplateColumns: showChords ? "1fr 3fr" : "1fr",
+									}}
 									// biome-ignore lint/suspicious/noArrayIndexKey: in this case, it's not that bad
-									<Fragment key={lineIndex}>
-										{showChords && (
+									key={index + strophe.content[0].text} // very likely to be the number of the strophe ("1. Par toi Seigneur..")
+								>
+									{strophe.content.map((line, lineIndex) => (
+										// biome-ignore lint/suspicious/noArrayIndexKey: in this case, it's not that bad
+										<Fragment key={lineIndex}>
+											{showChords && (
+												<DynamicText
+													className="bg-jubilateBlue-100 dark:bg-slate-600 outline-8 border-jubilateBlue-100 dark:border-slate-600 border-4 text-black dark:text-white"
+													text={transposeLine(line.chords, tonality)}
+												/>
+											)}
 											<DynamicText
-												className="bg-jubilateBlue-100 dark:bg-slate-600 outline-8 border-jubilateBlue-100 dark:border-slate-600 border-4 text-black dark:text-white"
-												text={transposeLine(line.chords, tonality)}
+												className=" text-black dark:text-white"
+												text={line.text}
 											/>
-										)}
-										<DynamicText
-											className=" text-black dark:text-white"
-											text={line.text}
-										/>
-									</Fragment>
-								))}
-							</div>
-						))}
+										</Fragment>
+									))}
+								</div>
+							),
+						)}
 					</div>
 				</div>
 			)}

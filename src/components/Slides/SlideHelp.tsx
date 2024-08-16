@@ -1,6 +1,6 @@
 import { useSetAtom } from "jotai";
 import { useRef, useEffect } from "react";
-import { slideHelpAtom } from "../SettingsContext";
+import { slideHelpAtom } from "../Contexts/SettingsContext";
 
 const SlideHelp = () => {
 	const modalRef = useRef<HTMLDivElement>(null);
