@@ -63,6 +63,10 @@ const SlideHelp = () => {
 							<span className="font-bold">H</span> : Afficher cette aide
 						</li>
 					</ul>
+					<p className="text-gray-400 italic">
+						Pour afficher la croix Jubilate, naviguez vers n'importe quel numéro
+						non associé à un morceau (100, 999...)
+					</p>
 				</div>
 			</div>
 		</div>
