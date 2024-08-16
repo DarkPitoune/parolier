@@ -1,4 +1,4 @@
-import { atomWithStorage } from "jotai/utils";
+import { atomWithStorage, createJSONStorage } from "jotai/utils";
 
 export const fontSizeAtom = atomWithStorage("settings.fontSize", 2);
 export const showChordsAtom = atomWithStorage("settings.showChords", true);
@@ -9,5 +9,13 @@ export const usernameAtom = atomWithStorage(
 	navigator.platform,
 ); // deprecated but idc
 
-// True is : I want to see the slide help, that way we avoid the flash of the help
-export const slideHelpAtom = atomWithStorage("help.slide", false);
+// True is : I want to see the slide help
+export const slideHelpAtom = atomWithStorage(
+	"help.slide",
+	true,
+	// using a custom storage to avoid the flash of the help
+	createJSONStorage(() => localStorage),
+	{
+		getOnInit: true,
+	},
+);
