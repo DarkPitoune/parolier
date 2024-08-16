@@ -1,8 +1,8 @@
-import type { RealtimePostgresUpdatePayload } from "@supabase/supabase-js";
 import clsx from "clsx";
 import {
 	type ReactNode,
 	createContext,
+	useCallback,
 	useContext,
 	useEffect,
 	useState,
@@ -18,16 +18,19 @@ const LeaderContext = createContext<
 
 const useLeader = () => {
 	const [leader, setLeader] = useContext(LeaderContext);
+
 	const username = useAtomValue(usernameAtom);
-	const takeLead = async () =>
-		supabase
-			.from("leaders")
-			.upsert({ name: username })
-			.then(() => setLeader({ name: username, status: "leader" }));
+	const takeLead = () => setLeader({ name: username, status: "leader" });
 
 	const setLeaderSong = async (song: number) => {
 		if (!leader || leader.status === "follower" || leader.song === song) return;
-		await supabase.from("leaders").upsert({ name: username, song });
+		const channel = supabase.channel("leader");
+		channel.send({
+			type: "broadcast",
+			event: "update_song",
+			payload: { ...leader, song },
+		});
+		supabase.removeChannel(channel);
 		setLeader({ ...leader, song });
 	};
 
@@ -39,53 +42,50 @@ const useLeader = () => {
 };
 
 function LeaderContextProvider({
-	navigate,
 	children,
+	navigate,
 }: {
-	navigate: (to: string) => void;
 	children: ReactNode;
+	navigate: (to: string) => void;
 }) {
 	const [leader, setLeader] = useState<Leader | null>(null);
 
-	useEffect(() => {
-		const handleInserts = (
-			payload: RealtimePostgresUpdatePayload<{
-				name: string;
-				song: number;
-			}>,
-		) => {
+	const handleUpdateSong = useCallback(
+		(newLeader: Leader) => {
+			console.log("leader changed");
 			if (
-				!leader ||
-				leader.status === "leader" ||
-				payload.old.name !== leader.name
+				// reasons to not do anything
+				!leader || // I'm not following anyone
+				leader.name !== newLeader.name || // It's not the person I'm following
+				leader.status === "leader" || // I'm the leader
+				leader.song === newLeader.song // It's the same song
 			)
 				return;
-			setLeader({
-				name: payload.new.name,
-				song: payload.new.song,
-				status: "follower",
-			});
-			navigate(`/songs/${payload.new.song}`);
-		};
-		const channel = supabase.channel("leaders");
-		channel
-			.on(
-				// here, it may be better to listen to broadcast instead of postgres_changes.. i coded this wrong
-				"postgres_changes",
-				{ event: "UPDATE", schema: "public", table: "leaders" },
-				handleInserts,
-			)
+			setLeader({ ...newLeader, status: "follower" });
+			navigate(`/songs/${newLeader.song}`);
+		},
+		[leader, navigate],
+	);
+
+	useEffect(() => {
+		if (!leader) return;
+		const leaderRoom = supabase.channel("leader");
+		leaderRoom
+			.on("broadcast", { event: "update_song" }, ({ payload }) => {
+				handleUpdateSong(payload);
+			})
 			.subscribe();
+
 		return () => {
-			supabase.removeChannel(channel);
+			supabase.removeChannel(leaderRoom);
 		};
-	}, [leader, navigate]);
+	}, [leader, handleUpdateSong]);
 
 	return (
 		<LeaderContext.Provider value={[leader, setLeader]}>
 			<div
 				className={clsx(
-					"sticky top-0 right-0 left-0 bg-red-500 text-center transition-all",
+					"sticky top-0 right-0 left-0 bg-red-500 text-center transition-all overflow-hidden",
 					leader ? "h-6" : "h-0",
 				)}
 			>

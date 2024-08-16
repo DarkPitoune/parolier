@@ -34,6 +34,10 @@ const router = createBrowserRouter([
 		path: "/slides/:songId",
 		element: <SlideShow />,
 	},
+	{
+		path: "*",
+		element: <img src="https://http.dog/404.jpg" alt="404" />,
+	},
 ]);
 
 const App = () => {
@@ -42,19 +46,19 @@ const App = () => {
 		<>
 			<Toaster position="bottom-right" />
 			<AuthContextProvider>
-				<LeaderContextProvider navigate={router.navigate}>
-					<div
-						className={clsx(
-							darkMode ? "dark bg-gray-800" : "light",
-							"min-h-screen",
-						)}
-					>
+				<div
+					className={clsx(
+						darkMode ? "dark bg-gray-800" : "light",
+						"min-h-screen",
+					)}
+				>
+					<LeaderContextProvider navigate={router.navigate}>
 						<main>
 							<RouterProvider router={router} />
 							<CornerMenu navigate={router.navigate} />
 						</main>
-					</div>
-				</LeaderContextProvider>
+					</LeaderContextProvider>
+				</div>
 			</AuthContextProvider>
 		</>
 	);
