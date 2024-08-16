@@ -39,27 +39,29 @@ const router = createBrowserRouter([
 const App = () => {
 	const darkMode = useAtomValue(darkModeAtom);
 	return (
-		<AuthContextProvider>
-			<LeaderContextProvider navigate={router.navigate}>
-				<div
-					className={clsx(
-						darkMode ? "dark bg-gray-800" : "light",
-						"min-h-screen",
-					)}
-				>
-					<main>
-						<RouterProvider router={router} />
-						<CornerMenu />
-					</main>
-				</div>
-			</LeaderContextProvider>
-		</AuthContextProvider>
+		<>
+			<Toaster position="bottom-right" />
+			<AuthContextProvider>
+				<LeaderContextProvider navigate={router.navigate}>
+					<div
+						className={clsx(
+							darkMode ? "dark bg-gray-800" : "light",
+							"min-h-screen",
+						)}
+					>
+						<main>
+							<RouterProvider router={router} />
+							<CornerMenu navigate={router.navigate} />
+						</main>
+					</div>
+				</LeaderContextProvider>
+			</AuthContextProvider>
+		</>
 	);
 };
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 	<React.StrictMode>
-		<Toaster position="bottom-right" />
 		<App />
 	</React.StrictMode>,
 );

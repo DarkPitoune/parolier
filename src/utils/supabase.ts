@@ -5,3 +5,10 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default supabase;
+
+export const getSong = async (songId: string | undefined) =>
+	supabase
+		.from("songs")
+		.select("*, tags(name, id, svg, color)")
+		.eq("id", songId)
+		.single();

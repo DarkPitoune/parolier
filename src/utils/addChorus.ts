@@ -1,6 +1,6 @@
 import type { Strophe } from "@/assets/types";
 
-export const addChorus = (strophes: Strophe[], apply: boolean) => {
+export const addChorus = (strophes: Strophe[], apply = true) => {
 	if (!apply) return strophes;
 
 	// first, get the chorus

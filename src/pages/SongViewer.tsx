@@ -12,7 +12,7 @@ import {
 	showChordsAtom,
 } from "@/components";
 import { addChorus } from "@/utils/addChorus";
-import supabase from "@/utils/supabase";
+import { getSong } from "@/utils/supabase";
 import { transposeLine } from "@/utils/tonalManipulation";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
@@ -29,15 +29,11 @@ function SongViewer() {
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: adding setLeaderSong spams the backend
 	useEffect(() => {
-		supabase
-			.from("songs")
-			.select("*, tags(name, id, svg, color)")
-			.eq("id", songId)
-			.then(({ data }) => {
-				if (data && data.length > 0) {
-					setSong(data[0]);
-				}
-			});
+		getSong(songId).then(({ data }) => {
+			if (data) {
+				setSong(data);
+			}
+		});
 		setLeaderSong(Number(songId));
 	}, [songId]);
 

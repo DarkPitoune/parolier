@@ -6,8 +6,11 @@ import supabase from "@/utils/supabase";
 import { FollowButton, TakeLeadButton } from "./LeaderButtons";
 import { darkModeAtom } from "./SettingsContext";
 import { useAtom } from "jotai";
+import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
 
-export const CornerMenu = () => {
+export const CornerMenu = ({
+	navigate,
+}: { navigate: (to: string) => void }) => {
 	const [darkMode, setDarkMode] = useAtom(darkModeAtom);
 
 	const loadAllSongs = useCallback(() => {
@@ -70,6 +73,16 @@ export const CornerMenu = () => {
 				)}
 			>
 				<img src="/svg/Jubilate_Croix.svg" alt="logo" className="size-10" />
+				<button
+					onClick={() => navigate("/slides")}
+					type="button"
+					className={clsx(
+						"bg-jubilateBlue-500 absolute z-1 size-12 rounded-full transition-all -z-10 flex items-center justify-center",
+						isExpanded ? "-left-[3.5rem] -bottom-[3.5rem]" : "left-2 bottom-2",
+					)}
+				>
+					<ComputerDesktopIcon color="white" className="size-8" />
+				</button>
 				<button
 					onClick={loadAllSongs}
 					type="button"
