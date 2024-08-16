@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Strophe } from "./assets/types";
+import type { Strophe } from "@/assets/types";
 
 function SlideShow({ strophes }: { strophes: Strophe[] }) {
 	const [step, setStep] = useState(0);

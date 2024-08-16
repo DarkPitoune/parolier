@@ -26,4 +26,4 @@ function DynamicText({ text, className }: DynamicTextProps) {
 	return <p className={clsx(fontSizeTailwind[fontSize], className)}>{text}</p>;
 }
 
-export default DynamicText;
+export { DynamicText };

@@ -3,14 +3,14 @@ import * as ReactDOM from "react-dom/client";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import "./index.css";
 import { Toaster } from "react-hot-toast";
-import { Index } from "./Index";
-import { Login } from "./Login";
-import { SongViewer } from "./SongViewer";
-import { AuthContextProvider } from "./components/AuthContextProvider";
-import { CornerMenu } from "./components/CornerMenu";
-import { LeaderContextProvider } from "./components/LeaderContext";
+import { Index, Login, SongViewer, SlideShow } from "@/pages";
+import {
+	AuthContextProvider,
+	CornerMenu,
+	darkModeAtom,
+	LeaderContextProvider,
+} from "@/components";
 import { useAtomValue } from "jotai";
-import { darkModeAtom } from "./components/SettingsContext";
 import clsx from "clsx";
 
 const router = createBrowserRouter([
@@ -25,6 +25,14 @@ const router = createBrowserRouter([
 	{
 		path: "/songs/:songId",
 		element: <SongViewer />,
+	},
+	{
+		path: "/slides",
+		element: <SlideShow />,
+	},
+	{
+		path: "/slides/:songId",
+		element: <SlideShow />,
 	},
 ]);
 

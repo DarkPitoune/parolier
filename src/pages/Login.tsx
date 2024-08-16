@@ -1,8 +1,8 @@
 import { type FormEventHandler, useContext, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { AuthContext } from "./components/AuthContextProvider";
-import supabase from "./utils/supabase";
+import { AuthContext } from "@/components";
+import supabase from "@/utils/supabase";
 
 function Login() {
 	const [email, setEmail] = useState("");

@@ -6,14 +6,14 @@ import {
 } from "@headlessui/react";
 import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
 import clsx from "clsx";
-import DynamicText from "../DynamicText";
 import {
+	DynamicText,
 	addChorusAtom,
 	darkModeAtom,
 	fontSizeAtom,
 	showChordsAtom,
 	usernameAtom,
-} from "../SettingsContext";
+} from "@/components";
 import { ResetIcon } from "./ResetIcon";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 

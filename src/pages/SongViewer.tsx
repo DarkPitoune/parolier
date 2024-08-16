@@ -2,17 +2,20 @@ import { Bars3Icon, ChevronLeftIcon } from "@heroicons/react/16/solid";
 import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
 import { Fragment, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { SlideShow } from "./SlideShow";
-import type { TaggedSong } from "./assets/types";
-import DynamicText from "./components/DynamicText";
-import { useLeader } from "./components/LeaderContext";
-import { SidePanel } from "./components/SidePanel/SidePanel";
-import { addChorus } from "./utils/addChorus";
-import supabase from "./utils/supabase";
-import { transposeLine } from "./utils/tonalManipulation";
+import type { TaggedSong } from "@/assets/types";
+import {
+	SlideShow,
+	useLeader,
+	SidePanel,
+	DynamicText,
+	addChorusAtom,
+	showChordsAtom,
+} from "@/components";
+import { addChorus } from "@/utils/addChorus";
+import supabase from "@/utils/supabase";
+import { transposeLine } from "@/utils/tonalManipulation";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
-import { addChorusAtom, showChordsAtom } from "./components/SettingsContext";
 
 function SongViewer() {
 	const { songId } = useParams();

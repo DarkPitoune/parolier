@@ -9,10 +9,9 @@ import {
 	useState,
 } from "react";
 import { Link } from "react-router-dom";
-import type { Tag, TaggedSong } from "./assets/types";
-import DynamicText from "./components/DynamicText";
-import { useLeader } from "./components/LeaderContext";
-import supabase from "./utils/supabase";
+import type { Tag, TaggedSong } from "@/assets/types";
+import { useLeader, DynamicText } from "@/components";
+import supabase from "@/utils/supabase";
 
 function Index() {
 	const [songs, setSongs] = useState<Omit<TaggedSong, "strophes">[]>([]);

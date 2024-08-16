@@ -7,8 +7,8 @@ import {
 	useEffect,
 	useState,
 } from "react";
-import type { Leader } from "../assets/types";
-import supabase from "../utils/supabase";
+import type { Leader } from "@/assets/types";
+import supabase from "@/utils/supabase";
 import { useAtomValue } from "jotai";
 import { usernameAtom } from "./SettingsContext";
 

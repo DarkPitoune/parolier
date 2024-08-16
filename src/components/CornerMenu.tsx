@@ -2,7 +2,7 @@ import { ArrowPathIcon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import supabase from "../utils/supabase";
+import supabase from "@/utils/supabase";
 import { FollowButton, TakeLeadButton } from "./LeaderButtons";
 import { darkModeAtom } from "./SettingsContext";
 import { useAtom } from "jotai";
