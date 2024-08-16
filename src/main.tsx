@@ -9,6 +9,9 @@ import { SongViewer } from "./SongViewer";
 import { AuthContextProvider } from "./components/AuthContextProvider";
 import { CornerMenu } from "./components/CornerMenu";
 import { LeaderContextProvider } from "./components/LeaderContext";
+import { useAtomValue } from "jotai";
+import { darkModeAtom } from "./components/SettingsContext";
+import clsx from "clsx";
 
 const router = createBrowserRouter([
 	{
@@ -25,16 +28,30 @@ const router = createBrowserRouter([
 	},
 ]);
 
+const App = () => {
+	const darkMode = useAtomValue(darkModeAtom);
+	return (
+		<AuthContextProvider>
+			<LeaderContextProvider navigate={router.navigate}>
+				<div
+					className={clsx(
+						darkMode ? "dark bg-gray-800" : "light",
+						"min-h-screen",
+					)}
+				>
+					<main>
+						<RouterProvider router={router} />
+						<CornerMenu />
+					</main>
+				</div>
+			</LeaderContextProvider>
+		</AuthContextProvider>
+	);
+};
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 	<React.StrictMode>
 		<Toaster position="bottom-right" />
-		<AuthContextProvider>
-			<LeaderContextProvider navigate={router.navigate}>
-				<main>
-					<RouterProvider router={router} />
-					<CornerMenu />
-				</main>
-			</LeaderContextProvider>
-		</AuthContextProvider>
+		<App />
 	</React.StrictMode>,
 );
