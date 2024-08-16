@@ -24,6 +24,7 @@ function SongViewer() {
 	const addChorusSetting = useAtomValue(addChorusAtom);
 	const showChords = useAtomValue(showChordsAtom);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: adding setLeaderSong spams the backend
 	useEffect(() => {
 		supabase
 			.from("songs")
@@ -35,7 +36,7 @@ function SongViewer() {
 				}
 			});
 		setLeaderSong(Number(songId));
-	}, [songId, setLeaderSong]);
+	}, [songId]);
 
 	useEffect(() => {
 		const handleQuit = () => {
