@@ -166,7 +166,7 @@ function SidePanel({
 											setUsername(e.target.value);
 										}}
 										value={username}
-										className="rounded-2xl px-4 accent-jubilateBlue-500 dark:accent-jubilateBlue-400"
+										className="rounded-2xl px-4 accent-jubilateBlue-500 dark:accent-jubilateBlue-400 w-full"
 									/>
 								</div>
 							</div>

@@ -21,7 +21,7 @@ function Index() {
 	>([]);
 	const [tags, setTags] = useState<Tag[]>([]);
 	const [selectedTags, setSelectedTags] = useState<number[]>([]);
-	const [tagTabOpen, setTagTabOpen] = useState(true);
+	const [tagTabOpen, setTagTabOpen] = useState(false);
 	const fuse = useMemo(() => new Fuse(songs, { keys: ["title"] }), [songs]);
 	const { leader } = useLeader();
 
