@@ -19,6 +19,7 @@ export interface Settings {
   showChords: boolean;
   addChorus: boolean;
   darkMode: boolean;
+  username: string;
 }
 export interface Tag {
   id: number;
@@ -29,4 +30,10 @@ export interface Tag {
 
 export interface TaggedSong extends Song {
   tags: Tag[];
+}
+
+export interface Leader {
+  name: string;
+  song?: number;
+  status: "leader" | "follower";
 }
