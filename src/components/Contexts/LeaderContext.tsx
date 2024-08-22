@@ -5,12 +5,13 @@ import {
 	useCallback,
 	useContext,
 	useEffect,
+	useMemo,
 	useState,
 } from "react";
 import type { Leader } from "@/assets/types";
 import supabase from "@/utils/supabase";
 import { useAtomValue } from "jotai";
-import { usernameAtom } from "./SettingsContext";
+import { darkModeAtom, usernameAtom } from "./SettingsContext";
 
 const LeaderContext = createContext<
 	[Leader | null, (newLeader: Leader | null) => void]
@@ -35,10 +36,16 @@ const useLeader = () => {
 	};
 
 	const follow = async (name: string) => {
+		console.log("presence", supabase.channel("leader").presenceState());
 		setLeader({ status: "follower", name, song: 0 });
 	};
 
-	return { leader, takeLead, setLeaderSong, follow };
+	return {
+		leader,
+		takeLead,
+		setLeaderSong,
+		follow,
+	};
 };
 
 function LeaderContextProvider({
@@ -49,10 +56,11 @@ function LeaderContextProvider({
 	navigate: (to: string) => void;
 }) {
 	const [leader, setLeader] = useState<Leader | null>(null);
+	const username = useAtomValue(usernameAtom);
+	const darkMode = useAtomValue(darkModeAtom);
 
 	const handleUpdateSong = useCallback(
 		(newLeader: Leader) => {
-			console.log("leader changed");
 			if (
 				// reasons to not do anything
 				!leader || // I'm not following anyone
@@ -67,19 +75,47 @@ function LeaderContextProvider({
 		[leader, navigate],
 	);
 
+	const leaderRoom = useMemo(
+		() =>
+			supabase
+				.channel("leader", {
+					config: {
+						presence: {
+							key: username,
+						},
+					},
+				})
+				.on("broadcast", { event: "update_song" }, ({ payload }) => {
+					handleUpdateSong(payload);
+				})
+				.on("presence", { event: "sync" }, () => {
+					// const newState = leaderRoom.presenceState();
+					// console.log("status", Object.values(newState));
+					// const newAvailableLeaders = Object.values(newState)
+					// biome-ignore lint/suspicious/noExplicitAny: I know messages are Leaders
+					// 	.map(([leader]: any) => ({
+					// 		name: leader.name,
+					// 		status: leader.status,
+					// 		song: leader.song,
+					// 	}))
+					// 	.filter((leader) => leader.name !== username)
+					// 	.filter((leader) => leader.status);
+					// console.log("setting", newAvailableLeaders);
+				}),
+		[handleUpdateSong, username],
+	);
+
 	useEffect(() => {
 		if (!leader) return;
-		const leaderRoom = supabase.channel("leader");
-		leaderRoom
-			.on("broadcast", { event: "update_song" }, ({ payload }) => {
-				handleUpdateSong(payload);
-			})
-			.subscribe();
+		leaderRoom.subscribe(async (status) => {
+			if (status !== "SUBSCRIBED") return;
+			await leaderRoom.track({ name: username, status: leader.status });
+		});
 
 		return () => {
 			supabase.removeChannel(leaderRoom);
 		};
-	}, [leader, handleUpdateSong]);
+	}, [leader, leaderRoom, username]);
 
 	return (
 		<LeaderContext.Provider value={[leader, setLeader]}>
@@ -87,6 +123,7 @@ function LeaderContextProvider({
 				className={clsx(
 					"sticky top-0 right-0 left-0 bg-red-500 text-center transition-all overflow-hidden",
 					leader ? "h-6" : "h-0",
+					darkMode ? "text-black" : "text-white",
 				)}
 			>
 				{leader?.status === "leader" ? (
