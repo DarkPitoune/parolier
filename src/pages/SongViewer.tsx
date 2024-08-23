@@ -11,7 +11,7 @@ import {
 	showChordsAtom,
 } from "@/components";
 import { addChorus } from "@/utils/addChorus";
-import { getSong } from "@/utils/supabase";
+import { analyticsSong, getSong } from "@/utils/supabase";
 import { transposeLine } from "@/utils/tonalManipulation";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
@@ -28,11 +28,15 @@ function SongViewer() {
 	// biome-ignore lint/correctness/useExhaustiveDependencies: adding setLeaderSong spams the backend
 	useEffect(() => {
 		getSong(songId).then(({ data }) => {
-			if (data) {
-				setSong(data);
-			}
+			if (data) setSong(data);
 		});
 		setLeaderSong(Number(songId));
+		let timeout: NodeJS.Timeout; // send an analytics only on prod afer 30sec
+		if (songId && import.meta.env.MODE === "production")
+			timeout = setTimeout(() => {
+				analyticsSong(songId);
+			}, 30_000);
+		return () => clearTimeout(timeout);
 	}, [songId]);
 
 	return (

@@ -77,7 +77,7 @@ export const CornerMenu = ({
 					onClick={() => navigate("/slides")}
 					type="button"
 					className={clsx(
-						"bg-jubilateBlue-500 absolute z-1 size-12 rounded-full transition-all -z-10 flex items-center justify-center",
+						"bg-jubilateBlue-500 absolute z-1 size-12 rounded-full transition-all -z-10 hidden items-center justify-center sm:flex",
 						isExpanded ? "-left-[3.5rem] -bottom-[3.5rem]" : "left-2 bottom-2",
 					)}
 				>

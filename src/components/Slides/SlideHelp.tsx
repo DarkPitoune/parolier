@@ -44,11 +44,7 @@ const SlideHelp = () => {
 							<span className="font-bold">F</span> : Passer en plein écran
 						</li>
 						<li>
-							<span className="font-bold">Flèche gauche</span> : Slide
-							précédente (si elle existe)
-						</li>
-						<li>
-							<span className="font-bold">Flèche droite</span> : Slide suivante
+							<span className="font-bold">⬅️/➡️</span> : Slide précédente/suivante
 							(si elle existe)
 						</li>
 						<li>
@@ -60,13 +56,12 @@ const SlideHelp = () => {
 							vers un morceau avec son numéro
 						</li>
 						<li>
-							<span className="font-bold">H</span> : Afficher cette aide
+							<span className="font-bold">H</span> : Afficher/Cacher cette aide
+						</li>
+						<li>
+							<span className="font-bold">T</span> : Afficher la croix Jubilate
 						</li>
 					</ul>
-					<p className="text-gray-400 italic">
-						Pour afficher la croix Jubilate, naviguez vers n'importe quel numéro
-						non associé à un morceau (100, 999...)
-					</p>
 				</div>
 			</div>
 		</div>

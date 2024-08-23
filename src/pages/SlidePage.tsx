@@ -19,10 +19,20 @@ const SlideShow = () => {
 	const [slideHelp, setSlideHelp] = useAtom(slideHelpAtom);
 
 	useEffect(() => {
-		getSong(songId).then(({ data }) => {
-			if (data) setStrophes(addChorus(data.strophes));
-			else setStrophes([]);
-		});
+		if (!songId) setStrophes([]);
+		else
+			getSong(songId).then(({ data }) => {
+				if (data) setStrophes(addChorus(data.strophes));
+				else {
+					setStrophes([]);
+					toast.error("Morceau non trouvé !", {
+						style: {
+							backgroundColor: "black",
+							color: "white",
+						},
+					});
+				}
+			});
 	}, [songId]);
 
 	useEffect(() => {
@@ -39,7 +49,9 @@ const SlideShow = () => {
 		const handleKey = (e: KeyboardEvent) => {
 			if (e.key === "f" || e.key === "F")
 				return document.body.requestFullscreen();
-			if (e.key === "h" || e.key === "H") setSlideHelp(true);
+			if (e.key === "h" || e.key === "H") setSlideHelp((v) => !v);
+			if (e.key === "t" || e.key === "T") navigate("/slides/");
+			if (e.key === "Escape" && !document.fullscreenElement) navigate("/");
 		};
 		document.addEventListener("keydown", handleKey);
 

@@ -12,3 +12,6 @@ export const getSong = async (songId: string | undefined) =>
 		.select("*, tags(name, id, svg, color)")
 		.eq("id", songId)
 		.single();
+
+export const analyticsSong = async (songId: string) =>
+	supabase.from("analytics").insert([{ songId }]);
