@@ -63,6 +63,7 @@ function SongViewer() {
 				<div className="flex items-center gap-4">
 					<Link
 						className="rounded-full hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-3"
+						onClick={() => document.body.requestFullscreen()}
 						to={`/slides/${song?.id}`}
 					>
 						<ComputerDesktopIcon className="size-6 fill-white" />

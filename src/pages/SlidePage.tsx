@@ -36,19 +36,7 @@ const SlideShow = () => {
 	}, [songId]);
 
 	useEffect(() => {
-		if (!document.fullscreenElement)
-			toast("Appuyez sur la touche F pour passer en plein écran", {
-				style: {
-					backgroundColor: "black",
-					color: "white",
-				},
-			});
-	}, []);
-
-	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {
-			if (e.key === "f" || e.key === "F")
-				return document.body.requestFullscreen();
 			if (e.key === "h" || e.key === "H") setSlideHelp((v) => !v);
 			if (e.key === "t" || e.key === "T") navigate("/slides/");
 			if (e.key === "Escape" && !document.fullscreenElement) navigate("/");

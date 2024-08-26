@@ -74,7 +74,10 @@ export const CornerMenu = ({
 			>
 				<img src="/svg/Jubilate_Croix.svg" alt="logo" className="size-10" />
 				<button
-					onClick={() => navigate("/slides")}
+					onClick={() => {
+						document.body.requestFullscreen();
+						navigate("/slides");
+					}}
 					type="button"
 					className={clsx(
 						"bg-jubilateBlue-500 absolute z-1 size-12 rounded-full transition-all -z-10 hidden items-center justify-center sm:flex",

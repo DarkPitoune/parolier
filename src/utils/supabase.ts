@@ -14,4 +14,4 @@ export const getSong = async (songId: string | undefined) =>
 		.single();
 
 export const analyticsSong = async (songId: string) =>
-	supabase.from("analytics").insert([{ songId }]);
+	supabase.from("analytics").insert({ songId });

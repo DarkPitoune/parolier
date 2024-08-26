@@ -41,9 +41,6 @@ const SlideHelp = () => {
 					</p>
 					<ul>
 						<li>
-							<span className="font-bold">F</span> : Passer en plein écran
-						</li>
-						<li>
 							<span className="font-bold">⬅️/➡️</span> : Slide précédente/suivante
 							(si elle existe)
 						</li>
