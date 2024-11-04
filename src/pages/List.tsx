@@ -10,7 +10,7 @@ import {
 } from "react";
 import { Link } from "react-router-dom";
 import type { Tag, TaggedSong } from "@/assets/types";
-import { useLeader, DynamicText } from "@/components";
+import { useLeader, DynamicText, SidePanel } from "@/components";
 import supabase from "@/utils/supabase";
 
 function Index() {
@@ -97,6 +97,7 @@ function Index() {
 
   return (
     <div className="bg-white dark:bg-gray-800">
+      <SidePanel tonality={undefined} setTonality={undefined} />
       <div
         className={clsx(
           "transition-all sticky bg-white dark:bg-gray-800",

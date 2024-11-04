@@ -6,6 +6,7 @@ export {
   addChorusAtom,
   showChordsAtom,
   slideHelpAtom,
+  settingsOpenedAtom,
 } from "./Contexts/SettingsContext";
 export {
   AuthContextProvider,
