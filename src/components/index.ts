@@ -1,16 +1,16 @@
 export { DynamicText } from "./DynamicText";
 export {
-  fontSizeAtom,
-  darkModeAtom,
-  usernameAtom,
-  addChorusAtom,
-  showChordsAtom,
-  slideHelpAtom,
-  settingsOpenedAtom,
+	fontSizeAtom,
+	darkModeAtom,
+	usernameAtom,
+	addChorusAtom,
+	showChordsAtom,
+	slideHelpAtom,
+	settingsOpenedAtom,
 } from "./Contexts/SettingsContext";
 export {
-  AuthContextProvider,
-  AuthContext,
+	AuthContextProvider,
+	AuthContext,
 } from "./Contexts/AuthContextProvider";
 export { CornerMenu } from "./CornerMenu";
 export { LeaderContextProvider, useLeader } from "./Contexts/LeaderContext";
