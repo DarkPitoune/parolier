@@ -3,17 +3,12 @@ import clsx from "clsx";
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import supabase from "@/utils/supabase";
-import { FollowButton, TakeLeadButton } from "./Contexts/LeaderButtons";
+import { FollowButton } from "./Contexts/LeaderButtons";
 import { darkModeAtom } from "./Contexts/SettingsContext";
 import { useAtom } from "jotai";
-import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
 import { SettingsButton } from "./SettingsButton";
 
-export const CornerMenu = ({
-	navigate,
-}: {
-	navigate: (to: string) => void;
-}) => {
+export const CornerMenu = () => {
 	const [darkMode, setDarkMode] = useAtom(darkModeAtom);
 
 	const loadAllSongs = useCallback(() => {
@@ -88,13 +83,12 @@ export const CornerMenu = ({
 					<ArrowPathIcon color="white" className="size-8" />
 				</button>
 				<SettingsButton isExpanded={isExpanded} />
-				<FollowButton isExpanded={isExpanded} />
 				<button
 					onClick={() => setDarkMode(!darkMode)}
 					type="button"
 					className={clsx(
 						"absolute bg-yellow-200 ease-in-out z-1 size-12 rounded-full transition-all -z-10 flex items-center justify-center",
-						isExpanded ? "-top-[3.5rem] -right-[3.5rem]" : "right-2 top-2",
+						isExpanded ? "-top-20 " : "left-2 top-2",
 					)}
 					style={{ backgroundColor: darkMode ? "#fde047" : "#0f172a" }}
 				>
@@ -104,6 +98,8 @@ export const CornerMenu = ({
 						<MoonIcon color="white" className="size-8" />
 					)}
 				</button>
+				{/* Hidden until functionnality completed */}
+				<FollowButton isExpanded={false} />
 			</div>
 		</div>
 	);

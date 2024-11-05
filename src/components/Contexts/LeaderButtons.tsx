@@ -70,7 +70,7 @@ const FollowButton = ({ isExpanded }: { isExpanded: boolean }) => {
 				type="button"
 				className={clsx(
 					"absolute ease-in-out z-1 size-12 rounded-full transition-all -z-10 flex items-center justify-center bg-jubilateRed",
-					isExpanded ? "-top-20" : "left-2 top-2",
+					isExpanded ? "-top-[3.5rem] -right-[3.5rem]" : "right-2 top-2",
 				)}
 			>
 				<UsersIcon color="white" className="size-8" />

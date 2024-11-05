@@ -127,7 +127,7 @@ function LeaderContextProvider({
 				)}
 			>
 				{leader?.status === "leader" ? (
-					<div className="font-semibold p-1">Vous partagez votre session</div>
+					<div className="font-semibold">Vous partagez votre session</div>
 				) : (
 					<div>
 						Vous suivez <span className="font-semibold">{leader?.name}</span>

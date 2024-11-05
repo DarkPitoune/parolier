@@ -45,10 +45,13 @@ function SidePanel({
 	return (
 		<Dialog
 			open={open}
-			onClose={setOpen}
+			onClose={() => setOpen(false)}
 			className={clsx("relative z-10", darkMode && "dark")}
 		>
-			<DialogBackdrop className="fixed inset-0 bg-jubilateBlue-300 bg-opacity-60 transition-opacity duration-300 ease-in-out data-[closed]:opacity-0" />
+			<DialogBackdrop
+				transition
+				className="fixed inset-0 bg-jubilateBlue-300 bg-opacity-60 transition duration-300 ease-in-out data-[closed]:opacity-0"
+			/>
 
 			<div className="fixed inset-0 overflow-hidden">
 				<div className="absolute inset-0 overflow-hidden">
@@ -166,8 +169,9 @@ function SidePanel({
 									/>
 								</div>
 
+								{/* Hidden until functionnality completed */}
 								<div
-									className="flex flex-col gap-4 fixed bottom-6"
+									className="flex-col gap-4 fixed bottom-6 hidden"
 									aria-label="streaming choice"
 								>
 									<div className="flex md:gap-4 gap-2 items-baseline justify-between">
