@@ -121,7 +121,7 @@ function LeaderContextProvider({
 		<LeaderContext.Provider value={[leader, setLeader]}>
 			<div
 				className={clsx(
-					"sticky top-0 right-0 left-0 bg-red-500 text-center transition-all overflow-hidden",
+					"sticky top-0 right-0 left-0 bg-jubilateRed text-center transition-all overflow-hidden",
 					leader ? "h-6" : "h-0",
 					darkMode ? "text-black" : "text-white",
 				)}

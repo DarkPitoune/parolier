@@ -8,6 +8,11 @@ export const usernameAtom = atomWithStorage(
 	"settings.username",
 	navigator.platform,
 ); // deprecated but idc
+export const settingsOpenedAtom = atomWithStorage(
+	"settings.settingsOpened",
+	false,
+);
+export const tonalityAtom = atomWithStorage("settings.tonality", 0);
 
 // True is : I want to see the slide help
 export const slideHelpAtom = atomWithStorage(

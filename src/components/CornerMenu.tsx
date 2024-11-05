@@ -3,14 +3,12 @@ import clsx from "clsx";
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import supabase from "@/utils/supabase";
-import { FollowButton, TakeLeadButton } from "./Contexts/LeaderButtons";
+import { FollowButton } from "./Contexts/LeaderButtons";
 import { darkModeAtom } from "./Contexts/SettingsContext";
 import { useAtom } from "jotai";
-import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
+import { SettingsButton } from "./SettingsButton";
 
-export const CornerMenu = ({
-	navigate,
-}: { navigate: (to: string) => void }) => {
+export const CornerMenu = () => {
 	const [darkMode, setDarkMode] = useAtom(darkModeAtom);
 
 	const loadAllSongs = useCallback(() => {
@@ -73,39 +71,26 @@ export const CornerMenu = ({
 				)}
 			>
 				<img src="/svg/Jubilate_Croix.svg" alt="logo" className="size-10" />
-				<button
-					onClick={() => {
-						document.body.requestFullscreen();
-						navigate("/slides");
-					}}
-					type="button"
-					className={clsx(
-						"bg-jubilateBlue-500 absolute z-1 size-12 rounded-full transition-all -z-10 hidden items-center justify-center sm:flex",
-						isExpanded ? "-left-[3.5rem] -bottom-[3.5rem]" : "left-2 bottom-2",
-					)}
-				>
-					<ComputerDesktopIcon color="white" className="size-8" />
-				</button>
+
 				<button
 					onClick={loadAllSongs}
 					type="button"
 					className={clsx(
-						"bg-green-500 absolute top-2 z-1 size-12 rounded-full transition-all -z-10 flex items-center justify-center",
+						"bg-jubilateGreen absolute top-2 z-1 size-12 rounded-full transition-all -z-10 flex items-center justify-center",
 						isExpanded ? "-left-20" : "left-2",
 					)}
 				>
 					<ArrowPathIcon color="white" className="size-8" />
 				</button>
-				<TakeLeadButton isExpanded={isExpanded} />
-				<FollowButton isExpanded={isExpanded} />
+				<SettingsButton isExpanded={isExpanded} />
 				<button
 					onClick={() => setDarkMode(!darkMode)}
 					type="button"
 					className={clsx(
-						"absolute ease-in-out z-1 size-12 rounded-full transition-all -z-10 flex items-center justify-center",
-						isExpanded ? "-top-[3.5rem] -right-[3.5rem]" : "right-2 top-2",
+						"absolute bg-yellow-200 ease-in-out z-1 size-12 rounded-full transition-all -z-10 flex items-center justify-center",
+						isExpanded ? "-top-20 " : "left-2 top-2",
 					)}
-					style={{ backgroundColor: darkMode ? "#D4A021" : "black" }}
+					style={{ backgroundColor: darkMode ? "#fde047" : "#0f172a" }}
 				>
 					{darkMode ? (
 						<SunIcon color="white" className="size-8" />
@@ -113,6 +98,8 @@ export const CornerMenu = ({
 						<MoonIcon color="white" className="size-8" />
 					)}
 				</button>
+				{/* Hidden until functionnality completed */}
+				<FollowButton isExpanded={false} />
 			</div>
 		</div>
 	);
