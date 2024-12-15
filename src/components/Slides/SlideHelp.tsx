@@ -1,5 +1,5 @@
 import { useSetAtom } from "jotai";
-import { useRef, useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { slideHelpAtom } from "../Contexts/SettingsContext";
 
 const SlideHelp = () => {

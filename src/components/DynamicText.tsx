@@ -1,6 +1,6 @@
 import clsx from "clsx";
-import { fontSizeAtom } from "./Contexts/SettingsContext";
 import { useAtomValue } from "jotai";
+import { fontSizeAtom } from "./Contexts/SettingsContext";
 
 const fontSizeTailwind = [
 	"text-xs",

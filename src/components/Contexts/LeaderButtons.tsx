@@ -1,16 +1,16 @@
-import { NoSymbolIcon, UsersIcon } from "@heroicons/react/24/outline";
-import { RssIcon } from "@heroicons/react/24/solid";
-import clsx from "clsx";
-import { useLeader } from "./LeaderContext";
 import {
 	Description,
 	Dialog,
 	DialogPanel,
 	DialogTitle,
 } from "@headlessui/react";
-import { useState } from "react";
-import { darkModeAtom } from "./SettingsContext";
+import { NoSymbolIcon, UsersIcon } from "@heroicons/react/24/outline";
+import { RssIcon } from "@heroicons/react/24/solid";
+import clsx from "clsx";
 import { useAtomValue } from "jotai";
+import { useState } from "react";
+import { useLeader } from "./LeaderContext";
+import { darkModeAtom } from "./SettingsContext";
 
 const TakeLeadButton = () => {
 	const { takeLead } = useLeader();

@@ -1,4 +1,7 @@
+import type { Leader } from "@/assets/types";
+import supabase from "@/utils/supabase";
 import clsx from "clsx";
+import { useAtomValue } from "jotai";
 import {
 	type ReactNode,
 	createContext,
@@ -8,9 +11,6 @@ import {
 	useMemo,
 	useState,
 } from "react";
-import type { Leader } from "@/assets/types";
-import supabase from "@/utils/supabase";
-import { useAtomValue } from "jotai";
 import { darkModeAtom, usernameAtom } from "./SettingsContext";
 
 const LeaderContext = createContext<

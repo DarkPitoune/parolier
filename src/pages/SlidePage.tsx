@@ -2,8 +2,8 @@ import type { Strophe } from "@/assets/types";
 import {
 	SlideFinder,
 	SlideHelp,
-	slideHelpAtom,
 	SlideViewer,
+	slideHelpAtom,
 } from "@/components";
 import { addChorus } from "@/utils/addChorus";
 import { getSong } from "@/utils/supabase";

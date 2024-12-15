@@ -30,6 +30,19 @@ const SlideFinder = () => {
 		return () => document.removeEventListener("keydown", handleKey);
 	}, []);
 
+	/**
+	 * type="number" does not properly filter non-digit characters
+	 * this filters + keeps only the first 3 digits
+	 */
+	const handleNewValue = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const onlyNumbers = e.target.value.replace(/\D/g, "");
+			const only3firstDigits = onlyNumbers.slice(0, 3);
+			setInputValue(only3firstDigits);
+		},
+		[],
+	);
+
 	return (
 		<div
 			className={clsx(
@@ -39,9 +52,8 @@ const SlideFinder = () => {
 		>
 			<input
 				ref={inputRef}
-				type="number"
 				value={inputValue}
-				onChange={(e) => setInputValue(e.target.value.slice(0, 3))}
+				onChange={handleNewValue}
 				onKeyDown={handleInput}
 				className="rounded-full bg-gray-700 px-2 text-white outline-none w-11"
 				onFocus={() => setInputVisible(true)}

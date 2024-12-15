@@ -1,11 +1,11 @@
+import supabase from "@/utils/supabase";
 import { ArrowPathIcon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
+import { useAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import supabase from "@/utils/supabase";
 import { FollowButton } from "./Contexts/LeaderButtons";
 import { darkModeAtom } from "./Contexts/SettingsContext";
-import { useAtom } from "jotai";
 import { SettingsButton } from "./SettingsButton";
 
 export const CornerMenu = () => {

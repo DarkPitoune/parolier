@@ -1,6 +1,6 @@
+import supabase from "@/utils/supabase";
 import type { User } from "@supabase/supabase-js";
 import { type ReactNode, createContext, useEffect, useState } from "react";
-import supabase from "@/utils/supabase";
 
 const AuthContext = createContext<[User | null, () => void]>([null, () => {}]);
 

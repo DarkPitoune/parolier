@@ -1,12 +1,4 @@
 import {
-	Dialog,
-	DialogBackdrop,
-	DialogPanel,
-	DialogTitle,
-} from "@headlessui/react";
-import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
-import clsx from "clsx";
-import {
 	DynamicText,
 	addChorusAtom,
 	darkModeAtom,
@@ -15,9 +7,17 @@ import {
 	showChordsAtom,
 	usernameAtom,
 } from "@/components";
-import { ResetIcon } from "./ResetIcon";
+import {
+	Dialog,
+	DialogBackdrop,
+	DialogPanel,
+	DialogTitle,
+} from "@headlessui/react";
+import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
+import clsx from "clsx";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { DropLeadButton, TakeLeadButton } from "../Contexts/LeaderButtons";
+import { ResetIcon } from "./ResetIcon";
 
 function SidePanel({
 	tonality,
