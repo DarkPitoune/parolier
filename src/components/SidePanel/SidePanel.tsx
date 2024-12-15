@@ -23,8 +23,8 @@ function SidePanel({
 	tonality,
 	setTonality,
 }: {
-	tonality: number | undefined;
-	setTonality: ((newT: number) => void) | undefined;
+	tonality?: number;
+	setTonality?: (newT: number) => void;
 }) {
 	const setFontSize = useSetAtom(fontSizeAtom);
 	const [showChords, setShowChords] = useAtom(showChordsAtom);
@@ -111,7 +111,7 @@ function SidePanel({
 										className="w-5 h-5 accent-jubilateBlue-500 dark:accent-jubilateBlue-400 rounded-2xl"
 									/>
 								</div>
-								{tonality !== undefined && setTonality !== undefined && (
+								{tonality && setTonality && (
 									<div
 										className="flex flex-col gap-2"
 										aria-label="tonality choice"

@@ -55,7 +55,7 @@ const App = () => {
 					<LeaderContextProvider navigate={router.navigate}>
 						<main>
 							<RouterProvider router={router} />
-							<CornerMenu navigate={router.navigate} />
+							<CornerMenu />
 						</main>
 					</LeaderContextProvider>
 				</div>
