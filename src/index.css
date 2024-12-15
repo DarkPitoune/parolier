@@ -38,6 +38,13 @@ body {
   min-height: 100vh;
 }
 
+.dark {
+  background-color: #1f2937;
+}
+.light {
+  background-color: #ffffff;
+}
+
 main {
   max-width: 1440px;
   margin: 0 auto;

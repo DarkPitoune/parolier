@@ -483,7 +483,7 @@ const manifest: Partial<VitePWAOptions> = {
 		runtimeCaching: [
 			{
 				urlPattern: ({ url }) => url.href.includes("/rest/v1/"), // Match Supabase REST API calls
-				handler: "CacheFirst",
+				handler: "NetworkFirst",
 				options: {
 					cacheName: "supabase-api-cache",
 					expiration: {
