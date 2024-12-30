@@ -100,15 +100,17 @@ function Index() {
 	};
 
 	const askNewSong = () => {
-		const promise = supabase
-			.from("song_requests")
-			.insert({ title: searchValue })
-			.then() as Promise<void>;
-		toast.promise(promise, {
-			loading: "Chargement...",
-			success: "Chant demandé !",
-			error: "Erreur !",
-		});
+		if (window.confirm(`Voulez-vous vraiment demander l'ajout de "${searchValue}" ?`)) {
+			const promise = supabase
+				.from("song_requests")
+				.insert({ title: searchValue })
+				.then() as Promise<void>;
+			toast.promise(promise, {
+				loading: "Chargement...",
+				success: "Chant demandé !",
+				error: "Erreur !",
+			});
+		}
 	};
 
 	return (
