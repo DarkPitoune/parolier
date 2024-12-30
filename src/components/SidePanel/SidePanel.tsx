@@ -111,7 +111,7 @@ function SidePanel({
 										className="w-5 h-5 accent-jubilateBlue-500 dark:accent-jubilateBlue-400 rounded-2xl"
 									/>
 								</div>
-								{tonality && setTonality && (
+								{tonality !== undefined && setTonality && (
 									<div
 										className="flex flex-col gap-2"
 										aria-label="tonality choice"
