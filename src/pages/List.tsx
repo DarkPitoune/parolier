@@ -210,7 +210,7 @@ function Index() {
 
 				{searchValue && (
 					<button
-						className="px-2 py-4 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 flex justify-center text-black dark:text-white w-full"
+						className="px-2 py-4 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 text-black dark:text-white w-full"
 						onClick={askNewSong}
 						type="button"
 					>
