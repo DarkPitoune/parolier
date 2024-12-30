@@ -11,6 +11,7 @@ import {
 	useMemo,
 	useState,
 } from "react";
+import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 
 function Index() {
@@ -70,8 +71,11 @@ function Index() {
 		};
 	}, []);
 
+	const [searchValue, setSearchValue] = useState("");
+
 	const search: ChangeEventHandler<HTMLInputElement> = useCallback(
 		(event) => {
+			setSearchValue(event.target.value);
 			if (event.target.value.length === 0) setFilteredSongs(songs);
 			else {
 				window.scrollTo(0, 0);
@@ -93,6 +97,18 @@ function Index() {
 	const isCorrectTag = (song: Omit<TaggedSong, "strophes">) => {
 		if (selectedTags.length === 0) return true;
 		return song.tags.some(({ id }) => selectedTags.includes(id));
+	};
+
+	const askNewSong = () => {
+		const promise = supabase
+			.from("song_requests")
+			.insert({ title: searchValue })
+			.then() as Promise<void>;
+		toast.promise(promise, {
+			loading: "Chargement...",
+			success: "Chant demandé !",
+			error: "Erreur !",
+		});
 	};
 
 	return (
@@ -191,6 +207,16 @@ function Index() {
 						</div>
 					</Link>
 				))}
+
+				{searchValue && (
+					<button
+						className="px-2 py-4 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 flex justify-center text-black dark:text-white w-full"
+						onClick={askNewSong}
+						type="button"
+					>
+						Demander l'ajout de <b>"{searchValue}"</b> dans la liste
+					</button>
+				)}
 			</div>
 		</div>
 	);
