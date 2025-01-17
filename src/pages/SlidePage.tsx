@@ -6,11 +6,24 @@ import {
 	slideHelpAtom,
 } from "@/components";
 import { addChorus } from "@/utils/addChorus";
-import { getSong } from "@/utils/supabase";
+import supabase from "@/utils/supabase";
+import type { QueryData } from "@supabase/supabase-js";
 import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
+
+// region Supabase Queries
+
+const songQuery = (songId: number) =>
+	supabase
+		.from("songs")
+		.select("*, tags(name, id, svg, color)")
+		.eq("id", songId)
+		.single();
+type Song = QueryData<ReturnType<typeof songQuery>>;
+
+// region React Component
 
 const SlideShow = () => {
 	const { songId } = useParams();
@@ -21,8 +34,8 @@ const SlideShow = () => {
 	useEffect(() => {
 		if (!songId) setStrophes([]);
 		else
-			getSong(songId).then(({ data }) => {
-				if (data) setStrophes(addChorus(data.strophes));
+			songQuery(Number(songId)).then(({ data }) => {
+				if (data) setStrophes(addChorus(data.strophes as Strophe[]));
 				else {
 					setStrophes([]);
 					toast.error("Morceau non trouvé !", {

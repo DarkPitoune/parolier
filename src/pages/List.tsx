@@ -1,7 +1,7 @@
-import type { Tag, TaggedSong } from "@/assets/types";
 import { DynamicText, SidePanel, useLeader } from "@/components";
 import supabase from "@/utils/supabase";
 import { ChevronUpIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid";
+import type { QueryData } from "@supabase/supabase-js";
 import clsx from "clsx";
 import Fuse from "fuse.js";
 import {
@@ -14,12 +14,22 @@ import {
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 
+// region Supabase Queries
+
+const songsQuery = supabase
+	.from("songs")
+	.select("title, id, tags (id, name, svg, color)");
+type Songs = QueryData<typeof songsQuery>;
+
+const tagsQuery = supabase.from("tags").select();
+type Tags = QueryData<typeof tagsQuery>;
+
+// region React Component
+
 function Index() {
-	const [songs, setSongs] = useState<Omit<TaggedSong, "strophes">[]>([]);
-	const [filteredSongs, setFilteredSongs] = useState<
-		Omit<TaggedSong, "strophes">[]
-	>([]);
-	const [tags, setTags] = useState<Tag[]>([]);
+	const [songs, setSongs] = useState<Songs>([]);
+	const [filteredSongs, setFilteredSongs] = useState<Songs>([]);
+	const [tags, setTags] = useState<Tags>([]);
 	const [selectedTags, setSelectedTags] = useState<number[]>([]);
 	const [tagTabOpen, setTagTabOpen] = useState(false);
 	const fuse = useMemo(() => new Fuse(songs, { keys: ["title"] }), [songs]);
@@ -44,21 +54,18 @@ function Index() {
 					fuse.setCollection(data);
 				}
 			});
-		supabase
-			.from("tags")
-			.select()
-			.then(({ data }) => {
-				if (data && data.length > 0) {
-					data.sort((a, b) => a.id - b.id);
-					setTags(data);
-				}
-			});
+		tagsQuery.then(({ data }) => {
+			if (data && data.length > 0) {
+				data.sort((a, b) => a.id - b.id);
+				setTags(data);
+			}
+		});
 	}, [fuse.setCollection]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we want to scroll AFTER the songs are loaded in the DOM
 	useEffect(() => {
 		window.scroll({
-			top: Number.parseInt(sessionStorage.getItem("indexScroll") || "0"),
+			top: Number(sessionStorage.getItem("indexScroll") || "0"),
 		});
 	}, [songs]);
 
@@ -79,10 +86,8 @@ function Index() {
 			if (event.target.value.length === 0) setFilteredSongs(songs);
 			else {
 				window.scrollTo(0, 0);
-				if (!Number.isNaN(Number.parseInt(event.target.value))) {
-					const song = songs.find(
-						(s) => s.id === Number.parseInt(event.target.value),
-					);
+				if (!Number.isNaN(Number(event.target.value))) {
+					const song = songs.find((s) => s.id === Number(event.target.value));
 					setFilteredSongs(song ? [song] : []);
 				} else {
 					setFilteredSongs(
@@ -94,13 +99,17 @@ function Index() {
 		[fuse, songs],
 	);
 
-	const isCorrectTag = (song: Omit<TaggedSong, "strophes">) => {
+	const isCorrectTag = (song: Songs[number]) => {
 		if (selectedTags.length === 0) return true;
 		return song.tags.some(({ id }) => selectedTags.includes(id));
 	};
 
 	const askNewSong = () => {
-		if (window.confirm(`Voulez-vous vraiment demander l'ajout de "${searchValue}" ?`)) {
+		if (
+			window.confirm(
+				`Voulez-vous vraiment demander l'ajout de "${searchValue}" ?`,
+			)
+		) {
 			const promise = supabase
 				.from("song_requests")
 				.insert({ title: searchValue })
@@ -169,9 +178,11 @@ function Index() {
 								>
 									<div
 										// biome-ignore lint/security/noDangerouslySetInnerHtml: svg is in database
-										dangerouslySetInnerHTML={{ __html: tag.svg }}
+										dangerouslySetInnerHTML={{ __html: tag.svg || "" }}
 										style={{
-											fill: selectedTags.includes(tag.id) ? "white" : tag.color,
+											fill: selectedTags.includes(tag.id)
+												? "white"
+												: tag.color || "black",
 										}}
 										className="w-4 h-4"
 									/>
@@ -199,11 +210,11 @@ function Index() {
 						<div className="flex gap-2">
 							{song.tags.map((tag) => (
 								<div
-									style={{ fill: tag.color }}
+									style={{ fill: tag.color || "black" }}
 									className="size-6 "
 									key={tag.id}
 									// biome-ignore lint/security/noDangerouslySetInnerHtml: svg is in database
-									dangerouslySetInnerHTML={{ __html: tag.svg }}
+									dangerouslySetInnerHTML={{ __html: tag.svg || "" }}
 								/>
 							))}
 						</div>

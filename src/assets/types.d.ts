@@ -1,9 +1,3 @@
-export interface Song {
-	title: string;
-	id: number;
-	strophes: Strophe[];
-}
-
 export interface Strophe {
 	content: Line[];
 	type: "verse" | "chorus" | "bridge";
@@ -20,16 +14,6 @@ export interface Settings {
 	addChorus: boolean;
 	darkMode: boolean;
 	username: string;
-}
-export interface Tag {
-	id: number;
-	name: string;
-	svg: string;
-	color: string;
-}
-
-export interface TaggedSong extends Song {
-	tags: Tag[];
 }
 
 export interface Leader {
