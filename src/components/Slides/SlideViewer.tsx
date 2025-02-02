@@ -28,7 +28,7 @@ const SlideViewer = ({ strophes }: { strophes: Strophe[] }) => {
 		>
 			{strophes[step].content.map((line, lineIndex) => (
 				// biome-ignore lint/suspicious/noArrayIndexKey: in this case, it's not that bad
-				<div className="col-span-2 leading-relaxed" key={lineIndex}>
+				<div className="col-span-2" key={lineIndex}>
 					{line.text}
 				</div>
 			))}
