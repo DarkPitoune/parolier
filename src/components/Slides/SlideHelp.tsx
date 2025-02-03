@@ -45,7 +45,7 @@ const SlideHelp = () => {
 							(si elle existe)
 						</li>
 						<li>
-							<span className="font-bold">Echap</span> : Quitter le mode
+							<span className="font-bold">Echap</span> ou <span className='font-bold'>Q</span> : Quitter le mode
 							Présentation
 						</li>
 						<li>

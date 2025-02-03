@@ -53,6 +53,7 @@ const SlideShow = () => {
       if (e.key === "h" || e.key === "H") setSlideHelp((v) => !v);
       if (e.key === "t" || e.key === "T") navigate("/slides/");
       if (e.key === "Escape" && !document.fullscreenElement) navigate("/");
+      if (e.key === "q" || e.key === "Q") document.exitFullscreen();
     };
     document.addEventListener("keydown", handleKey);
 
