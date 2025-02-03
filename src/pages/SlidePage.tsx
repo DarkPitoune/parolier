@@ -7,7 +7,6 @@ import {
 } from "@/components";
 import { addChorus } from "@/utils/addChorus";
 import supabase from "@/utils/supabase";
-import type { QueryData } from "@supabase/supabase-js";
 import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -21,7 +20,6 @@ const songQuery = (songId: number) =>
     .select("*, tags(name, id, svg, color)")
     .eq("id", songId)
     .single();
-type Song = QueryData<ReturnType<typeof songQuery>>;
 
 // region React Component
 
@@ -34,12 +32,15 @@ const SlideShow = () => {
   useEffect(() => {
     if (!songId) setStrophes([]);
     else
-      songQuery(Number(songId)).then(({ data, error }: { data: Song | null, error:any }) => {
+      songQuery(Number(songId)).then(({ data, error }) => {
         if (data?.strophes) setStrophes(addChorus(data.strophes));
         else {
-          console.log(error)
           setStrophes([]);
-          toast.error("Morceau non trouvé !", {
+          const errorMessage =
+            error?.code === "PGRST116"
+              ? "Morceau non trouvé !"
+              : "Connexion à internet requise";
+          toast.error(errorMessage, {
             style: {
               backgroundColor: "black",
               color: "white"
