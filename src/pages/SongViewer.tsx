@@ -88,7 +88,7 @@ function SongViewer() {
 						</h1>
 					</div>
 					<div className="flex gap-8 px-4 font-flame">
-						{song.tags.map((tag) => (
+						{song.tags?.map((tag) => (
 							<div className="flex gap-1" key={tag.id}>
 								<div
 									style={{ fill: tag.color || "black" }}
