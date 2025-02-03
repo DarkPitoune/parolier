@@ -92,7 +92,6 @@ function LeaderContextProvider({
 					// const newState = leaderRoom.presenceState();
 					// console.log("status", Object.values(newState));
 					// const newAvailableLeaders = Object.values(newState)
-					// biome-ignore lint/suspicious/noExplicitAny: I know messages are Leaders
 					// 	.map(([leader]: any) => ({
 					// 		name: leader.name,
 					// 		status: leader.status,
