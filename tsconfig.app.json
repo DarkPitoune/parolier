@@ -26,5 +26,5 @@
 		"noUnusedParameters": true,
 		"noFallthroughCasesInSwitch": true
 	},
-	"include": ["src", "database.types.ts"]
+	"include": ["src", "database.types.ts", "database-generated.types.ts"],
 }

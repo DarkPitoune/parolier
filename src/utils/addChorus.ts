@@ -1,9 +1,6 @@
-import type { Strophe } from "@/assets/types";
-import type { Json } from "../../database.types";
+import type { Strophe } from "@/assets/types"
 
-export const addChorus = (rawStrophes: Json[], apply = true) => {
-	// we know that the rawStrophes are Strophe[] but we need to cast them. Ugly.
-  const strophes = rawStrophes as unknown as Strophe[];
+export const addChorus = (strophes: Strophe[], apply = true) => {
   if (!apply) return strophes;
 
   // first, get the chorus

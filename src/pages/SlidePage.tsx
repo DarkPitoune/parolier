@@ -34,9 +34,10 @@ const SlideShow = () => {
   useEffect(() => {
     if (!songId) setStrophes([]);
     else
-      songQuery(Number(songId)).then(({ data }: { data: Song | null }) => {
+      songQuery(Number(songId)).then(({ data, error }: { data: Song | null, error:any }) => {
         if (data?.strophes) setStrophes(addChorus(data.strophes));
         else {
+          console.log(error)
           setStrophes([]);
           toast.error("Morceau non trouvé !", {
             style: {
