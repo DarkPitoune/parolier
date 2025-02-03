@@ -8,7 +8,7 @@ import {
 	LeaderContextProvider,
 	darkModeAtom,
 } from "@/components";
-import { Index, Login, Setlists, SlideShow, SongViewer } from "@/pages";
+import { Index, Setlists, SlideShow, SongViewer } from "@/pages";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { Toaster } from "react-hot-toast";
@@ -17,10 +17,6 @@ const router = createBrowserRouter([
 	{
 		path: "/",
 		element: <Index />,
-	},
-	{
-		path: "/login",
-		element: <Login />,
 	},
 	{
 		path: "/setlists",

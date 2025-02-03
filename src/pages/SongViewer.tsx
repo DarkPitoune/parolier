@@ -1,4 +1,3 @@
-import type { Strophe } from "@/assets/types";
 import {
 	DynamicText,
 	SidePanel,
@@ -107,8 +106,8 @@ function SongViewer() {
 						))}
 					</div>
 					<div className="flex flex-col gap-4">
-						{song.strophes &&
-							addChorus(song.strophes as Strophe[], addChorusSetting).map(
+						{song?.strophes &&
+							addChorus(song.strophes, addChorusSetting).map(
 								(strophe, index) => (
 									<div
 										data-type={strophe.type}
