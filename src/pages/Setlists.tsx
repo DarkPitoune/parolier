@@ -1,41 +1,29 @@
-import supabase from "@/utils/supabase";
-import type { QueryData } from "@supabase/supabase-js";
+import supabase, {
+	type AllSetlists,
+	allSetlistsQuery,
+	type Setlist,
+	setlistQuery,
+} from "@/utils/supabase";
 import clsx from "clsx";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-// region Supabase Queries
-
-const setlistItemsQuery = supabase
-	.from("setlist_items")
-	.select("id, songs (id, title, tags (id)), texts (id, title), position");
-type SetListItems = QueryData<typeof setlistItemsQuery>;
-
-const setListsQuery = supabase.from("setlists").select();
-type SetLists = QueryData<typeof setListsQuery>;
-
-// region React Component
-
 const Setlists = () => {
 	const { setlistId } = useParams();
 
-	const [setslists, setSetlists] = useState<SetLists | null>(null);
-	const [selectedSetlist, setSelectedSetlist] = useState<SetListItems | null>(
-		null,
-	);
+	const [setslists, setSetlists] = useState<AllSetlists>([]);
+	const [selectedSetlist, setSelectedSetlist] = useState<Setlist | null>(null);
 
 	const updateSelectedSetlist = useCallback(
 		() =>
 			setlistId
-				? setlistItemsQuery
-						.eq("setlist_id", setlistId)
-						.then(({ data }) => setSelectedSetlist(data))
+				? setlistQuery(setlistId).then(({ data }) => setSelectedSetlist(data))
 				: null,
 		[setlistId],
 	);
 
 	useEffect(() => {
-		setListsQuery.then(({ data }) => setSetlists(data));
+		allSetlistsQuery().then(({ data }) => setSetlists(data || []));
 
 		if (setlistId) updateSelectedSetlist();
 	}, [setlistId, updateSelectedSetlist]);

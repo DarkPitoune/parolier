@@ -44,7 +44,7 @@ const router = createBrowserRouter([
 	},
 ]);
 
-navigator.storage.persist() // our way to tackle long term storage.. let's see how it goes
+if (navigator.storage) navigator.storage.persist(); // our way to tackle long term storage.. let's see how it goes
 
 const App = () => {
 	const darkMode = useAtomValue(darkModeAtom);

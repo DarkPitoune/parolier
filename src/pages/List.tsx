@@ -1,7 +1,11 @@
 import { DynamicText, SidePanel, useLeader } from "@/components";
-import supabase from "@/utils/supabase";
+import supabase, {
+	type AllSongs,
+	allSongsQuery,
+	allTagsQuery,
+	type Tags,
+} from "@/utils/supabase";
 import { ChevronUpIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid";
-import type { QueryData } from "@supabase/supabase-js";
 import clsx from "clsx";
 import Fuse from "fuse.js";
 import {
@@ -14,21 +18,9 @@ import {
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 
-// region Supabase Queries
-
-const songsQuery = supabase
-	.from("songs")
-	.select("title, id, tags (id, name, svg, color)");
-type Songs = QueryData<typeof songsQuery>;
-
-const tagsQuery = supabase.from("tags").select();
-type Tags = QueryData<typeof tagsQuery>;
-
-// region React Component
-
 function Index() {
-	const [songs, setSongs] = useState<Songs>([]);
-	const [filteredSongs, setFilteredSongs] = useState<Songs>([]);
+	const [songs, setSongs] = useState<AllSongs>([]);
+	const [filteredSongs, setFilteredSongs] = useState<AllSongs>([]);
 	const [tags, setTags] = useState<Tags>([]);
 	const [selectedTags, setSelectedTags] = useState<number[]>([]);
 	const [tagTabOpen, setTagTabOpen] = useState(false);
@@ -43,18 +35,15 @@ function Index() {
 	};
 
 	useEffect(() => {
-		supabase
-			.from("songs")
-			.select("title, id, tags (id, name, svg, color)")
-			.then(({ data }) => {
-				if (data && data.length > 0) {
-					data.sort((a, b) => a.id - b.id);
-					setSongs(data);
-					setFilteredSongs(data);
-					fuse.setCollection(data);
-				}
-			});
-		tagsQuery.then(({ data }) => {
+		allSongsQuery().then(({ data }) => {
+			if (data && data.length > 0) {
+				data.sort((a, b) => a.id - b.id);
+				setSongs(data);
+				setFilteredSongs(data);
+				fuse.setCollection(data);
+			}
+		});
+		allTagsQuery().then(({ data }) => {
 			if (data && data.length > 0) {
 				data.sort((a, b) => a.id - b.id);
 				setTags(data);
@@ -99,7 +88,7 @@ function Index() {
 		[fuse, songs],
 	);
 
-	const isCorrectTag = (song: Songs[number]) => {
+	const isCorrectTag = (song: AllSongs[number]) => {
 		if (selectedTags.length === 0) return true;
 		return song.tags.some(({ id }) => selectedTags.includes(id));
 	};

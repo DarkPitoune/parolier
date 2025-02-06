@@ -1,4 +1,4 @@
-import supabase from "@/utils/supabase";
+import { allSongsQuery, songQuery } from "@/utils/supabase";
 import { ArrowPathIcon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useAtom } from "jotai";
@@ -11,19 +11,12 @@ import { SettingsButton } from "./SettingsButton";
 export const CornerMenu = () => {
 	const [darkMode, setDarkMode] = useAtom(darkModeAtom);
 
-	const loadAllSongs = useCallback(() => {
-		const promise = supabase
-			.from("songs")
-			.select("title, id, tags (id, name, svg, color)")
-			.then(({ data: songs }) =>
-				songs?.map(({ id }) =>
-					supabase
-						.from("songs")
-						.select("*, tags(name, id, svg, color)")
-						.eq("id", id),
-				),
-			);
-		toast.promise(promise as Promise<void>, {
+	const loadAllSongs = useCallback(async () => {
+		const { data: allSongs } = await allSongsQuery();
+		const allPromises = Promise.all(
+			(allSongs ?? []).map(async ({ id }) => songQuery(id) as Promise<unknown>),
+		);
+		toast.promise(allPromises, {
 			loading: "Chargement...",
 			success: "Liste mise à jour",
 			error: "Erreur !",

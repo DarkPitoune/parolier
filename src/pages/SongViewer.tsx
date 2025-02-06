@@ -6,27 +6,16 @@ import {
 	useLeader,
 } from "@/components";
 import { addChorus } from "@/utils/addChorus";
-import supabase, { analyticsSong } from "@/utils/supabase";
+import { type Song, analyticsSong, songQuery } from "@/utils/supabase";
 import { transposeLine } from "@/utils/tonalManipulation";
 import { ChevronLeftIcon } from "@heroicons/react/16/solid";
 import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
-import type { QueryData } from "@supabase/supabase-js";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { Fragment, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 // region Supabase Queries
-
-const songQuery = (songId: number) =>
-	supabase
-		.from("songs")
-		.select("*, tags(name, id, svg, color)")
-		.eq("id", songId)
-		.single();
-type Song = QueryData<ReturnType<typeof songQuery>>;
-
-// region React Component
 
 function SongViewer() {
 	const { songId } = useParams();
