@@ -18,3 +18,4 @@ export { SidePanel } from "./SidePanel/SidePanel";
 export { SlideFinder } from "./Slides/SlideFinder";
 export { SlideViewer } from "./Slides/SlideViewer";
 export { SlideHelp } from "./Slides/SlideHelp";
+export { TouchScreenListener } from "./TouchScreenListener";

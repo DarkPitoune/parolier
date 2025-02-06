@@ -3,6 +3,7 @@ import {
 	SlideFinder,
 	SlideHelp,
 	SlideViewer,
+	TouchScreenListener,
 	slideHelpAtom,
 } from "@/components";
 import { addChorus } from "@/utils/addChorus";
@@ -89,6 +90,7 @@ const SlideShow = () => {
 				<img src="/svg/Jubilate_Croix.svg" alt="logo" className="size-36" />
 			)}
 			{slideHelp && <SlideHelp />}
+			<TouchScreenListener />
 		</div>
 	);
 };
