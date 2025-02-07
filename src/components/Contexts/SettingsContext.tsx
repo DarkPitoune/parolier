@@ -24,3 +24,9 @@ export const slideHelpAtom = atomWithStorage(
 		getOnInit: true,
 	},
 );
+
+export const filtersAtom = atomWithStorage<number[]>(
+	"filters",
+	[],
+	createJSONStorage(() => sessionStorage),
+);

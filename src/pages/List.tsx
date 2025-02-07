@@ -1,4 +1,5 @@
 import { DynamicText, SidePanel, useLeader } from "@/components";
+import { filtersAtom } from "@/components/Contexts/SettingsContext";
 import supabase, {
 	type AllSongs,
 	allSongsQuery,
@@ -8,6 +9,7 @@ import supabase, {
 import { ChevronUpIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import clsx from "clsx";
 import Fuse from "fuse.js";
+import { useAtom } from "jotai";
 import {
 	type ChangeEventHandler,
 	useCallback,
@@ -22,7 +24,7 @@ function Index() {
 	const [songs, setSongs] = useState<AllSongs>([]);
 	const [filteredSongs, setFilteredSongs] = useState<AllSongs>([]);
 	const [tags, setTags] = useState<Tags>([]);
-	const [selectedTags, setSelectedTags] = useState<number[]>([]);
+	const [selectedTags, setSelectedTags] = useAtom<number[]>(filtersAtom);
 	const [tagTabOpen, setTagTabOpen] = useState(false);
 	const fuse = useMemo(() => new Fuse(songs, { keys: ["title"] }), [songs]);
 	const { leader } = useLeader();
