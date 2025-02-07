@@ -1,6 +1,7 @@
 export interface Strophe {
 	content: Line[];
 	type: "verse" | "chorus" | "bridge";
+	repetition: boolean;
 }
 
 export interface Line {

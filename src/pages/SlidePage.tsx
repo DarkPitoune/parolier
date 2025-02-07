@@ -6,7 +6,6 @@ import {
 	TouchScreenListener,
 	slideHelpAtom,
 } from "@/components";
-import { addChorus } from "@/utils/addChorus";
 import supabase from "@/utils/supabase";
 import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
@@ -34,7 +33,7 @@ const SlideShow = () => {
 		if (!songId) setStrophes([]);
 		else
 			songQuery(Number(songId)).then(({ data, error }) => {
-				if (data?.strophes) setStrophes(addChorus(data.strophes));
+				if (data?.strophes) setStrophes(data.strophes);
 				else {
 					setStrophes([]);
 					const errorMessage =
