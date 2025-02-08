@@ -1,5 +1,5 @@
 import { DynamicText, SidePanel, useLeader } from "@/components";
-import { filtersAtom } from "@/components/Contexts/SettingsContext";
+import { filtersAtom, tagTabOpenAtom } from "@/components/Contexts/SettingsContext";
 import supabase, {
 	type AllSongs,
 	allSongsQuery,
@@ -25,7 +25,7 @@ function Index() {
 	const [filteredSongs, setFilteredSongs] = useState<AllSongs>([]);
 	const [tags, setTags] = useState<Tags>([]);
 	const [selectedTags, setSelectedTags] = useAtom<number[]>(filtersAtom);
-	const [tagTabOpen, setTagTabOpen] = useState(false);
+	const [tagTabOpen, setTagTabOpen] = useAtom(tagTabOpenAtom);
 	const fuse = useMemo(() => new Fuse(songs, { keys: ["title"] }), [songs]);
 	const { leader } = useLeader();
 
