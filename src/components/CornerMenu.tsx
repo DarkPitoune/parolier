@@ -12,14 +12,16 @@ export const CornerMenu = () => {
 	const [darkMode, setDarkMode] = useAtom(darkModeAtom);
 
 	const loadAllSongs = useCallback(async () => {
-		const { data: allSongs } = await allSongsQuery();
-		const allPromises = Promise.all(
-			(allSongs ?? []).map(async ({ id }) => songQuery(id) as Promise<unknown>),
-		);
+		const allPromises = allSongsQuery().then(({ data: allSongs, error }) => {
+			if (error || !allSongs) throw "Connexion failure";
+			return Promise.all(
+				allSongs.map(async ({ id }) => songQuery(id) as Promise<unknown>),
+			);
+		});
 		toast.promise(allPromises, {
 			loading: "Chargement...",
 			success: "Liste mise à jour",
-			error: "Erreur !",
+			error: "Connexion à internet requise",
 		});
 	}, []);
 

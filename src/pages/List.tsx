@@ -1,5 +1,8 @@
 import { DynamicText, SidePanel, useLeader } from "@/components";
-import { filtersAtom, tagTabOpenAtom } from "@/components/Contexts/SettingsContext";
+import {
+	filtersAtom,
+	tagTabOpenAtom,
+} from "@/components/Contexts/SettingsContext";
 import supabase, {
 	type AllSongs,
 	allSongsQuery,

@@ -12,6 +12,7 @@ import { Index, Setlists, SlideShow, SongViewer } from "@/pages";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { Toaster } from "react-hot-toast";
+import SongEditor from "./pages/SongEditor";
 
 const router = createBrowserRouter([
 	{
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
 	{
 		path: "/songs/:songId",
 		element: <SongViewer />,
+	},
+	{
+		path: "/songs/edit/:songId",
+		element: <SongEditor />,
 	},
 	{
 		path: "/slides",
