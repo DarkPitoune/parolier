@@ -42,33 +42,41 @@ const Setlists = () => {
 	};
 
 	return (
-		<div
-			className={clsx(
-				"grid w-screen h-screen",
-				setlistId ? "grid-cols-2" : "grid-cols-1",
-			)}
-		>
-			<div>
-				{setslists?.map((setlist) => (
-					<div key={setlist.id} className="p-4 bg-gray-100 dark:bg-gray-800">
-						<Link to={`/setlists/${setlist.id}`} className="text-xl font-bold">
-							{setlist.name}
-						</Link>
-					</div>
-				))}
+		<div className="bg-white dark:bg-gray-800">
+			<div className="bg-jubilateBlue-500 dark:bg-slate-900 px-6 py-4 gap-4 flex justify-end items-center">
+				<img className="h-12" src="/svg/logo.svg" alt="Logo" />
 			</div>
-			{setlistId && (
-				<div className="shadow-2xl p-4">
-					{selectedSetlist?.map((item) => (
-						<div key={item.id}>
-							{item.songs ? item.songs.title : item.texts?.title}
+			<div
+				className={clsx(
+					"grid w-screen h-screen",
+					setlistId ? "grid-cols-2" : "grid-cols-1",
+				)}
+			>
+				<div>
+					{setslists?.map((setlist) => (
+						<div key={setlist.id} className="p-4 bg-gray-100 dark:bg-gray-800">
+							<Link
+								to={`/setlists/${setlist.id}`}
+								className="text-xl font-bold"
+							>
+								{setlist.name}
+							</Link>
 						</div>
 					))}
-					<button type="button" onClick={addSong}>
-						Ajouter nouveau morceau
-					</button>
 				</div>
-			)}
+				{setlistId && (
+					<div className="shadow-2xl p-4">
+						{selectedSetlist?.map((item) => (
+							<div key={item.id}>
+								{item.songs ? item.songs.title : item.texts?.title}
+							</div>
+						))}
+						<button type="button" onClick={addSong}>
+							Ajouter nouveau morceau
+						</button>
+					</div>
+				)}
+			</div>
 		</div>
 	);
 };

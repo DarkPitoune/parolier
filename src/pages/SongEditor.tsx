@@ -25,7 +25,17 @@ const SongEditor = () => {
 	const handleSave = async () => {
 		if (!song) return;
 
-		const { error } = await supabase.from("songs").upsert(song);
+		const songNoEmptyLines = {
+			...song,
+			strophes: song.strophes.map((strophe) => ({
+				...strophe,
+				content: strophe.content.filter((line) => line.text || line.chords),
+			})),
+		};
+
+		console.log(songNoEmptyLines);
+
+		const { error } = await supabase.from("songs").upsert(songNoEmptyLines);
 
 		if (error) throw error;
 		alert("Song saved successfully!");
@@ -43,14 +53,27 @@ const SongEditor = () => {
 		if (!song) return;
 		const newStrophes = [...song.strophes];
 		newStrophes[index] = { ...newStrophes[index], [field]: value };
+		if (field === "content") {
+			// remove empty lines
+			newStrophes[index].content = (value as Line[]).filter(
+				(line) => line.text || line.chords,
+			);
+			// add one empty line at the end
+			newStrophes[index].content.push({ text: "", chords: "" });
+		}
 		handleChange("strophes", newStrophes);
 	};
 
-	const addStrophe = () => {
+	const addStrophe = (index: number) => {
 		if (!song) return;
 		const newStrophes = [
-			...song.strophes,
-			{ content: [], type: "verse", repetition: false } satisfies Strophe,
+			...song.strophes.slice(0, index + 1),
+			{
+				content: [{ text: "", chords: "" }],
+				type: "verse",
+				repetition: false,
+			} satisfies Strophe,
+			...song.strophes.slice(index + 1),
 		];
 		handleChange("strophes", newStrophes);
 	};
@@ -127,32 +150,26 @@ const SongEditor = () => {
 											key={lineIndex}
 											className="mb-2 grid grid-cols-2 gap-4"
 										>
-											<label className="block text-sm font-medium">
-												Text:
-												<input
-													type="text"
-													value={line.text}
-													onChange={(e) => {
-														const newContent = [...strophe.content];
-														newContent[lineIndex].text = e.target.value;
-														handleStropheChange(index, "content", newContent);
-													}}
-													className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-												/>
-											</label>
-											<label className="block text-sm font-medium">
-												Chords:
-												<input
-													type="text"
-													value={line.chords}
-													onChange={(e) => {
-														const newContent = [...strophe.content];
-														newContent[lineIndex].chords = e.target.value;
-														handleStropheChange(index, "content", newContent);
-													}}
-													className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-												/>
-											</label>
+											<input
+												type="text"
+												value={line.text}
+												onChange={(e) => {
+													const newContent = [...strophe.content];
+													newContent[lineIndex].text = e.target.value;
+													handleStropheChange(index, "content", newContent);
+												}}
+												className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+											/>
+											<input
+												type="text"
+												value={line.chords}
+												onChange={(e) => {
+													const newContent = [...strophe.content];
+													newContent[lineIndex].chords = e.target.value;
+													handleStropheChange(index, "content", newContent);
+												}}
+												className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+											/>
 										</div>
 									))}
 								</div>
@@ -161,24 +178,24 @@ const SongEditor = () => {
 									onClick={() => removeStrophe(index)}
 									className="mt-2 bg-red-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-red-600"
 								>
-									Remove Strophe
+									Supprimer strophe
+								</button>
+								<button
+									type="button"
+									onClick={() => addStrophe(index)}
+									className="mt-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-green-600"
+								>
+									Insérer strophe
 								</button>
 							</div>
 						))}
-						<button
-							type="button"
-							onClick={addStrophe}
-							className="mt-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-green-600"
-						>
-							Add Strophe
-						</button>
 					</div>
 					<button
 						type="button"
 						onClick={handleSave}
 						className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600"
 					>
-						Save
+						Enregistrer
 					</button>
 				</div>
 			)}

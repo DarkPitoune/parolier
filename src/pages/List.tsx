@@ -23,6 +23,8 @@ import {
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 
+const isSetlistEnabled = localStorage.getItem("setlistEnabled") === "true";
+
 function Index() {
 	const [songs, setSongs] = useState<AllSongs>([]);
 	const [filteredSongs, setFilteredSongs] = useState<AllSongs>([]);
@@ -126,6 +128,11 @@ function Index() {
 				)}
 			>
 				<div className="bg-jubilateBlue-500 dark:bg-slate-900 px-6 py-4 gap-4 flex justify-between items-center">
+					{isSetlistEnabled && (
+						<Link to="/setlists" className="hidden lg:block">
+							S
+						</Link>
+					)}
 					<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
 						<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
 						<input
@@ -201,7 +208,7 @@ function Index() {
 							className="grow text-black dark:text-white"
 							text={song.title}
 						/>
-						<div className="flex gap-2">
+						<div className="flex gap-2 items-center">
 							{song.tags.map((tag) => (
 								<div
 									style={{ fill: tag.color || "black" }}
