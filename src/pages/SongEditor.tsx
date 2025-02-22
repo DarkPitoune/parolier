@@ -1,12 +1,9 @@
 import type { Line, Strophe } from "@/assets/types";
-import { type Song, songQuery } from "@/utils/supabase";
-import { createClient } from "@supabase/supabase-js";
+import supabase, { type Song, songQuery } from "@/utils/supabase";
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
-const supabaseUrl = "https://your-supabase-url.supabase.co";
-const supabaseKey = "your-supabase-key";
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { Json, Song as SBsong } from "../../database.types";
 
 const SongEditor = () => {
 	const { songId } = useParams();
@@ -30,12 +27,12 @@ const SongEditor = () => {
 			strophes: song.strophes.map((strophe) => ({
 				...strophe,
 				content: strophe.content.filter((line) => line.text || line.chords),
-			})),
+			} as Json)),
 		};
 
-		console.log(songNoEmptyLines);
+		songNoEmptyLines.tags = undefined;
 
-		const { error } = await supabase.from("songs").upsert(songNoEmptyLines);
+		const { error } = await supabase.from("songs").update(songNoEmptyLines).eq("id", song.id);
 
 		if (error) throw error;
 		alert("Song saved successfully!");
