@@ -195,7 +195,7 @@ const SongEditor = () => {
 									type="button"
 									onClick={() => {
 										const newStrophes = [...song.strophes];
-										newStrophes.push(strophe);
+										newStrophes.push(JSON.parse(JSON.stringify(strophe)));
 										handleChange("strophes", newStrophes);
 									}}
 								>
@@ -210,7 +210,7 @@ const SongEditor = () => {
 										handleChange("strophes", newStrophes);
 									}}
 								>
-									⬆️
+										⬆️
 								</button>}
 								{index < song.strophes.length - 1 && <button
 									className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600"
@@ -221,7 +221,7 @@ const SongEditor = () => {
 										handleChange("strophes", newStrophes);
 									}}
 								>
-									⬇️
+										⬇️
 								</button>}
 							</div>
 						))}
