@@ -3,7 +3,7 @@ import supabase, { type Song, songQuery } from "@/utils/supabase";
 
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Json, Song as SBsong } from "../../database.types";
+import { type Json, Song as SBsong } from "../../database.types";
 
 const SongEditor = () => {
 	const { songId } = useParams();
@@ -24,15 +24,21 @@ const SongEditor = () => {
 
 		const songNoEmptyLines = {
 			...song,
-			strophes: song.strophes.map((strophe) => ({
-				...strophe,
-				content: strophe.content.filter((line) => line.text || line.chords),
-			} as Json)),
+			strophes: song.strophes.map(
+				(strophe) =>
+					({
+						...strophe,
+						content: strophe.content.filter((line) => line.text || line.chords),
+					}) as Json,
+			),
 		};
 
 		songNoEmptyLines.tags = undefined;
 
-		const { error } = await supabase.from("songs").update(songNoEmptyLines).eq("id", song.id);
+		const { error } = await supabase
+			.from("songs")
+			.update(songNoEmptyLines)
+			.eq("id", song.id);
 
 		if (error) throw error;
 		alert("Song saved successfully!");
@@ -184,6 +190,39 @@ const SongEditor = () => {
 								>
 									Insérer strophe
 								</button>
+								<button
+									className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600"
+									type="button"
+									onClick={() => {
+										const newStrophes = [...song.strophes];
+										newStrophes.push(strophe);
+										handleChange("strophes", newStrophes);
+									}}
+								>
+									Copier à la fin
+								</button>
+								{index > 0 && <button
+									className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600"
+									type="button"
+									onClick={() => {
+										const newStrophes = [...song.strophes];
+										[newStrophes[index - 1], newStrophes[index]] = [newStrophes[index], newStrophes[index - 1]];
+										handleChange("strophes", newStrophes);
+									}}
+								>
+									⬆️
+								</button>}
+								{index < song.strophes.length - 1 && <button
+									className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600"
+									type="button"
+									onClick={() => {
+										const newStrophes = [...song.strophes];
+										[newStrophes[index], newStrophes[index + 1]] = [newStrophes[index + 1], newStrophes[index]];
+										handleChange("strophes", newStrophes);
+									}}
+								>
+									⬇️
+								</button>}
 							</div>
 						))}
 					</div>
