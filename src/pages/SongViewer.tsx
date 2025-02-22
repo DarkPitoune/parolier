@@ -5,7 +5,11 @@ import {
 	showChordsAtom,
 	useLeader,
 } from "@/components";
-import { type Song, analyticsSong, songQuery } from "@/utils/supabase";
+import {
+	type TaggedSong,
+	analyticsSong,
+	taggedSongQuery,
+} from "@/utils/supabase";
 import { transposeLine } from "@/utils/tonalManipulation";
 import { ChevronLeftIcon } from "@heroicons/react/16/solid";
 import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
@@ -17,14 +21,14 @@ import { Link, useParams } from "react-router-dom";
 function SongViewer() {
 	const { songId } = useParams();
 	const [tonality, setTonality] = useState(0);
-	const [song, setSong] = useState<Song>();
+	const [song, setSong] = useState<TaggedSong>();
 	const { setLeaderSong, leader } = useLeader();
 	const addChorusSetting = useAtomValue(addChorusAtom);
 	const showChords = useAtomValue(showChordsAtom);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: adding setLeaderSong spams the backend
 	useEffect(() => {
-		songQuery(Number(songId)).then(({ data }) => {
+		taggedSongQuery(Number(songId)).then(({ data }) => {
 			if (data) setSong(data);
 		});
 		setLeaderSong(Number(songId));

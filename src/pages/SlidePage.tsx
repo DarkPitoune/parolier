@@ -14,7 +14,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 // region Supabase Queries
 
-const songQuery = (songId: number) =>
+const taggedSongQuery = (songId: number) =>
 	supabase
 		.from("songs")
 		.select("*, tags(name, id, svg, color)")
@@ -32,7 +32,7 @@ const SlideShow = () => {
 	useEffect(() => {
 		if (!songId) setStrophes([]);
 		else
-			songQuery(Number(songId)).then(({ data, error }) => {
+			taggedSongQuery(Number(songId)).then(({ data, error }) => {
 				if (data?.strophes) setStrophes(data.strophes);
 				else {
 					setStrophes([]);

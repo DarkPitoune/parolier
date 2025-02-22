@@ -14,12 +14,16 @@ export const allSongsQuery = async () =>
 	supabase.from("songs").select("title, id, tags (id, name, svg, color)");
 export type AllSongs = QueryData<ReturnType<typeof allSongsQuery>>;
 
-export const songQuery = async (songId: number) =>
+export const taggedSongQuery = async (songId: number) =>
 	supabase
 		.from("songs")
 		.select("*, tags(name, id, svg, color)")
 		.eq("id", songId)
 		.single();
+export type TaggedSong = QueryData<ReturnType<typeof taggedSongQuery>>;
+
+export const songQuery = async (songId: number) =>
+	supabase.from("songs").select().eq("id", songId).single();
 export type Song = QueryData<ReturnType<typeof songQuery>>;
 
 export const allTagsQuery = async () => supabase.from("tags").select();

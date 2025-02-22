@@ -1,4 +1,4 @@
-import { allSongsQuery, songQuery } from "@/utils/supabase";
+import { allSongsQuery, taggedSongQuery } from "@/utils/supabase";
 import { ArrowPathIcon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useAtom } from "jotai";
@@ -15,7 +15,7 @@ export const CornerMenu = () => {
 		const allPromises = allSongsQuery().then(({ data: allSongs, error }) => {
 			if (error || !allSongs) throw "Connexion failure";
 			return Promise.all(
-				allSongs.map(async ({ id }) => songQuery(id) as Promise<unknown>),
+				allSongs.map(async ({ id }) => taggedSongQuery(id) as Promise<unknown>),
 			);
 		});
 		toast.promise(allPromises, {

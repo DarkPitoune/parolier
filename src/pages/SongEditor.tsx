@@ -1,9 +1,9 @@
 import type { Line, Strophe } from "@/assets/types";
-import supabase, { type Song, songQuery } from "@/utils/supabase";
+import supabase, { songQuery, type Song } from "@/utils/supabase";
 
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { type Json, Song as SBsong } from "../../database.types";
+import type { Json } from "../../database.types";
 
 const SongEditor = () => {
 	const { songId } = useParams();
@@ -24,16 +24,13 @@ const SongEditor = () => {
 
 		const songNoEmptyLines = {
 			...song,
-			strophes: song.strophes.map(
-				(strophe) =>
-					({
-						...strophe,
-						content: strophe.content.filter((line) => line.text || line.chords),
-					}) as Json,
-			),
+			strophes: song.strophes.map((strophe) => ({
+				...strophe,
+				content: strophe.content.filter(
+					(line) => line.text || line.chords,
+				) as unknown as Json[],
+			})),
 		};
-
-		songNoEmptyLines.tags = undefined;
 
 		const { error } = await supabase
 			.from("songs")
@@ -201,28 +198,60 @@ const SongEditor = () => {
 								>
 									Copier à la fin
 								</button>
-								{index > 0 && <button
-									className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600"
-									type="button"
-									onClick={() => {
-										const newStrophes = [...song.strophes];
-										[newStrophes[index - 1], newStrophes[index]] = [newStrophes[index], newStrophes[index - 1]];
-										handleChange("strophes", newStrophes);
-									}}
-								>
+								{index > 0 && (
+									<button
+										className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600"
+										type="button"
+										onClick={() => {
+											const newStrophes = [...song.strophes];
+											[newStrophes[index - 1], newStrophes[index]] = [
+												newStrophes[index],
+												newStrophes[index - 1],
+											];
+											handleChange("strophes", newStrophes);
+										}}
+									>
 										⬆️
-								</button>}
-								{index < song.strophes.length - 1 && <button
-									className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600"
-									type="button"
-									onClick={() => {
-										const newStrophes = [...song.strophes];
-										[newStrophes[index], newStrophes[index + 1]] = [newStrophes[index + 1], newStrophes[index]];
-										handleChange("strophes", newStrophes);
-									}}
-								>
+									</button>
+								)}
+								{index < song.strophes.length - 1 && (
+									<button
+										className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600"
+										type="button"
+										onClick={() => {
+											const newStrophes = [...song.strophes];
+											[newStrophes[index], newStrophes[index + 1]] = [
+												newStrophes[index + 1],
+												newStrophes[index],
+											];
+											handleChange("strophes", newStrophes);
+										}}
+									>
 										⬇️
-								</button>}
+									</button>
+								)}
+								{strophe.content.length > 6 && (
+									<div>
+										<p>Un couplet trop long peut dépasser sur les slides</p>
+										<button
+											type="button"
+											onClick={() => {
+												const firstHalf = strophe.content.slice(0, 4);
+												const secondHalf = strophe.content.slice(4);
+												const newStrophes = [...song.strophes];
+												newStrophes[index].content = firstHalf;
+												newStrophes.splice(index + 1, 0, {
+													...strophe,
+													content: secondHalf,
+												});
+												handleChange("strophes", newStrophes);	
+											}}
+											className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600"
+										>
+											Couper à la ligne 4
+										</button>
+									</div>
+								)}
 							</div>
 						))}
 					</div>
