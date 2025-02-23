@@ -38,6 +38,9 @@ importers:
       react:
         specifier: ^18.3.1
         version: 18.3.1
+      react-dnd-list:
+        specifier: ^1.2.3
+        version: 1.2.3(react@18.3.1)
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
@@ -2126,6 +2129,11 @@ packages:
 
   randombytes@2.1.0:
     resolution: {integrity: sha512-vYl3iOX+4CKUWuxGi9Ukhie6fsqXqS9FE2Zaic4tNFD2N2QQaXOMFbuKK4QmDHC0JO6B1Zp41J0LpT0oR68amQ==}
+
+  react-dnd-list@1.2.3:
+    resolution: {integrity: sha512-H7bddhky9buDB/dzAiqqj6fHkbb8PdmOlaIEG20lVhVuri3WwDBiBp2qWtqIXH3aUbKMdWTgtXsG17vA5YRzxA==}
+    peerDependencies:
+      react: ^16.8.6
 
   react-dom@18.3.1:
     resolution: {integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==}
@@ -4826,6 +4834,10 @@ snapshots:
   randombytes@2.1.0:
     dependencies:
       safe-buffer: 5.2.1
+
+  react-dnd-list@1.2.3(react@18.3.1):
+    dependencies:
+      react: 18.3.1
 
   react-dom@18.3.1(react@18.3.1):
     dependencies:

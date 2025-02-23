@@ -8,7 +8,7 @@ import {
 	LeaderContextProvider,
 	darkModeAtom,
 } from "@/components";
-import { Index, Setlists, SlideShow, SongViewer } from "@/pages";
+import { Index, SetlistViewer, Setlists, SlideShow, SongPage } from "@/pages";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { Toaster } from "react-hot-toast";
@@ -24,12 +24,16 @@ const router = createBrowserRouter([
 		element: <Setlists />,
 	},
 	{
-		path: "/setlists/:setlistId",
-		element: <Setlists />,
+		path: "/setlists/:setlistId/edit",
+		element: <SetlistViewer />,
+	},
+	{
+		path: "/setlists/:setlistId/steps/:stepNumber",
+		element: <SongPage />,
 	},
 	{
 		path: "/songs/:songId",
-		element: <SongViewer />,
+		element: <SongPage />,
 	},
 	{
 		path: "/songs/edit/:songId",

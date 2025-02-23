@@ -37,23 +37,20 @@ export type Database = {
       }
       setlist_items: {
         Row: {
-          id: number
           position: number
-          setlist_id: number | null
+          setlist_id: number
           song_id: number | null
           text_id: number | null
         }
         Insert: {
-          id?: number
           position?: number
-          setlist_id?: number | null
+          setlist_id: number
           song_id?: number | null
           text_id?: number | null
         }
         Update: {
-          id?: number
           position?: number
-          setlist_id?: number | null
+          setlist_id?: number
           song_id?: number | null
           text_id?: number | null
         }
@@ -100,16 +97,19 @@ export type Database = {
         Row: {
           created_at: string
           id: number
+          is_done: boolean
           title: string
         }
         Insert: {
           created_at?: string
           id?: number
+          is_done?: boolean
           title: string
         }
         Update: {
           created_at?: string
           id?: number
+          is_done?: boolean
           title?: string
         }
         Relationships: []

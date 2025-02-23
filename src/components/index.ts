@@ -19,3 +19,5 @@ export { SlideFinder } from "./Slides/SlideFinder";
 export { SlideViewer } from "./Slides/SlideViewer";
 export { SlideHelp } from "./Slides/SlideHelp";
 export { TouchScreenListener } from "./TouchScreenListener";
+export { SongViewer } from "./SongViewer";
+export { SongItem } from "./SongItem";

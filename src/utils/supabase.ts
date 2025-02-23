@@ -32,9 +32,25 @@ export type Tags = QueryData<ReturnType<typeof allTagsQuery>>;
 export const setlistQuery = async (setlistId: string) =>
 	supabase
 		.from("setlist_items")
-		.select("id, songs (id, title, tags (id)), texts (id, title), position")
+		.select(
+			"songs (id, title, tags (id, name, svg, color)), texts (id, title), position, setlists (id, name)",
+		)
 		.eq("setlist_id", setlistId);
 export type Setlist = QueryData<ReturnType<typeof setlistQuery>>;
+
+export const taggedSongFromSetlistStepQuery = async (
+	setlistId: string,
+	stepNumber: number,
+) =>
+	supabase
+		.from("setlist_items")
+		.select("songs (*, tags (id, name, svg, color)), position")
+		.eq("setlist_id", setlistId)
+		.eq("position", stepNumber)
+		.single();
+export type TaggedSongFromSetlistStep = QueryData<
+	ReturnType<typeof taggedSongFromSetlistStepQuery>
+>;
 
 export const allSetlistsQuery = async () => supabase.from("setlists").select();
 export type AllSetlists = QueryData<ReturnType<typeof allSetlistsQuery>>;
