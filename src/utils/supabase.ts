@@ -33,7 +33,10 @@ export const setlistQuery = async (setlistId: string) =>
 	supabase
 		.from("setlist_items")
 		.select(
-			"songs (id, title, tags (id, name, svg, color)), texts (id, title), position, setlists (id, name)",
+			`id,
+			songs (id, strophes, title, tags (id, name, svg, color)),
+			texts (id, title), position,
+			setlists (id, name)`,
 		)
 		.eq("setlist_id", setlistId);
 export type Setlist = QueryData<ReturnType<typeof setlistQuery>>;
@@ -44,7 +47,7 @@ export const taggedSongFromSetlistStepQuery = async (
 ) =>
 	supabase
 		.from("setlist_items")
-		.select("songs (*, tags (id, name, svg, color)), position")
+		.select("id, songs (*, tags (id, name, svg, color)), position")
 		.eq("setlist_id", setlistId)
 		.eq("position", stepNumber)
 		.single();
@@ -54,3 +57,36 @@ export type TaggedSongFromSetlistStep = QueryData<
 
 export const allSetlistsQuery = async () => supabase.from("setlists").select();
 export type AllSetlists = QueryData<ReturnType<typeof allSetlistsQuery>>;
+
+export const setlistNameMutation = async (setlistId: string, name: string) =>
+	supabase.from("setlists").update({ name }).eq("id", setlistId);
+export type SetlistNameMutation = QueryData<
+	ReturnType<typeof setlistNameMutation>
+>;
+
+export const setlistItemPositionMutation = async (
+	setlistId: string,
+	itemId: number,
+	position: number,
+) =>
+	supabase
+		.from("setlist_items")
+		.update({ position })
+		.eq("setlist_id", setlistId)
+		.eq("id", itemId);
+export type SetlistItemPositionMutation = QueryData<
+	ReturnType<typeof setlistItemPositionMutation>
+>;
+
+export const setlistItemDeleteMutation = async (
+	setlistId: string,
+	itemId: number,
+) =>
+	supabase
+		.from("setlist_items")
+		.delete()
+		.eq("setlist_id", setlistId)
+		.eq("id", itemId);
+export type SetlistItemDeleteMutation = QueryData<
+	ReturnType<typeof setlistItemDeleteMutation>
+>;

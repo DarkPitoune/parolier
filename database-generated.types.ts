@@ -37,18 +37,21 @@ export type Database = {
       }
       setlist_items: {
         Row: {
+          id: number
           position: number
           setlist_id: number
           song_id: number | null
           text_id: number | null
         }
         Insert: {
+          id?: number
           position?: number
           setlist_id: number
           song_id?: number | null
           text_id?: number | null
         }
         Update: {
+          id?: number
           position?: number
           setlist_id?: number
           song_id?: number | null

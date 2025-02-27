@@ -1,6 +1,7 @@
 import type { Line, Strophe } from "@/assets/types";
 import supabase, { songQuery, type Song } from "@/utils/supabase";
 
+import { TextInput } from "@/components";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import type { Json } from "../../database.types";
@@ -83,38 +84,32 @@ const SongEditor = () => {
 		handleChange("strophes", newStrophes);
 	};
 
-	if (loading) return <div className="text-center mt-4">Loading...</div>;
+	if (loading) return <div className="text-center">Loading...</div>;
 
 	return (
-		<div className="max-w-4xl mx-auto p-4">
-			<h2 className="text-2xl font-bold mb-4">Edit Song</h2>
+		<div className="max-w-4xl mx-auto p-4 text-black dark:text-white">
+			<h2 className="text-2xl font-bold mb-4">Modifier "{song?.title}"</h2>
 			{song && (
 				<div className="space-y-4">
-					<div className="mb-4">
-						<label className="block text-sm font-medium">
-							Title:
-							<input
-								type="text"
-								value={song.title}
-								onChange={(e) => handleChange("title", e.target.value)}
-								className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-							/>
-						</label>
-					</div>
+					<TextInput
+						label="Title"
+						value={song.title}
+						onChange={(value) => handleChange("title", value)}
+					/>
 					<div>
 						<h3 className="text-xl font-semibold mb-2">Strophes</h3>
 						{song.strophes.map((strophe, index) => (
 							// biome-ignore lint/suspicious/noArrayIndexKey: Idc
 							<div key={index} className="border p-4 rounded-md mb-4">
 								<div className="mb-2">
-									<label className="block text-sm font-medium">
+									<label className="text-sm font-medium">
 										Type:
 										<select
 											value={strophe.type}
 											onChange={(e) =>
 												handleStropheChange(index, "type", e.target.value)
 											}
-											className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+											className="w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
 										>
 											<option value="verse">Verse</option>
 											<option value="chorus">Chorus</option>
@@ -123,7 +118,7 @@ const SongEditor = () => {
 									</label>
 								</div>
 								<div className="mb-2">
-									<label className="block text-sm font-medium">
+									<label className="text-sm font-medium">
 										Repetition:
 										<input
 											type="checkbox"
@@ -135,7 +130,7 @@ const SongEditor = () => {
 													e.target.checked,
 												)
 											}
-											className="mt-1 ml-2"
+											className="ml-2"
 										/>
 									</label>
 								</div>
@@ -147,115 +142,116 @@ const SongEditor = () => {
 											key={lineIndex}
 											className="mb-2 grid grid-cols-2 gap-4"
 										>
-											<input
-												type="text"
+											<TextInput
 												value={line.text}
-												onChange={(e) => {
+												onChange={(value) => {
 													const newContent = [...strophe.content];
-													newContent[lineIndex].text = e.target.value;
+													newContent[lineIndex].text = value;
 													handleStropheChange(index, "content", newContent);
 												}}
-												className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
 											/>
-											<input
-												type="text"
+											<TextInput
 												value={line.chords}
-												onChange={(e) => {
+												onChange={(value) => {
 													const newContent = [...strophe.content];
-													newContent[lineIndex].chords = e.target.value;
+													newContent[lineIndex].chords = value;
 													handleStropheChange(index, "content", newContent);
 												}}
-												className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
 											/>
 										</div>
 									))}
 								</div>
-								<button
-									type="button"
-									onClick={() => removeStrophe(index)}
-									className="mt-2 bg-red-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-red-600"
-								>
-									Supprimer strophe
-								</button>
-								<button
-									type="button"
-									onClick={() => addStrophe(index)}
-									className="mt-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-green-600"
-								>
-									Insérer strophe
-								</button>
-								<button
-									className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600"
-									type="button"
-									onClick={() => {
-										const newStrophes = [...song.strophes];
-										newStrophes.push(JSON.parse(JSON.stringify(strophe)));
-										handleChange("strophes", newStrophes);
-									}}
-								>
-									Copier à la fin
-								</button>
-								{index > 0 && (
+								<div className="flex gap-2">
 									<button
-										className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600"
+										type="button"
+										onClick={() => removeStrophe(index)}
+										className="bg-red-500 text-white px-2 py-1 rounded-md shadow-sm hover:bg-red-600"
+									>
+										Supprimer strophe
+									</button>
+									<button
+										type="button"
+										onClick={() => addStrophe(index)}
+										className="bg-green-500 text-white px-2 py-1 rounded-md shadow-sm hover:bg-green-600"
+									>
+										Insérer strophe
+									</button>
+									<button
+										className="bg-blue-500 text-white px-2 py-1 rounded-md shadow-sm hover:bg-blue-600"
 										type="button"
 										onClick={() => {
 											const newStrophes = [...song.strophes];
-											[newStrophes[index - 1], newStrophes[index]] = [
-												newStrophes[index],
-												newStrophes[index - 1],
-											];
+											newStrophes.push(JSON.parse(JSON.stringify(strophe)));
 											handleChange("strophes", newStrophes);
 										}}
 									>
-										⬆️
+										Copier à la fin
 									</button>
-								)}
-								{index < song.strophes.length - 1 && (
-									<button
-										className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600"
-										type="button"
-										onClick={() => {
-											const newStrophes = [...song.strophes];
-											[newStrophes[index], newStrophes[index + 1]] = [
-												newStrophes[index + 1],
-												newStrophes[index],
-											];
-											handleChange("strophes", newStrophes);
-										}}
-									>
-										⬇️
-									</button>
-								)}
-								{strophe.content.length > 6 && (
-									<div>
-										<p>Un couplet trop long peut dépasser sur les slides</p>
+									{index > 0 && (
 										<button
+											className=" text-white px-2 py-1 rounded-md shadow-sm hover:bg-gray-100"
 											type="button"
 											onClick={() => {
-												const firstHalf = strophe.content.slice(0, 4);
-												const secondHalf = strophe.content.slice(4);
 												const newStrophes = [...song.strophes];
-												newStrophes[index].content = firstHalf;
-												newStrophes.splice(index + 1, 0, {
-													...strophe,
-													content: secondHalf,
-												});
+												[newStrophes[index - 1], newStrophes[index]] = [
+													newStrophes[index],
+													newStrophes[index - 1],
+												];
 												handleChange("strophes", newStrophes);
 											}}
-											className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600"
 										>
-											Couper à la ligne 4
+											⬆️
 										</button>
-									</div>
-								)}
+									)}
+									{index < song.strophes.length - 1 && (
+										<button
+											className="text-white px-2 py-1 rounded-md shadow-sm hover:bg-gray-100"
+											type="button"
+											onClick={() => {
+												const newStrophes = [...song.strophes];
+												[newStrophes[index], newStrophes[index + 1]] = [
+													newStrophes[index + 1],
+													newStrophes[index],
+												];
+												handleChange("strophes", newStrophes);
+											}}
+										>
+											⬇️
+										</button>
+									)}
+									{strophe.content.length > 6 && (
+										<div>
+											<p>
+												⚠️: Un couplet trop long peut dépasser sur les slides.
+												Clickez pour{" "}
+												<button
+													type="button"
+													onClick={() => {
+														const firstHalf = strophe.content.slice(0, 4);
+														const secondHalf = strophe.content.slice(4);
+														const newStrophes = [...song.strophes];
+														newStrophes[index].content = firstHalf;
+														newStrophes.splice(index + 1, 0, {
+															...strophe,
+															content: secondHalf,
+														});
+														handleChange("strophes", newStrophes);
+													}}
+													className="inline hover:underline text-gray-500 hover:text-gray-700"
+												>
+													couper à la ligne 4
+												</button>
+											</p>
+										</div>
+									)}
+								</div>
 							</div>
 						))}
 					</div>
 					<button
 						type="button"
 						onClick={handleSave}
-						className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600"
+						className="bg-blue-500 text-white px-2 py-1 rounded-md shadow-sm hover:bg-blue-600"
 					>
 						Enregistrer
 					</button>

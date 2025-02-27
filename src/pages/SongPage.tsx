@@ -1,7 +1,4 @@
-import {
-	SongViewer,
-	useLeader,
-} from "@/components";
+import { SongViewer, useLeader } from "@/components";
 import {
 	type TaggedSong,
 	analyticsSong,
