@@ -82,7 +82,7 @@ const SetlistViewer = () => {
 			{setlist ? (
 				<div className="grid grid-cols-3">
 					<ul className="col-span-1 border-r-2 border-gray-200 dark:border-gray-600 h-screen">
-						<li className="h-12 px-4 flex justify-between items-center">
+						<li className="h-12 px-4 flex justify-between items-center bg-slate-700 hover:bg-slate-600 m-2 rounded-md">
 							<TextInput
 								value={setlistName}
 								onChange={setSetlistName}
@@ -93,8 +93,8 @@ const SetlistViewer = () => {
 							<li
 								key={item.id}
 								className={clsx(
-									"flex hover:bg-jubilateBlue-100",
-									selectedItem === item.id && "bg-gray-100 dark:bg-gray-900",
+									"flex pr-2 hover:bg-jubilateBlue-100 dark:hover:bg-slate-600",
+									selectedItem === item.id && "bg-gray-100 dark:bg-slate-700",
 								)}
 							>
 								<button
@@ -108,14 +108,14 @@ const SetlistViewer = () => {
 								</button>
 								<div className="grid grid-cols-2 items-center h-fit w-fit gap-2 my-2 mr-2">
 									<button type="button" className="col-span-1">
-										<ArrowPathIcon className=" bg-jubilateGreen text-white w-6 p-1 rounded-md" />
+										<ArrowPathIcon className=" bg-jubilateGreen bg-opacity-85 hover:bg-opacity-100 text-white w-6 p-1 rounded-md" />
 									</button>
 									<button
 										type="button"
 										className="col-span-1"
 										onClick={() => handleDelete(item.id)}
 									>
-										<XMarkIcon className="bg-jubilateRed text-white w-6 p-1 rounded-md" />
+										<XMarkIcon className="bg-jubilateRed bg-opacity-85 hover:bg-opacity-100 text-white w-6 p-1 rounded-md" />
 									</button>
 									{index < setlist.length - 1 ? (
 										<button
@@ -125,7 +125,7 @@ const SetlistViewer = () => {
 												handleSwapItemsPosition(item.id, setlist[index + 1].id)
 											}
 										>
-											<ArrowDownIcon className="bg-jubilateBlue-500 text-white w-6 p-1 rounded-md" />
+											<ArrowDownIcon className="bg-jubilateBlue-500 bg-opacity-85 hover:bg-opacity-100 text-white w-6 p-1 rounded-md" />
 										</button>
 									) : (
 										<div className="col-span-1" />
@@ -138,7 +138,7 @@ const SetlistViewer = () => {
 												handleSwapItemsPosition(item.id, setlist[index - 1].id)
 											}
 										>
-											<ArrowUpIcon className="bg-jubilateBlue-500 text-white w-6 p-1 rounded-md" />
+											<ArrowUpIcon className="bg-jubilateBlue-500 bg-opacity-85 hover:bg-opacity-100 text-white w-6 p-1 rounded-md" />
 										</button>
 									) : (
 										<div className="col-span-1" />
@@ -146,11 +146,15 @@ const SetlistViewer = () => {
 								</div>
 							</li>
 						))}
-								<li className="text-black border-b-2 border-gray-200 dark:border-gray-600 w-full" >
-									<button type="button" className="w-full text-left" onClick={() => setIsSongPickerOpen(true)}>
-										+ Add Song
-									</button>
-									</li>
+						<li className="text-white border-b-2 border-gray-200 dark:border-gray-600 w-full">
+							<button
+								type="button"
+								className="w-fit place-self-start text-left p-2 bg-jubilateBlue-500 hover:bg-jubilateBlue-700 m-2 rounded-md"
+								onClick={() => setIsSongPickerOpen(true)}
+							>
+								+ Add Song
+							</button>
+						</li>
 					</ul>
 					{selectedSong && (
 						<div className="col-span-2 max-h-screen overflow-y-auto">

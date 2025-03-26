@@ -36,13 +36,20 @@ const SongPicker = ({ isOpen, handleClose }: SongPickerProps) => {
 	if (!isOpen) return null;
 
 	return (
-		<div className="bg-black/50 fixed inset-0 flex justify-center items-center" onClick={handleClose}>
-			<div className="bg-white dark:bg-gray-800 rounded-lg w-4/5 h-4/5 overflow-y-auto grid grid-cols-3" onClick={(e) => e.stopPropagation()}>
+		// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
+		<div
+			className="bg-black/50 fixed inset-0 flex justify-center items-center"
+			onClick={handleClose}
+		>
+			<div
+				className="bg-white dark:bg-gray-800 rounded-lg w-4/5 h-4/5 overflow-y-auto grid grid-cols-3"
+				onClick={(e) => e.stopPropagation()}
+			>
 				<div className="flex flex-col col-span-1 min-h-0">
-					<h2 className="text-xl font-bold px-4 py-2 shadow">
-						Selectionner un chant
+					<h2 className="text-xl font-bold px-4 py-2 shadow dark:text-white">
+						Sélectionner un chant
 					</h2>
-					<div className="grow min-h-0 overflow-y-auto">
+					<div className="grow min-h-0 overflow-y-auto scrollbar">
 						{songs.map((song) => (
 							<button
 								key={song.id}
