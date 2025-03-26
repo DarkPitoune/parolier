@@ -14,7 +14,7 @@ export const TextInput = ({
 	onBlur,
 }: TextInputProps) => (
 	<label className="text-sm sm:text-base font-medium text-black dark:text-white">
-		{label && `${label}:`}
+		{label && `${label} :`}
 		<div className="flex flex-col items-center">
 			<input
 				type="text"

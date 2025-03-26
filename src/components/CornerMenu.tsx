@@ -82,10 +82,10 @@ export const CornerMenu = () => {
 					onClick={() => setDarkMode(!darkMode)}
 					type="button"
 					className={clsx(
-						"absolute bg-yellow-200 ease-in-out z-1 size-12 rounded-full transition-all -z-10 flex items-center justify-center",
+						"absolute ease-in-out z-1 size-12 rounded-full transition-all -z-10 flex items-center justify-center",
 						isExpanded ? "-top-20 " : "left-2 top-2",
 					)}
-					style={{ backgroundColor: darkMode ? "#fde047" : "#0f172a" }}
+					style={{ backgroundColor: darkMode ? "#ffc852" : "#0f172a" }}
 				>
 					{darkMode ? (
 						<SunIcon color="white" className="size-8" />
