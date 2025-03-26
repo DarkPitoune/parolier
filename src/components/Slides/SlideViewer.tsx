@@ -1,14 +1,37 @@
 import type { Strophe } from "@/assets/types";
+import { setlistLengthQuery } from "@/utils/supabase";
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 const SlideViewer = ({ strophes }: { strophes: Strophe[] }) => {
+	const { stepNumber, setlistId } = useParams();
+	const navigate = useNavigate();
 	const [step, setStep] = useState(0);
+	const [setlistLength, setSetlistLength] = useState(0);
 
-	const plus1 = useCallback(
-		() => setStep((s) => Math.min(s + 1, strophes.length - 1)),
-		[strophes],
-	);
-	const minus1 = useCallback(() => setStep((s) => Math.max(0, s - 1)), []);
+	useEffect(() => {
+		if (setlistId)
+			setlistLengthQuery(setlistId).then(({ data }) => {
+				if (data) setSetlistLength(data[0].position);
+			});
+	}, [setlistId]);
+
+	const plus1 = useCallback(() => {
+		setStep((s) => Math.min(s + 1, strophes.length - 1));
+		if (
+			step === strophes.length - 1 &&
+			setlistId &&
+			stepNumber &&
+			Number(stepNumber) < setlistLength
+		)
+			navigate(`/setlists/${setlistId}/steps/${Number(stepNumber) + 1}/slide`);
+	}, [navigate, setlistId, stepNumber, strophes.length, step, setlistLength]);
+
+	const minus1 = useCallback(() => {
+		setStep((s) => Math.max(0, s - 1));
+		if (step === 0 && setlistId && stepNumber && Number(stepNumber) > 0)
+			navigate(`/setlists/${setlistId}/steps/${Number(stepNumber) - 1}/slide`);
+	}, [navigate, setlistId, step, stepNumber]);
 
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {

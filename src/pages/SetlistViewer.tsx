@@ -1,6 +1,7 @@
-import { SongItem, SongViewer, TextInput } from "@/components";
+import { SongItem, SongPicker, SongViewer, TextInput } from "@/components";
 import {
 	type Setlist,
+	setlistItemAppendMutation,
 	setlistItemDeleteMutation,
 	setlistItemPositionMutation,
 	setlistNameMutation,
@@ -13,7 +14,7 @@ import {
 	XMarkIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 const SetlistViewer = () => {
@@ -22,8 +23,9 @@ const SetlistViewer = () => {
 	const [setlist, setSetlist] = useState<Setlist | null>(null);
 	const [selectedItem, setSelectedItem] = useState<number>();
 	const [setlistName, setSetlistName] = useState<string>("");
+	const [isSongPickerOpen, setIsSongPickerOpen] = useState(false);
 
-	useEffect(() => {
+	const handleSetlistQuery = useCallback(() => {
 		if (!setlistId) return;
 		setlistQuery(setlistId).then(({ data }) => {
 			if (data) data.sort((a, b) => a.position - b.position);
@@ -31,6 +33,10 @@ const SetlistViewer = () => {
 			if (data?.[0]?.setlists?.name) setSetlistName(data[0].setlists.name);
 		});
 	}, [setlistId]);
+
+	useEffect(() => {
+		handleSetlistQuery();
+	}, [handleSetlistQuery]);
 
 	const handleSaveSetlistName = () => {
 		if (!setlistId) return;
@@ -61,10 +67,18 @@ const SetlistViewer = () => {
 		setSetlist(newSetlist);
 	};
 
+	const handleClose = (songId: number) => {
+		setIsSongPickerOpen(false);
+		if (!setlistId) return;
+		setlistItemAppendMutation(Number(setlistId), songId).then(() => {
+			handleSetlistQuery();
+		});
+	};
+
 	const selectedSong = setlist?.find((item) => item.id === selectedItem)?.songs;
 
 	return (
-		<div>
+		<>
 			{setlist ? (
 				<div className="grid grid-cols-3">
 					<ul className="col-span-1 border-r-2 border-gray-200 dark:border-gray-600 h-screen">
@@ -132,6 +146,11 @@ const SetlistViewer = () => {
 								</div>
 							</li>
 						))}
+								<li className="text-black border-b-2 border-gray-200 dark:border-gray-600 w-full" >
+									<button type="button" className="w-full text-left" onClick={() => setIsSongPickerOpen(true)}>
+										+ Add Song
+									</button>
+									</li>
 					</ul>
 					{selectedSong && (
 						<div className="col-span-2 max-h-screen overflow-y-auto">
@@ -142,7 +161,8 @@ const SetlistViewer = () => {
 			) : (
 				<p>Loading...</p>
 			)}
-		</div>
+			<SongPicker isOpen={isSongPickerOpen} handleClose={handleClose} />
+		</>
 	);
 };
 

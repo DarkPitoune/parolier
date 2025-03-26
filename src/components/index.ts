@@ -21,4 +21,5 @@ export { SlideHelp } from "./Slides/SlideHelp";
 export { TouchScreenListener } from "./TouchScreenListener";
 export { SongViewer } from "./SongViewer";
 export { TextInput } from "./TextInput";
+export { SongPicker } from "./SongPicker";
 export { SongItem } from "./SongItem";

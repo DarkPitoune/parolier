@@ -11,7 +11,10 @@ export const analyticsSong = async (songId: number) =>
 	supabase.from("analytics").insert({ songId });
 
 export const allSongsQuery = async () =>
-	supabase.from("songs").select("title, id, tags (id, name, svg, color)");
+	supabase
+		.from("songs")
+		.select("title, id, tags (id, name, svg, color)")
+		.order("id");
 export type AllSongs = QueryData<ReturnType<typeof allSongsQuery>>;
 
 export const taggedSongQuery = async (songId: number) =>
@@ -89,4 +92,24 @@ export const setlistItemDeleteMutation = async (
 		.eq("id", itemId);
 export type SetlistItemDeleteMutation = QueryData<
 	ReturnType<typeof setlistItemDeleteMutation>
+>;
+
+export const setlistLengthQuery = async (setlistId: string) =>
+	supabase
+		.from("setlist_items")
+		.select("position")
+		.eq("setlist_id", setlistId)
+		.order("position", { ascending: false })
+		.limit(1);
+export type SetlistLength = QueryData<ReturnType<typeof setlistLengthQuery>>;
+
+export const setlistItemAppendMutation = async (
+	setlistId: number,
+	songId: number,
+) =>
+	supabase
+		.from("setlist_items")
+		.insert({ setlist_id: setlistId, song_id: songId });
+export type SetlistItemAppendMutation = QueryData<
+	ReturnType<typeof setlistItemAppendMutation>
 >;

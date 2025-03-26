@@ -1,10 +1,10 @@
-import type { TaggedSong } from "@/utils/supabase";
+import { type TaggedSong, setlistLengthQuery } from "@/utils/supabase";
 import { transposeLine } from "@/utils/tonalManipulation";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useLeader } from "./Contexts/LeaderContext";
 import { addChorusAtom, showChordsAtom } from "./Contexts/SettingsContext";
@@ -20,6 +20,14 @@ function SongViewer({
 	const { leader } = useLeader();
 	const { stepNumber, setlistId } = useParams();
 	const [tonality, setTonality] = useState(0);
+	const [setlistLength, setSetlistLength] = useState(0);
+
+	useEffect(() => {
+		if (setlistId)
+			setlistLengthQuery(setlistId).then(({ data }) => {
+				if (data) setSetlistLength(data[0].position);
+			});
+	}, [setlistId]);
 
 	const strophes = addChorusSetting
 		? song?.strophes
@@ -46,7 +54,11 @@ function SongViewer({
 						<Link
 							className="rounded-full hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-3"
 							onClick={() => document.body.requestFullscreen()}
-							to={`/slides/${song?.id}`}
+							to={
+								setlistId
+									? `/setlists/${setlistId}/steps/${stepNumber}/slide`
+									: `/slides/${song?.id}`
+							}
 						>
 							<ComputerDesktopIcon className="size-6 fill-white" />
 						</Link>
@@ -122,12 +134,14 @@ function SongViewer({
 							<ChevronLeftIcon className="w-10 dark:fill-gray-800 fill-white" />
 						</Link>
 					)}
-					<Link
-						className="bg-jubilateBlue-100 dark:bg-jubilateBlue-400 rounded-full hover:bg-jubilateBlue-300"
-						to={`/setlists/${setlistId}/steps/${Number(stepNumber) + 1}`}
-					>
-						<ChevronRightIcon className="w-10 dark:fill-gray-800 fill-white" />
-					</Link>
+					{Number(stepNumber) < setlistLength && (
+						<Link
+							className="bg-jubilateBlue-100 dark:bg-jubilateBlue-400 rounded-full hover:bg-jubilateBlue-300"
+							to={`/setlists/${setlistId}/steps/${Number(stepNumber) + 1}`}
+						>
+							<ChevronRightIcon className="w-10 dark:fill-gray-800 fill-white" />
+						</Link>
+					)}
 				</div>
 			)}
 		</div>

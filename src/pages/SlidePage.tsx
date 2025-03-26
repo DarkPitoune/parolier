@@ -6,7 +6,7 @@ import {
 	TouchScreenListener,
 	slideHelpAtom,
 } from "@/components";
-import supabase from "@/utils/supabase";
+import supabase, { taggedSongFromSetlistStepQuery } from "@/utils/supabase";
 import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -23,18 +23,18 @@ const taggedSongQuery = (songId: number) =>
 
 // region React Component
 
-const SlideShow = () => {
-	const { songId } = useParams();
+const SlidePage = () => {
+	const { songId, stepNumber, setlistId } = useParams();
 	const [strophes, setStrophes] = useState<Strophe[]>([]);
 	const navigate = useNavigate();
 	const [slideHelp, setSlideHelp] = useAtom(slideHelpAtom);
 
 	useEffect(() => {
-		if (!songId) setStrophes([]);
-		else
+		if (songId) {
 			taggedSongQuery(Number(songId)).then(({ data, error }) => {
-				if (data?.strophes) setStrophes(data.strophes);
-				else {
+				if (data?.strophes) {
+					setStrophes(data.strophes);
+				} else {
 					setStrophes([]);
 					const errorMessage =
 						error?.code === "PGRST116"
@@ -48,7 +48,24 @@ const SlideShow = () => {
 					});
 				}
 			});
-	}, [songId]);
+		}
+		if (setlistId && stepNumber)
+			// showing the page in the context of a set
+			taggedSongFromSetlistStepQuery(setlistId, Number(stepNumber)).then(
+				({ data }) => {
+					if (data?.songs) {
+						setStrophes(data.songs.strophes);
+						toast(data.songs.title, {
+							position: "top-center",
+							style: {
+								backgroundColor: "black",
+								color: "white",
+							},
+						});
+					}
+				},
+			);
+	}, [songId, setlistId, stepNumber]);
 
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {
@@ -84,7 +101,7 @@ const SlideShow = () => {
 		<div className="absolute z-20 inset-0 flex flex-col justify-center items-center text-white bg-black overflow-clip">
 			<SlideFinder />
 			{strophes.length > 0 ? (
-				<SlideViewer key={songId} strophes={strophes} /> // key to fully dismount child component on song change and thus reset state
+				<SlideViewer key={songId || stepNumber} strophes={strophes} /> // key to fully dismount child component on song change and thus reset state
 			) : (
 				<img src="/svg/Jubilate_Croix.svg" alt="logo" className="size-36" />
 			)}
@@ -94,4 +111,4 @@ const SlideShow = () => {
 	);
 };
 
-export { SlideShow };
+export { SlidePage };
