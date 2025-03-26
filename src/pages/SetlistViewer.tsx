@@ -6,6 +6,12 @@ import {
 	setlistNameMutation,
 	setlistQuery,
 } from "@/utils/supabase";
+import {
+	ArrowDownIcon,
+	ArrowPathIcon,
+	ArrowUpIcon,
+	XMarkIcon,
+} from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -70,43 +76,58 @@ const SetlistViewer = () => {
 							/>
 						</li>
 						{setlist.map((item, index) => (
-							<li key={item.id} className="flex">
+							<li
+								key={item.id}
+								className={clsx(
+									"flex hover:bg-jubilateBlue-100",
+									selectedItem === item.id && "bg-gray-100 dark:bg-gray-900",
+								)}
+							>
 								<button
 									type="button"
-									className={clsx(
-										"w-full text-left",
-										selectedItem === item.id && "bg-gray-100 dark:bg-gray-900",
-									)}
+									className={clsx("w-full text-left")}
 									onClick={() => {
 										setSelectedItem(item.id);
 									}}
 								>
-									{item.songs && <SongItem song={item.songs} />}
+									{item.songs && <SongItem song={item.songs} hover={false} />}
 								</button>
-								<div className="w-14">
-									<button type="button">🔄</button>
-									<button type="button" onClick={() => handleDelete(item.id)}>
-										❌
+								<div className="grid grid-cols-2 items-center h-fit w-fit gap-2 my-2 mr-2">
+									<button type="button" className="col-span-1">
+										<ArrowPathIcon className=" bg-jubilateGreen text-white w-6 p-1 rounded-md" />
 									</button>
-									{index < setlist.length - 1 && (
+									<button
+										type="button"
+										className="col-span-1"
+										onClick={() => handleDelete(item.id)}
+									>
+										<XMarkIcon className="bg-jubilateRed text-white w-6 p-1 rounded-md" />
+									</button>
+									{index < setlist.length - 1 ? (
 										<button
 											type="button"
+											className="col-span-1"
 											onClick={() =>
 												handleSwapItemsPosition(item.id, setlist[index + 1].id)
 											}
 										>
-											🔽
+											<ArrowDownIcon className="bg-jubilateBlue-500 text-white w-6 p-1 rounded-md" />
 										</button>
+									) : (
+										<div className="col-span-1" />
 									)}
-									{index > 0 && (
+									{index > 0 ? (
 										<button
 											type="button"
+											className="col-span-1"
 											onClick={() =>
 												handleSwapItemsPosition(item.id, setlist[index - 1].id)
 											}
 										>
-											🔼
+											<ArrowUpIcon className="bg-jubilateBlue-500 text-white w-6 p-1 rounded-md" />
 										</button>
+									) : (
+										<div className="col-span-1" />
 									)}
 								</div>
 							</li>

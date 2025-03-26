@@ -1,9 +1,18 @@
 import type { AllSongs } from "@/utils/supabase";
 import { DynamicText } from "./DynamicText";
+import clsx from "clsx";
 
-export function SongItem({ song }: { song: AllSongs[number] }) {
+export function SongItem({
+	song,
+	hover = true,
+}: { song: AllSongs[number]; hover?: boolean }) {
 	return (
-		<div className="px-2 py-4 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 flex items-stretch gap-3 text-black dark:text-jubilateBlue-400">
+		<div
+			className={clsx(
+				"px-2 py-4  flex items-stretch gap-3 text-black dark:text-jubilateBlue-400",
+				hover && "hover:bg-jubilateBlue-100 dark:hover:bg-gray-700",
+			)}
+		>
 			<div className="w-10 justify-center border-r font-bold flex items-center">
 				{song.id}
 			</div>
