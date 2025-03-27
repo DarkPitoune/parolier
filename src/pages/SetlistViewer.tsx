@@ -163,7 +163,7 @@ const SetlistViewer = () => {
 					)}
 				</div>
 			) : (
-				<p>Loading...</p>
+				<p>Chargement...</p>
 			)}
 			<SongPicker isOpen={isSongPickerOpen} handleClose={handleClose} />
 		</>
