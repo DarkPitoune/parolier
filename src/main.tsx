@@ -40,7 +40,7 @@ const router = createBrowserRouter([
 		element: <SongPage />,
 	},
 	{
-		path: "/songs/edit/:songId",
+		path: "/songs/:songId/edit",
 		element: <SongEditor />,
 	},
 	{

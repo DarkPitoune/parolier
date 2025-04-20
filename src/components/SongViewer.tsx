@@ -10,6 +10,7 @@ import { useLeader } from "./Contexts/LeaderContext";
 import { addChorusAtom, showChordsAtom } from "./Contexts/SettingsContext";
 import { DynamicText } from "./DynamicText";
 import { SidePanel } from "./SidePanel";
+import { TagChip } from "./TagChip";
 
 function SongViewer({
 	song,
@@ -77,20 +78,7 @@ function SongViewer({
 				</div>
 				<div className="flex gap-8 px-4 font-flame">
 					{song.tags?.map((tag) => (
-						<div className="flex gap-1" key={tag.id}>
-							<div
-								style={{ fill: tag.color || "black" }}
-								className="size-6"
-								// biome-ignore lint/security/noDangerouslySetInnerHtml: svg is in database
-								dangerouslySetInnerHTML={{ __html: tag.svg || "" }}
-							/>
-							<div
-								className="font-bold"
-								style={{ color: tag.color || "black" }}
-							>
-								{tag.name}
-							</div>
-						</div>
+						<TagChip tag={tag} key={tag.id} />
 					))}
 				</div>
 				<div className="flex flex-col gap-4">

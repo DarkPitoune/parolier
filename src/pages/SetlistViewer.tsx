@@ -67,10 +67,14 @@ const SetlistViewer = () => {
 		setSetlist(newSetlist);
 	};
 
-	const handleClose = (songId: number) => {
+	const handleClose = (songId?: number) => {
 		setIsSongPickerOpen(false);
-		if (!setlistId) return;
-		setlistItemAppendMutation(Number(setlistId), songId).then(() => {
+		if (!songId || !setlistId || setlist === null) return;
+		setlistItemAppendMutation(
+			setlist.length - 1,
+			Number(setlistId),
+			songId,
+		).then(() => {
 			handleSetlistQuery();
 		});
 	};
@@ -82,7 +86,7 @@ const SetlistViewer = () => {
 			{setlist ? (
 				<div className="grid grid-cols-3">
 					<ul className="col-span-1 border-r-2 border-gray-200 dark:border-gray-600 h-screen">
-						<li className="h-12 px-4 flex justify-between items-center bg-slate-700 hover:bg-slate-600 m-2 rounded-md">
+						<li className="h-12 px-4 flex justify-between items-center bg-jubilateBlue-100 hover:bg-jubilateBlue-200 dark:bg-slate-700 dark:hover:bg-slate-600 m-2 rounded-md">
 							<TextInput
 								value={setlistName}
 								onChange={setSetlistName}
@@ -99,7 +103,7 @@ const SetlistViewer = () => {
 							>
 								<button
 									type="button"
-									className={clsx("w-full text-left")}
+									className="w-full text-left"
 									onClick={() => {
 										setSelectedItem(item.id);
 									}}
@@ -165,7 +169,7 @@ const SetlistViewer = () => {
 			) : (
 				<p>Chargement...</p>
 			)}
-			<SongPicker isOpen={isSongPickerOpen} handleClose={handleClose} />
+			{isSongPickerOpen && <SongPicker handleClose={handleClose} />}
 		</>
 	);
 };

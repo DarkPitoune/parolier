@@ -3,6 +3,8 @@ import {
 	filtersAtom,
 	tagTabOpenAtom,
 } from "@/components/Contexts/SettingsContext";
+import { getSongItemId } from "@/components/SongItem";
+import { TagChip } from "@/components/TagChip";
 import supabase, {
 	type AllSongs,
 	allSongsQuery,
@@ -26,193 +28,213 @@ import { Link } from "react-router-dom";
 const isSetlistEnabled = localStorage.getItem("setlistEnabled") === "true";
 
 function Index() {
-	const [songs, setSongs] = useState<AllSongs>([]);
-	const [filteredSongs, setFilteredSongs] = useState<AllSongs>([]);
-	const [tags, setTags] = useState<Tags>([]);
-	const [selectedTags, setSelectedTags] = useAtom<number[]>(filtersAtom);
-	const [tagTabOpen, setTagTabOpen] = useAtom(tagTabOpenAtom);
-	const fuse = useMemo(() => new Fuse(songs, { keys: ["title"] }), [songs]);
-	const { leader } = useLeader();
+  const [songs, setSongs] = useState<AllSongs>([]);
+  const [filteredSongs, setFilteredSongs] = useState<AllSongs>([]);
+  const [tags, setTags] = useState<Tags>([]);
+  const [selectedTags, setSelectedTags] = useAtom<number[]>(filtersAtom);
+  const [tagTabOpen, setTagTabOpen] = useAtom(tagTabOpenAtom);
+  const [selectedSongIndex, setSelectedSongIndex] = useState<number | null>(
+    null
+  );
+  const fuse = useMemo(() => new Fuse(songs, { keys: ["title"] }), [songs]);
+  const { leader } = useLeader();
 
-	const toggleTag = (id: number) => {
-		setSelectedTags((oldTags) => {
-			if (!oldTags.includes(id)) return oldTags.concat([id]);
-			return oldTags.filter((tagId) => tagId !== id);
-		});
-	};
+  const toggleTag = (id: number) => {
+    setSelectedTags((oldTags) => {
+      if (!oldTags.includes(id)) return oldTags.concat([id]);
+      return oldTags.filter((tagId) => tagId !== id);
+    });
+  };
 
-	useEffect(() => {
-		allSongsQuery().then(({ data }) => {
-			if (data && data.length > 0) {
-				data.sort((a, b) => a.id - b.id);
-				setSongs(data);
-				setFilteredSongs(data);
-				fuse.setCollection(data);
-			}
-		});
-		allTagsQuery().then(({ data }) => {
-			if (data && data.length > 0) {
-				data.sort((a, b) => a.id - b.id);
-				setTags(data);
-			}
-		});
-	}, [fuse.setCollection]);
+  useEffect(() => {
+    allSongsQuery().then(({ data }) => {
+      if (data && data.length > 0) {
+        data.sort((a, b) => a.id - b.id);
+        setSongs(data);
+        setFilteredSongs(data);
+        fuse.setCollection(data);
+      }
+    });
+    allTagsQuery().then(({ data }) => {
+      if (data && data.length > 0) {
+        data.sort((a, b) => a.id - b.id);
+        setTags(data);
+      }
+    });
+  }, [fuse.setCollection]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: we want to scroll AFTER the songs are loaded in the DOM
-	useEffect(() => {
-		window.scroll({
-			top: Number(sessionStorage.getItem("indexScroll") || "0"),
-		});
-	}, [songs]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: we want to scroll AFTER the songs are loaded in the DOM
+  useEffect(() => {
+    window.scroll({
+      top: Number(sessionStorage.getItem("indexScroll") || "0")
+    });
+  }, [songs]);
 
-	useEffect(() => {
-		const setScrollY = () =>
-			sessionStorage.setItem("indexScroll", window.scrollY.toString());
-		window.addEventListener("scroll", setScrollY);
-		return () => {
-			window.removeEventListener("scroll", setScrollY);
-		};
-	}, []);
+  const scrollToSelectedSong = useCallback(() => {
+    if (selectedSongIndex !== null) {
+      const selectedSongId = filteredSongs[selectedSongIndex].id;
+      const element = document.getElementById(getSongItemId(selectedSongId));
+      if (element)
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [selectedSongIndex, filteredSongs]);
 
-	const [searchValue, setSearchValue] = useState("");
+  // biome-ignore lint/correctness/useExhaustiveDependencies: we want to trigger the function when selectedSongId changes
+  useEffect(scrollToSelectedSong, [scrollToSelectedSong]);
 
-	const search: ChangeEventHandler<HTMLInputElement> = useCallback(
-		(event) => {
-			setSearchValue(event.target.value);
-			if (event.target.value.length === 0) setFilteredSongs(songs);
-			else {
-				window.scrollTo(0, 0);
-				if (!Number.isNaN(Number(event.target.value))) {
-					const song = songs.find((s) => s.id === Number(event.target.value));
-					setFilteredSongs(song ? [song] : []);
-				} else {
-					setFilteredSongs(
-						fuse.search(event.target.value).map((hit) => hit.item),
-					);
-				}
-			}
-		},
-		[fuse, songs],
-	);
+  useEffect(() => {
+    const setScrollY = () =>
+      sessionStorage.setItem("indexScroll", window.scrollY.toString());
+    window.addEventListener("scroll", setScrollY);
 
-	const isCorrectTag = (song: AllSongs[number]) => {
-		if (selectedTags.length === 0) return true;
-		return song.tags.some(({ id }) => selectedTags.includes(id));
-	};
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (selectedSongIndex !== null && event.key === "ArrowUp") {
+        event.preventDefault();
+        setSelectedSongIndex(Math.max(0, selectedSongIndex - 1));
+      }
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        if (selectedSongIndex === null) setSelectedSongIndex(0);
+        else
+          setSelectedSongIndex(
+            Math.min(filteredSongs.length - 1, selectedSongIndex + 1)
+          );
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("scroll", setScrollY);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedSongIndex, filteredSongs]);
 
-	const askNewSong = () => {
-		if (
-			window.confirm(
-				`Voulez-vous vraiment demander l'ajout de "${searchValue}" ?`,
-			)
-		) {
-			const promise = supabase
-				.from("song_requests")
-				.insert({ title: searchValue })
-				.then() as Promise<void>;
-			toast.promise(promise, {
-				loading: "Chargement...",
-				success: "Chant demandé !",
-				error: "Erreur !",
-			});
-		}
-	};
+  const [searchValue, setSearchValue] = useState("");
 
-	return (
-		<div className="bg-white dark:bg-gray-800">
-			<SidePanel />
-			<div
-				className={clsx(
-					"transition-all sticky bg-white dark:bg-gray-800",
-					leader ? "top-6" : "top-0",
-				)}
-			>
-				<div className="bg-jubilateBlue-500 dark:bg-slate-900 px-6 py-4 gap-4 flex justify-between items-center">
-					{isSetlistEnabled && (
-						<Link to="/setlists" className="hidden lg:block">
-							S
-						</Link>
-					)}
-					<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
-						<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
-						<input
-							className="w-full h-9 rounded-full px-2 outline-none bg-white dark:bg-white text-black dark:text-black"
-							type="search"
-							onChange={search}
-							placeholder="Vite, une idée..."
-						/>
-					</div>
-					<img className="h-12" src="/svg/logo.svg" alt="Logo" />
-				</div>
-				<div className="px-6 py-2 flex flex-col items-stretch shadow font-flame">
-					<button
-						className="flex gap-2 text-jubilateBlue-500 dark:text-jubilateBlue-400 items-center"
-						onClick={() => setTagTabOpen((v) => !v)}
-						type="button"
-					>
-						<ChevronUpIcon
-							data-tabopen={tagTabOpen}
-							className="size-10 data-[tabopen=false]:rotate-180 transition"
-						/>
-						<h3 className="text-2xl font-bold">Filtres</h3>
-						{selectedTags.length > 0 && (
-							<div className="bg-jubilateBlue-500 rounded-full text-white font-bold w-6">
-								{selectedTags.length}
-							</div>
-						)}
-					</button>
-					<div>
-						{tagTabOpen &&
-							tags.map((tag) => (
-								<button
-									onClick={() => toggleTag(tag.id)}
-									key={tag.id}
-									aria-checked={selectedTags.includes(tag.id)}
-									type="button"
-									className={clsx(
-										"rounded-full border-2 font-semibold px-3 py-0.5 inline-flex items-center gap-2 m-1",
-										selectedTags.includes(tag.id)
-											? "text-white bg-[var(--tag-color)] border-[var(--tag-color)]"
-											: "text-[var(--tag-color)] bg-transparent border-[var(--tag-color)] border-2",
-									)}
-									style={{ "--tag-color": tag.color } as React.CSSProperties}
-								>
-									<div
-										// biome-ignore lint/security/noDangerouslySetInnerHtml: svg is in database
-										dangerouslySetInnerHTML={{ __html: tag.svg || "" }}
-										style={{
-											fill: selectedTags.includes(tag.id)
-												? "white"
-												: tag.color || "black",
-										}}
-										className="w-4 h-4"
-									/>
-									{tag.name}
-								</button>
-							))}
-					</div>
-				</div>
-			</div>
+  const search: ChangeEventHandler<HTMLInputElement> = useCallback(
+    (event) => {
+      setSearchValue(event.target.value);
+      if (event.target.value.length === 0) setFilteredSongs(songs);
+      else {
+        window.scrollTo(0, 0);
+        if (!Number.isNaN(Number(event.target.value))) {
+          const song = songs.find((s) => s.id === Number(event.target.value));
+          setFilteredSongs(song ? [song] : []);
+					setSelectedSongIndex(0);
+        } else {
+          setFilteredSongs(
+            fuse.search(event.target.value).map((hit) => hit.item)
+          );
+					setSelectedSongIndex(null);
+        }
+      }
+    },
+    [fuse, songs]
+  );
 
-			<div className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300 dark:bg-gray-800">
-				{filteredSongs.filter(isCorrectTag).map((song) => (
-					<Link key={song.id} to={`/songs/${song.id}`}>
-						<SongItem song={song} />
-					</Link>
-				))}
+  const isCorrectTag = (song: AllSongs[number]) => {
+    if (selectedTags.length === 0) return true;
+    return song.tags.some(({ id }) => selectedTags.includes(id));
+  };
 
-				{searchValue && (
-					<button
-						className="px-2 py-4 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 text-black dark:text-white w-full"
-						onClick={askNewSong}
-						type="button"
-					>
-						Demander l'ajout de <b>"{searchValue}"</b> dans la liste
-					</button>
-				)}
-			</div>
-		</div>
-	);
+  const askNewSong = () => {
+    if (
+      window.confirm(
+        `Voulez-vous vraiment demander l'ajout de "${searchValue}" ?`
+      )
+    ) {
+      const promise = supabase
+        .from("song_requests")
+        .insert({ title: searchValue })
+        .then() as Promise<void>;
+      toast.promise(promise, {
+        loading: "Chargement...",
+        success: "Chant demandé !",
+        error: "Erreur !"
+      });
+    }
+  };
+
+  return (
+    <div className="bg-white dark:bg-gray-800">
+      <SidePanel />
+      <div
+        className={clsx(
+          "transition-all sticky bg-white dark:bg-gray-800",
+          leader ? "top-6" : "top-0"
+        )}
+      >
+        <div className="bg-jubilateBlue-500 dark:bg-slate-900 px-6 py-4 gap-4 flex justify-between items-center">
+          {isSetlistEnabled && (
+            <Link to="/setlists" className="hidden lg:block">
+              S
+            </Link>
+          )}
+          <div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
+            <MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
+            <input
+              className="w-full h-9 rounded-full px-2 outline-none bg-white dark:bg-white text-black dark:text-black"
+              type="search"
+              onChange={search}
+              placeholder="Vite, une idée..."
+            />
+          </div>
+          <img className="h-12" src="/svg/logo.svg" alt="Logo" />
+        </div>
+        <div className="px-6 py-2 flex flex-col items-stretch shadow font-flame">
+          <button
+            className="flex gap-2 text-jubilateBlue-500 dark:text-jubilateBlue-400 items-center"
+            onClick={() => setTagTabOpen((v) => !v)}
+            type="button"
+          >
+            <ChevronUpIcon
+              data-tabopen={tagTabOpen}
+              className="size-10 data-[tabopen=false]:rotate-180 transition"
+            />
+            <h3 className="text-2xl font-bold">Filtres</h3>
+            {selectedTags.length > 0 && (
+              <div className="bg-jubilateBlue-500 rounded-full text-white font-bold w-6">
+                {selectedTags.length}
+              </div>
+            )}
+          </button>
+          <div>
+            {tagTabOpen &&
+              tags.map((tag) => (
+                <TagChip
+                  key={tag.id}
+                  tag={tag}
+                  onClick={() => toggleTag(tag.id)}
+                  inverted={selectedTags.includes(tag.id)}
+                  outline
+                />
+              ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300 dark:bg-gray-800">
+        {filteredSongs.filter(isCorrectTag).map((song, index) => (
+          <Link
+            key={song.id}
+            to={`/songs/${song.id}`}
+            className={index === selectedSongIndex ? "bg-gray-300" : ""}
+          >
+            <SongItem song={song} />
+          </Link>
+        ))}
+
+        {searchValue && (
+          <button
+            className="px-2 py-4 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 text-black dark:text-white w-full"
+            onClick={askNewSong}
+            type="button"
+          >
+            Demander l'ajout de <b>"{searchValue}"</b> dans la liste
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export { Index };

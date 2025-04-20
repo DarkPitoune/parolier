@@ -104,12 +104,13 @@ export const setlistLengthQuery = async (setlistId: string) =>
 export type SetlistLength = QueryData<ReturnType<typeof setlistLengthQuery>>;
 
 export const setlistItemAppendMutation = async (
+	position: number,
 	setlistId: number,
 	songId: number,
 ) =>
 	supabase
 		.from("setlist_items")
-		.insert({ setlist_id: setlistId, song_id: songId });
+		.insert({ setlist_id: setlistId, song_id: songId, position });
 export type SetlistItemAppendMutation = QueryData<
 	ReturnType<typeof setlistItemAppendMutation>
 >;

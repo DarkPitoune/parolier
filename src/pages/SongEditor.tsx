@@ -1,5 +1,11 @@
 import type { Line, Strophe } from "@/assets/types";
-import supabase, { songQuery, type Song } from "@/utils/supabase";
+import supabase, {
+	type TaggedSong,
+	taggedSongQuery,
+	type Song,
+	type Tags,
+	allTagsQuery,
+} from "@/utils/supabase";
 
 import { TextInput } from "@/components";
 import { useEffect, useState } from "react";
@@ -7,26 +13,37 @@ import { useParams } from "react-router-dom";
 import type { Json } from "../../database.types";
 import clsx from "clsx";
 import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline";
+import { TagChip } from "@/components/TagChip";
 
 const SongEditor = () => {
 	const { songId } = useParams();
-	const [song, setSong] = useState<Song | null>(null);
+	const [song, setSong] = useState<TaggedSong | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [allTags, setAllTags] = useState<Tags>([]);
+	const [selectedTags, setSelectedTags] = useState<number[]>([]);
 
 	useEffect(() => {
-		songQuery(Number(songId)).then(({ data, error }) => {
+		taggedSongQuery(Number(songId)).then(({ data, error }) => {
 			if (error) throw error;
 			setSong(data);
+			setSelectedTags(data.tags.map((tag) => tag.id));
 			setLoading(false);
+		});
+
+		allTagsQuery().then(({ data, error }) => {
+			if (error) throw error;
+			data.sort((a, b) => a.id - b.id);
+			setAllTags(data);
 		});
 	}, [songId]);
 
 	const handleSave = async () => {
 		if (!song) return;
+		const { strophes, title } = song;
 
 		const songNoEmptyLines = {
-			...song,
-			strophes: song.strophes.map((strophe) => ({
+			title,
+			strophes: strophes.map((strophe) => ({
 				...strophe,
 				content: strophe.content.filter(
 					(line) => line.text || line.chords,
@@ -34,13 +51,26 @@ const SongEditor = () => {
 			})),
 		};
 
-		const { error } = await supabase
+		const { error: errorSong } = await supabase
 			.from("songs")
 			.update(songNoEmptyLines)
 			.eq("id", song.id);
 
-		if (error) throw error;
-		alert("Song saved successfully!");
+		const { error: errorTags } = await supabase
+			.from("song_tag")
+			.delete()
+			.eq("song_id", song.id);
+
+		const { error: errorInsertTags } = await supabase.from("song_tag").insert(
+			selectedTags.map((tagId) => ({
+				song_id: song.id,
+				tag_id: tagId,
+			})),
+		);
+
+		if (errorSong || errorTags || errorInsertTags)
+			throw errorSong || errorTags || errorInsertTags;
+		alert("Modifications enregistrées");
 	};
 
 	const handleChange = (field: keyof Song, value: Strophe[] | string) => {
@@ -86,6 +116,13 @@ const SongEditor = () => {
 		handleChange("strophes", newStrophes);
 	};
 
+	const toggleTag = (tagId: number) => {
+		setSelectedTags((oldTags) => {
+			if (!oldTags.includes(tagId)) return oldTags.concat([tagId]);
+			return oldTags.filter((id) => id !== tagId);
+		});
+	};
+
 	if (loading) return <div className="text-center">Loading...</div>;
 
 	return (
@@ -112,6 +149,16 @@ const SongEditor = () => {
 								onChange={(value) => handleChange("title", value)}
 							/>
 						</div>
+						{allTags.map((tag) => (
+							<TagChip
+								tag={tag}
+								onClick={() => toggleTag(tag.id)}
+								key={tag.id}
+								inverted={selectedTags.includes(tag.id)}
+								iconOnly
+								outline
+							/>
+						))}
 						<div>
 							<h3 className="text-xl font-semibold mb-2">Strophes&nbsp;:</h3>
 							{song.strophes.map((strophe, index) => (
@@ -139,7 +186,7 @@ const SongEditor = () => {
 													handleStropheChange(index, "type", e.target.value)
 												}
 												className={clsx(
-													"w-full border rounded-md shadow-sm p-1 sm:text-sm",
+													"w-full border rounded-md shadow-sm p-1 sm:text-sm bg-transparent",
 													strophe.type === "verse" &&
 														"border-jubilateBlue-500 dark:focus:outline-slate-500 dark:bg-inherit dark:border-slate-700",
 													strophe.type === "chorus" &&
@@ -155,7 +202,7 @@ const SongEditor = () => {
 										</label>
 									</div>
 									<div className="mb-2">
-										<label className="text-sm font-medium flex ">
+										<label className="text-sm font-medium flex gap-1 items-center">
 											Répétition&nbsp;:
 											<input
 												type="checkbox"
@@ -167,7 +214,6 @@ const SongEditor = () => {
 														e.target.checked,
 													)
 												}
-												className="ml-2 -mb-[2px]"
 											/>
 										</label>
 									</div>
