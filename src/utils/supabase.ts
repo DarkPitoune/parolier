@@ -94,6 +94,20 @@ export type SetlistItemDeleteMutation = QueryData<
 	ReturnType<typeof setlistItemDeleteMutation>
 >;
 
+export const setlistTextItemMutation = async (
+	setlistId: string,
+	itemId: number,
+	text: string,
+) =>
+	supabase
+		.from("setlist_items")
+		.update({ text })
+		.eq("setlist_id", setlistId)
+		.eq("id", itemId);
+export type SetlistTextItemMutation = QueryData<
+	ReturnType<typeof setlistTextItemMutation>
+>;
+
 export const setlistLengthQuery = async (setlistId: string) =>
 	supabase
 		.from("setlist_items")
@@ -106,11 +120,12 @@ export type SetlistLength = QueryData<ReturnType<typeof setlistLengthQuery>>;
 export const setlistItemAppendMutation = async (
 	position: number,
 	setlistId: number,
-	songId: number,
+	songId: number | null,
+	text: string | null,
 ) =>
 	supabase
 		.from("setlist_items")
-		.insert({ setlist_id: setlistId, song_id: songId, position });
+		.insert({ setlist_id: setlistId, song_id: songId, position, text });
 export type SetlistItemAppendMutation = QueryData<
 	ReturnType<typeof setlistItemAppendMutation>
 >;
