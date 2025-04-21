@@ -13,6 +13,7 @@ import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { Toaster } from "react-hot-toast";
 import SongEditor from "./pages/SongEditor";
+import { SetlistPage } from "./pages/SetlistPage";
 
 const router = createBrowserRouter([
 	{
@@ -28,8 +29,8 @@ const router = createBrowserRouter([
 		element: <SetlistViewer />,
 	},
 	{
-		path: "/setlists/:setlistId/steps/:stepNumber",
-		element: <SongPage />,
+		path: "/setlists/:setlistId",
+		element: <SetlistPage />,
 	},
 	{
 		path: "/setlists/:setlistId/steps/:stepNumber/slide",

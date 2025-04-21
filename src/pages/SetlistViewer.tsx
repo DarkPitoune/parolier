@@ -70,13 +70,11 @@ const SetlistViewer = () => {
 	const handleClose = (songId?: number) => {
 		setIsSongPickerOpen(false);
 		if (!songId || !setlistId || setlist === null) return;
-		setlistItemAppendMutation(
-			setlist.length - 1,
-			Number(setlistId),
-			songId,
-		).then(() => {
-			handleSetlistQuery();
-		});
+		setlistItemAppendMutation(setlist.length, Number(setlistId), songId).then(
+			() => {
+				handleSetlistQuery();
+			},
+		);
 	};
 
 	const selectedSong = setlist?.find((item) => item.id === selectedItem)?.songs;

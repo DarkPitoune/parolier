@@ -37,6 +37,9 @@ function SongPage() {
 	}, [songId, setlistId, stepNumber]);
 
 	if (!song) return null;
+
+	if (setlistId && stepNumber) return <div></div>;
+
 	return <SongViewer song={song} />;
 }
 
