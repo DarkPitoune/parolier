@@ -52,7 +52,7 @@ function SetlistPage() {
 				<SwipeableTabs
 					activeTab={activeTab}
 					setActiveTab={handleChangeTab}
-					tabs={setlist.map((item) => ({
+					tabs={setlist.filter(item => item.songs).map((item) => ({
 						id: item.id,
 						title: item.songs.title,
 						content: (
