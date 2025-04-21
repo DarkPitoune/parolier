@@ -1,24 +1,15 @@
-import { type TaggedSong, setlistLengthQuery } from "@/utils/supabase";
+import type { TaggedSong } from "@/utils/supabase";
 import { transposeLine } from "@/utils/tonalManipulation";
-import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
-import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { Fragment, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { useLeader } from "./Contexts/LeaderContext";
 import { addChorusAtom, showChordsAtom } from "./Contexts/SettingsContext";
 import { DynamicText } from "./DynamicText";
-import { SidePanel } from "./SidePanel";
+import { SettingsSidePanel } from "./SidePanel/variants/SettingsSidePanel";
 import { TagChip } from "./TagChip";
 
-function SongViewer({
-	song,
-	showTopBar = true,
-}: { song: TaggedSong; showTopBar?: boolean }) {
+function SongViewer({ song }: { song: TaggedSong }) {
 	const addChorusSetting = useAtomValue(addChorusAtom);
 	const showChords = useAtomValue(showChordsAtom);
-	const { leader } = useLeader();
-	const { stepNumber, setlistId } = useParams();
 	const [tonality, setTonality] = useState(0);
 
 	const strophes = addChorusSetting
@@ -27,30 +18,7 @@ function SongViewer({
 
 	return (
 		<div className="bg-white dark:bg-gray-800">
-			<SidePanel tonality={tonality} setTonality={setTonality} />
-			{showTopBar && (
-				<div
-					className={clsx(
-						"flex justify-between items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky bg-white dark:bg-gray-900",
-						leader ? "top-6" : "top-0",
-					)}
-				>
-					<div className="flex items-center gap-4">
-						<Link
-							className="rounded-full hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-3"
-							onClick={() => document.body.requestFullscreen()}
-							to={
-								setlistId
-									? `/setlists/${setlistId}/steps/${stepNumber}/slide`
-									: `/slides/${song?.id}`
-							}
-						>
-							<ComputerDesktopIcon className="size-6 fill-white" />
-						</Link>
-					</div>
-				</div>
-			)}
-
+			<SettingsSidePanel tonality={tonality} setTonality={setTonality} />
 			<div className="flex flex-col gap-4 p-4">
 				<div className="flex gap-4 items-center">
 					<h1 className="font-flame text-3xl text-jubilateBlue-500 dark:text-jubilateBlue-400">

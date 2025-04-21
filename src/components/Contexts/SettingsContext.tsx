@@ -1,3 +1,4 @@
+import { atom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 
 export const fontSizeAtom = atomWithStorage("settings.fontSize", 2);
@@ -8,11 +9,10 @@ export const usernameAtom = atomWithStorage(
 	"settings.username",
 	navigator.platform,
 ); // deprecated but idc
-export const settingsOpenedAtom = atomWithStorage(
-	"settings.settingsOpened",
-	false,
-);
-export const tonalityAtom = atomWithStorage("settings.tonality", 0);
+
+export const settingsOpenAtom = atom(false);
+
+export const tonalityAtom = atom(0);
 
 // True is : I want to see the slide help
 export const slideHelpAtom = atomWithStorage(
@@ -24,6 +24,9 @@ export const slideHelpAtom = atomWithStorage(
 		getOnInit: true,
 	},
 );
+
+// True is : I want to see the song editor help
+export const songEditorHelpOpen = atomWithStorage("help.songEditor", true);
 
 export const filtersAtom = atomWithStorage<number[]>(
 	"filters",

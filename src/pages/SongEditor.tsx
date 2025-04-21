@@ -14,6 +14,9 @@ import type { Json } from "../../database.types";
 import clsx from "clsx";
 import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/24/outline";
 import { TagChip } from "@/components/TagChip";
+import { ChevronRightIcon } from "@heroicons/react/16/solid";
+import { useAtom } from "jotai";
+import { songEditorHelpOpen } from "@/components/Contexts/SettingsContext";
 
 const SongEditor = () => {
 	const { songId } = useParams();
@@ -21,6 +24,8 @@ const SongEditor = () => {
 	const [loading, setLoading] = useState(true);
 	const [allTags, setAllTags] = useState<Tags>([]);
 	const [selectedTags, setSelectedTags] = useState<number[]>([]);
+	const [isSongEditorHelpOpen, setIsSongEditorHelpOpen] =
+		useAtom(songEditorHelpOpen);
 
 	useEffect(() => {
 		taggedSongQuery(Number(songId)).then(({ data, error }) => {
@@ -159,14 +164,51 @@ const SongEditor = () => {
 								outline
 							/>
 						))}
-						<div>
+						<div className="flex flex-col gap-4">
 							<h3 className="text-xl font-semibold mb-2">Strophes&nbsp;:</h3>
+							<button
+								type="button"
+								className="text-left border p-4 rounded-md bg-lime-100  border-lime-300 dark:bg-lime-500 dark:bg-opacity-50 dark:border-lime-600"
+								onClick={() => setIsSongEditorHelpOpen((v) => !v)}
+							>
+								<div className="flex gap-2 items-center">
+									<ChevronRightIcon
+										className={clsx(
+											"size-6 transition-transform",
+											isSongEditorHelpOpen ? "rotate-90" : "",
+										)}
+									/>
+									<h1 className="text-xl font-semibold">
+										Comment modifier un chant ?
+									</h1>
+								</div>
+								{isSongEditorHelpOpen && (
+									<>
+										<p>
+											Ajoutez toutes les strophes telles qu'elles seraient
+											chantées, dans l'ordre.
+										</p>
+										<p>
+											Si un refrain revient deux fois, insérez le deux fois. Si
+											un refrain réapparait de façon identique (pas de
+											changement d'accord, de parole), cochez la case
+											"Répétition" pour indiquer que l'on peut le cacher en
+											désactivant l'option de l'app.
+										</p>
+										<p>
+											Pour éviter que les slides ne dépassent, limitez vous à
+											des strophes de 4 lignes maximum, quitte à couper un
+											couplet en plusieurs strophes.
+										</p>
+									</>
+								)}
+							</button>
 							{song.strophes.map((strophe, index) => (
 								<div
 									// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 									key={index}
 									className={clsx(
-										"border p-4 rounded-md mb-4",
+										"border p-4 rounded-md",
 										strophe.type === "verse" &&
 											"bg-none border-jubilateBlue-100 dark:border-slate-500",
 										strophe.type === "chorus" &&

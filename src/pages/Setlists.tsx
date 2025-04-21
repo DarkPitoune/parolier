@@ -1,4 +1,5 @@
 import { type AllSetlists, allSetlistsQuery } from "@/utils/supabase";
+import { ChevronLeftIcon } from "@heroicons/react/16/solid";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -11,25 +12,24 @@ const Setlists = () => {
 
 	return (
 		<div className="bg-white dark:bg-gray-800 text-black dark:text-white">
-			<div className="bg-jubilateBlue-500 dark:bg-slate-900 px-6 py-4 gap-4 flex justify-end items-center">
+			<div className="bg-jubilateBlue-500 dark:bg-slate-900 px-6 py-4 flex justify-between items-center">
+				<Link
+					className="bg-jubilateBlue-500 dark:bg-jubilateBlue-400 rounded-full hover:bg-jubilateBlue-700"
+					to="/"
+				>
+					<ChevronLeftIcon className="w-10 dark:fill-gray-800 fill-white" />
+				</Link>
 				<img className="h-12" src="/svg/logo.svg" alt="Logo" />
 			</div>
-			<div>
+			<div className="divide-y">
 				{setslists?.map((setlist) => (
-					<div
+					<Link
 						key={setlist.id}
-						className="flex p-4 bg-gray-100 dark:bg-gray-800"
+						className="px-2 py-4  flex items-stretch gap-3 text-black dark:text-white hover:bg-jubilateBlue-100 dark:hover:bg-gray-700"
+						to={`/setlists/${setlist.id}`}
 					>
-						<Link
-							to={`/setlists/${setlist.id}/edit`}
-							className="text-xl font-bold flex-1"
-						>
-							{setlist.name}
-						</Link>
-						<Link to={`/setlists/${setlist.id}/steps/0`} className="text-lg">
-							Lancer
-						</Link>
-					</div>
+						{setlist.name}
+					</Link>
 				))}
 			</div>
 		</div>

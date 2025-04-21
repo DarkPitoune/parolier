@@ -1,10 +1,10 @@
 import { CogIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
 import { useAtom } from "jotai";
-import { settingsOpenedAtom } from "./Contexts/SettingsContext";
+import { settingsOpenAtom } from "./Contexts/SettingsContext";
 
 const SettingsButton = ({ isExpanded }: { isExpanded: boolean }) => {
-	const [settingsOpened, setSettingsOpened] = useAtom(settingsOpenedAtom);
+	const [settingsOpened, setSettingsOpened] = useAtom(settingsOpenAtom);
 
 	return (
 		<button

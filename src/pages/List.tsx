@@ -1,8 +1,9 @@
-import { SidePanel, SongItem, useLeader } from "@/components";
+import { SettingsSidePanel, SongItem, useLeader } from "@/components";
 import {
 	filtersAtom,
 	tagTabOpenAtom,
 } from "@/components/Contexts/SettingsContext";
+import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
 import { getSongItemId } from "@/components/SongItem";
 import { TagChip } from "@/components/TagChip";
 import supabase, {
@@ -25,14 +26,13 @@ import {
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 
-const isSetlistEnabled = localStorage.getItem("setlistEnabled") === "true";
-
 function Index() {
 	const [songs, setSongs] = useState<AllSongs>([]);
 	const [filteredSongs, setFilteredSongs] = useState<AllSongs>([]);
 	const [tags, setTags] = useState<Tags>([]);
 	const [selectedTags, setSelectedTags] = useAtom<number[]>(filtersAtom);
 	const [tagTabOpen, setTagTabOpen] = useAtom(tagTabOpenAtom);
+	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
 	const [selectedSongIndex, setSelectedSongIndex] = useState<number | null>(
 		null,
 	);
@@ -156,7 +156,11 @@ function Index() {
 
 	return (
 		<div className="bg-white dark:bg-gray-800">
-			<SidePanel />
+			<SettingsSidePanel />
+			<NavigationSidePanel
+				open={isNavigationPanelOpen}
+				setOpen={setIsNavigationPanelOpen}
+			/>
 			<div
 				className={clsx(
 					"transition-all sticky bg-white dark:bg-gray-800",
@@ -164,11 +168,6 @@ function Index() {
 				)}
 			>
 				<div className="bg-jubilateBlue-500 dark:bg-slate-900 px-6 py-4 gap-4 flex justify-between items-center">
-					{isSetlistEnabled && (
-						<Link to="/setlists" className="hidden lg:block">
-							S
-						</Link>
-					)}
 					<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
 						<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
 						<input
@@ -178,7 +177,9 @@ function Index() {
 							placeholder="Vite, une idée..."
 						/>
 					</div>
-					<img className="h-12" src="/svg/logo.svg" alt="Logo" />
+					<button type="button" onClick={() => setIsNavigationPanelOpen(true)}>
+						<img className="h-12" src="/svg/logo.svg" alt="Logo" />
+					</button>
 				</div>
 				<div className="px-6 py-2 flex flex-col items-stretch shadow font-flame">
 					<button
@@ -211,7 +212,6 @@ function Index() {
 					</div>
 				</div>
 			</div>
-
 			<div className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300 dark:bg-gray-800">
 				{filteredSongs.filter(isCorrectTag).map((song, index) => (
 					<Link

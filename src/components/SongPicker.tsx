@@ -165,9 +165,7 @@ const SongPicker = ({ handleClose }: SongPickerProps) => {
 					)}
 				</div>
 				<div className="col-span-2 min-h-0 overflow-y-auto">
-					{selectedSong && (
-						<SongViewer showTopBar={false} song={selectedSong} />
-					)}
+					{selectedSong && <SongViewer song={selectedSong} />}
 				</div>
 			</div>
 		</div>

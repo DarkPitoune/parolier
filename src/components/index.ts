@@ -6,7 +6,7 @@ export {
 	addChorusAtom,
 	showChordsAtom,
 	slideHelpAtom,
-	settingsOpenedAtom,
+	settingsOpenAtom,
 } from "./Contexts/SettingsContext";
 export {
 	AuthContextProvider,
@@ -14,7 +14,7 @@ export {
 } from "./Contexts/AuthContextProvider";
 export { CornerMenu } from "./CornerMenu";
 export { LeaderContextProvider, useLeader } from "./Contexts/LeaderContext";
-export { SidePanel } from "./SidePanel/SidePanel";
+export { SettingsSidePanel } from "./SidePanel/variants/SettingsSidePanel";
 export { SlideFinder } from "./Slides/SlideFinder";
 export { SlideViewer } from "./Slides/SlideViewer";
 export { SlideHelp } from "./Slides/SlideHelp";

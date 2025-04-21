@@ -151,16 +151,16 @@ const SetlistViewer = () => {
 						<li className="text-white border-b-2 border-gray-200 dark:border-gray-600 w-full">
 							<button
 								type="button"
-								className="w-fit place-self-start text-left p-2 bg-jubilateBlue-500 hover:bg-jubilateBlue-700 m-2 rounded-md"
+								className="w-fit place-self-start text-left p-2 bg-jubilateBlue-500 hover:bg-jubilateBlue-700 dark:hover:bg-jubilateBlue-400 m-2 rounded-md transition"
 								onClick={() => setIsSongPickerOpen(true)}
 							>
-								+ Add Song
+								+ Ajouter morceau
 							</button>
 						</li>
 					</ul>
 					{selectedSong && (
 						<div className="col-span-2 max-h-screen overflow-y-auto">
-							<SongViewer song={selectedSong} showTopBar={false} />
+							<SongViewer song={selectedSong} />
 						</div>
 					)}
 				</div>

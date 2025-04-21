@@ -9,18 +9,19 @@ interface Tab {
 
 interface SwipeableTabsProps {
 	tabs: Tab[];
-	initialTab?: number;
+	activeTab: number;
+	setActiveTab: (index: number) => void;
 	tabsClassName?: string;
 	contentClassName?: string;
 }
 
 export default function SwipeableTabs({
 	tabs,
-	initialTab = 0,
+	activeTab,
+	setActiveTab,
 	tabsClassName = "",
 	contentClassName = "",
 }: SwipeableTabsProps) {
-	const [activeTab, setActiveTab] = useState(initialTab);
 	const [isDragging, setIsDragging] = useState(false);
 	const [startX, setStartX] = useState(0);
 	const [startY, setStartY] = useState(0); // Ajout pour détecter la direction
