@@ -25,10 +25,6 @@ export const taggedSongQuery = async (songId: number) =>
 		.single();
 export type TaggedSong = QueryData<ReturnType<typeof taggedSongQuery>>;
 
-export const songQuery = async (songId: number) =>
-	supabase.from("songs").select().eq("id", songId).single();
-export type Song = QueryData<ReturnType<typeof songQuery>>;
-
 export const allTagsQuery = async () => supabase.from("tags").select();
 export type Tags = QueryData<ReturnType<typeof allTagsQuery>>;
 
@@ -66,6 +62,10 @@ export const setlistNameMutation = async (setlistId: string, name: string) =>
 export type SetlistNameMutation = QueryData<
 	ReturnType<typeof setlistNameMutation>
 >;
+
+export const setlistNameQuery = async (setlistId: string) =>
+	supabase.from("setlists").select("name").eq("id", setlistId).single();
+export type SetlistNameQuery = QueryData<ReturnType<typeof setlistNameQuery>>;
 
 export const setlistItemPositionMutation = async (
 	setlistId: string,
@@ -113,4 +113,12 @@ export const setlistItemAppendMutation = async (
 		.insert({ setlist_id: setlistId, song_id: songId, position });
 export type SetlistItemAppendMutation = QueryData<
 	ReturnType<typeof setlistItemAppendMutation>
+>;
+
+export const newSetlistMutation = async () =>
+	supabase
+		.from("setlists")
+		.insert({ name: `Soirée prière du ${new Date().toLocaleDateString()}` });
+export type NewSetlistMutation = QueryData<
+	ReturnType<typeof newSetlistMutation>
 >;

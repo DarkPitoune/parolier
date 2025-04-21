@@ -35,7 +35,9 @@ function SetlistPage() {
 				>
 					<ChevronLeftIcon className="w-10 dark:fill-gray-800 fill-white" />
 				</Link>
-
+				<h3 className="text-lg font-flame text-jubilateBlue-500">
+					{setlist ? setlist[0]?.setlists?.name : "Loading..."}
+				</h3>
 				<div className="flex items-center gap-4">
 					<Link
 						className="rounded-full hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-3"

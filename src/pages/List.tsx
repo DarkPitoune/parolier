@@ -163,7 +163,7 @@ function Index() {
 			/>
 			<div
 				className={clsx(
-					"transition-all sticky bg-white dark:bg-gray-800",
+					"transition-all sticky bg-white dark:bg-gray-800 print:hidden",
 					leader ? "top-6" : "top-0",
 				)}
 			>
@@ -212,7 +212,10 @@ function Index() {
 					</div>
 				</div>
 			</div>
-			<div className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300 dark:bg-gray-800">
+			<div
+				className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300 dark:bg-gray-800 print:block print:p-0"
+				style={{ columnCount: 2 }}
+			>
 				{filteredSongs.filter(isCorrectTag).map((song, index) => (
 					<Link
 						key={song.id}

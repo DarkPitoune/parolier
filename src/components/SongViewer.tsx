@@ -19,14 +19,10 @@ function SongViewer({ song }: { song: TaggedSong }) {
 	return (
 		<div className="bg-white dark:bg-gray-800">
 			<SettingsSidePanel tonality={tonality} setTonality={setTonality} />
-			<div className="flex flex-col gap-4 p-4">
-				<div className="flex gap-4 items-center">
-					<h1 className="font-flame text-3xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
-						{song.id}.
-					</h1>
-					<h1 className="font-flame text-3xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
-						{song.title}
-					</h1>
+			<div className="flex flex-col gap-2 lg-gap-4 p-4">
+				<div className="flex gap-4 items-center font-flame text-xl lg:text-3xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
+					<h1>{song.id}.</h1>
+					<h1>{song.title}</h1>
 				</div>
 				<div className="flex gap-8 px-4 font-flame">
 					{song.tags?.map((tag) => (

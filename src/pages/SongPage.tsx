@@ -6,13 +6,47 @@ import {
 } from "@/utils/supabase";
 import { ChevronLeftIcon } from "@heroicons/react/16/solid";
 import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+
+type RightClickMenuPosition = {
+	x: number;
+	y: number;
+};
 
 function SongPage() {
 	const { songId } = useParams();
 	const [song, setSong] = useState<TaggedSong>();
 	const { setLeaderSong } = useLeader();
+	const rightClickMenuRef = useRef<HTMLDivElement>(null);
+	const [rightClickMenuPosition, setRightClickMenuPosition] =
+		useState<RightClickMenuPosition | null>(null);
+
+	const handleOnContextMenu: React.MouseEventHandler<HTMLDivElement> = (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+
+		setRightClickMenuPosition({
+			x: e.clientX,
+			y: e.clientY + window.pageYOffset,
+		});
+	};
+
+	useEffect(() => {
+		const handleClick = (e: MouseEvent) => {
+			if (
+				rightClickMenuRef.current &&
+				!rightClickMenuRef.current.contains(e.target as Node)
+			) {
+				setRightClickMenuPosition(null);
+			}
+		};
+
+		document.addEventListener("click", handleClick);
+		return () => {
+			document.removeEventListener("click", handleClick);
+		};
+	}, []);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: adding setLeader spams BE
 	useEffect(() => {
@@ -52,7 +86,28 @@ function SongPage() {
 					</Link>
 				</div>
 			</div>
-			<SongViewer song={song} />
+			<div onContextMenu={handleOnContextMenu}>
+				<SongViewer song={song} />
+				{rightClickMenuPosition && (
+					<div
+						ref={rightClickMenuRef}
+						style={{
+							position: "absolute",
+							left: rightClickMenuPosition.x,
+							top: rightClickMenuPosition.y,
+						}}
+						className="rounded-md bg-slate-900 p-1 flex flex-col gap-1"
+					>
+						<p className="text-sm italic px-1">Actions administrateur</p>
+						<Link
+							to={`/songs/${song.id}/edit`}
+							className="px-2 py-1 text-black dark:text-white dark:hover:bg-slate-700 bg-white hover:bg-slate-200 dark:bg-slate-800 rounded-md transition"
+						>
+							Modifier le morceau
+						</Link>
+					</div>
+				)}
+			</div>
 		</div>
 	);
 }

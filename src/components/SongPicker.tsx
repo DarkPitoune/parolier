@@ -1,6 +1,6 @@
 import {
 	type AllSongs,
-	type Song,
+	type TaggedSong,
 	allSongsQuery,
 	taggedSongQuery,
 } from "@/utils/supabase";
@@ -24,7 +24,7 @@ const SongPicker = ({ handleClose }: SongPickerProps) => {
 	const [songs, setSongs] = useState<AllSongs>([]);
 	const [filteredSongs, setFilteredSongs] = useState<AllSongs>([]);
 	const [selectedSongId, setSelectedSongId] = useState<number | null>(null);
-	const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+	const [selectedSong, setSelectedSong] = useState<TaggedSong | null>(null);
 
 	useEffect(() => {
 		allSongsQuery().then(({ data }) => {
@@ -130,7 +130,7 @@ const SongPicker = ({ handleClose }: SongPickerProps) => {
 					<div>
 						<input
 							placeholder="Tapez un chant ici"
-							className="px-2 py-1 w-full bg-transparent text-black dark:text-white"
+							className="px-2 py-1 w-full bg-transparent text-black dark:text-white outline-none"
 							type="text"
 							value={searchValue}
 							onChange={search}

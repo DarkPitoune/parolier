@@ -52,7 +52,7 @@ export const CornerMenu = () => {
 	return (
 		<div
 			className={clsx(
-				"fixed bottom-0 right-0 rounded-tl-full transition-all ease-in-out overflow-clip z-10",
+				"fixed bottom-0 right-0 rounded-tl-full transition-all ease-in-out overflow-clip z-10 print:hidden",
 				isExpanded ? "size-64" : "size-24",
 			)}
 			ref={wrapperRef}

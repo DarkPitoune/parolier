@@ -5,6 +5,7 @@ import {
 	setlistItemDeleteMutation,
 	setlistItemPositionMutation,
 	setlistNameMutation,
+	setlistNameQuery,
 	setlistQuery,
 } from "@/utils/supabase";
 import {
@@ -30,7 +31,9 @@ const SetlistViewer = () => {
 		setlistQuery(setlistId).then(({ data }) => {
 			if (data) data.sort((a, b) => a.position - b.position);
 			setSetlist(data);
-			if (data?.[0]?.setlists?.name) setSetlistName(data[0].setlists.name);
+		});
+		setlistNameQuery(setlistId).then(({ data }) => {
+			if (data?.name) setSetlistName(data.name);
 		});
 	}, [setlistId]);
 
