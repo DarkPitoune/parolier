@@ -2,7 +2,7 @@ import { SongViewer } from "@/components";
 import { type Setlist, setlistQuery } from "@/utils/supabase";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import SwipeableTabs from "@/components/SwipeableTabs";
+import SwipeableTabs, { type Tab } from "@/components/SwipeableTabs";
 import { ChevronLeftIcon } from "@heroicons/react/16/solid";
 import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
 
@@ -25,6 +25,29 @@ function SetlistPage() {
 			});
 		// evenuellement remettre les analytics
 	}, [setlistId]);
+
+	const tabs: Tab[] = (setlist ?? []).map((item) => {
+			if (item.songs) return {
+				id: item.id,
+				title: item.songs.title,
+				content: (
+					<div className="flex flex-col gap-4">
+						<SongViewer song={item.songs} />
+					</div>
+				),
+			};
+			if (item.text)
+				return {
+					id: item.id,
+					title: item.text.split(" ")[0],
+					content: (
+						<div className="flex flex-col gap-4 p-4">
+							<div className="whitespace-pre-wrap">{item.text}</div>
+						</div>
+					),
+				};
+			return null;
+		}).filter(v=>(v !== null)); 
 
 	return (
 		<div>
@@ -52,15 +75,7 @@ function SetlistPage() {
 				<SwipeableTabs
 					activeTab={activeTab}
 					setActiveTab={handleChangeTab}
-					tabs={setlist.filter(item => item.songs).map((item) => ({
-						id: item.id,
-						title: item.songs.title,
-						content: (
-							<div className="flex flex-col gap-4">
-								<SongViewer song={item.songs} />
-							</div>
-						),
-					}))}
+					tabs={tabs}
 				/>
 			)}
 		</div>

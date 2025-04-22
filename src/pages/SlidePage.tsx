@@ -6,22 +6,11 @@ import {
 	TouchScreenListener,
 	slideHelpAtom,
 } from "@/components";
-import supabase, { taggedSongFromSetlistStepQuery } from "@/utils/supabase";
+import { taggedSongFromSetlistStepQuery, taggedSongQuery } from "@/utils/supabase";
 import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
-
-// region Supabase Queries
-
-const taggedSongQuery = (songId: number) =>
-	supabase
-		.from("songs")
-		.select("*, tags(name, id, svg, color)")
-		.eq("id", songId)
-		.single();
-
-// region React Component
 
 const SlidePage = () => {
 	const { songId, stepNumber, setlistId } = useParams();
@@ -62,11 +51,29 @@ const SlidePage = () => {
 								color: "white",
 							},
 						});
-					}
+					} else setStrophes([]);
 				},
 			);
 	}, [songId, setlistId, stepNumber]);
 
+	useEffect(() => {
+		const handleKey = (e: KeyboardEvent) => {
+			if (strophes.length > 0) return; // if a song is open, the key events are handled by the song viewer
+			if (e.key === "ArrowLeft" && setlistId && stepNumber) {
+				const prevStep = Number(stepNumber) - 1;
+				if (prevStep > 0) navigate(`/setlists/${setlistId}/steps/${prevStep}/slide`);
+			}
+			if (e.key === "ArrowRight" && setlistId && stepNumber) {
+				const nextStep = Number(stepNumber) + 1;
+				navigate(`/setlists/${setlistId}/steps/${nextStep}/slide`);
+			}
+		};
+		document.addEventListener("keydown", handleKey);
+		return () => {
+			document.removeEventListener("keydown", handleKey);
+		};
+	}, [setlistId, stepNumber, navigate, strophes.length]);
+	
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {
 			if (e.key === "h" || e.key === "H") setSlideHelp((v) => !v);

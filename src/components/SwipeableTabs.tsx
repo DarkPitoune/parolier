@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { useState, useRef, useEffect, type TouchEventHandler } from "react";
 
-interface Tab {
+export interface Tab {
 	id?: string | number;
 	title: React.ReactNode;
 	content: React.ReactNode;

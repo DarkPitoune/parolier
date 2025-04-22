@@ -137,3 +137,9 @@ export const newSetlistMutation = async () =>
 export type NewSetlistMutation = QueryData<
 	ReturnType<typeof newSetlistMutation>
 >;
+
+export const deleteSetlistMutation = async (setlistId: number) =>
+	supabase
+		.from("setlists")
+		.delete()
+		.eq("id", setlistId);
