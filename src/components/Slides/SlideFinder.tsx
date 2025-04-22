@@ -37,8 +37,8 @@ const SlideFinder = () => {
 	const handleNewValue = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			const onlyNumbers = e.target.value.replace(/\D/g, "");
-			const only3firstDigits = onlyNumbers.slice(0, 3);
-			setInputValue(only3firstDigits);
+			const only4firstDigits = onlyNumbers.slice(0, 4);
+			setInputValue(only4firstDigits);
 		},
 		[],
 	);

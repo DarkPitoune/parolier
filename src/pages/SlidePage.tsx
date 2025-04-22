@@ -6,19 +6,31 @@ import {
 	TouchScreenListener,
 	slideHelpAtom,
 } from "@/components";
-import { taggedSongFromSetlistStepQuery, taggedSongQuery } from "@/utils/supabase";
+import { setlistLengthQuery, taggedSongFromSetlistStepQuery, taggedSongQuery } from "@/utils/supabase";
 import { useAtom } from "jotai";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
 const SlidePage = () => {
 	const { songId, stepNumber, setlistId } = useParams();
 	const [strophes, setStrophes] = useState<Strophe[]>([]);
+	const [currentStropheIndex, setCurrentStropheIndex] = useState(0);
+	const [setlistLength, setSetlistLength] = useState(0);
 	const navigate = useNavigate();
 	const [slideHelp, setSlideHelp] = useAtom(slideHelpAtom);
 
 	useEffect(() => {
+		if (setlistId)
+			setlistLengthQuery(setlistId).then(({ data }) => {
+				if (data) setSetlistLength(data[0].position);
+			});
+	}, [setlistId]);
+
+	useEffect(() => {
+		// Reset strophe index when song changes
+		setCurrentStropheIndex(0);
+		
 		if (songId) {
 			taggedSongQuery(Number(songId)).then(({ data, error }) => {
 				if (data?.strophes) {
@@ -56,23 +68,52 @@ const SlidePage = () => {
 			);
 	}, [songId, setlistId, stepNumber]);
 
+	const nextStrophe = useCallback(() => {
+		if (strophes.length === 0) return;
+		
+		if (currentStropheIndex < strophes.length - 1) {
+			setCurrentStropheIndex(currentStropheIndex + 1);
+		} else if (setlistId && stepNumber && Number(stepNumber) < setlistLength) {
+			navigate(`/setlists/${setlistId}/steps/${Number(stepNumber) + 1}/slide`);
+		}
+	}, [currentStropheIndex, navigate, setlistId, stepNumber, strophes.length, setlistLength]);
+
+	const prevStrophe = useCallback(() => {
+		if (strophes.length === 0) return;
+		
+		if (currentStropheIndex > 0) {
+			setCurrentStropheIndex(currentStropheIndex - 1);
+		} else if (setlistId && stepNumber && Number(stepNumber) > 0) {
+			navigate(`/setlists/${setlistId}/steps/${Number(stepNumber) - 1}/slide`);
+		}
+	}, [currentStropheIndex, navigate, setlistId, stepNumber, strophes.length]);
+
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {
-			if (strophes.length > 0) return; // if a song is open, the key events are handled by the song viewer
-			if (e.key === "ArrowLeft" && setlistId && stepNumber) {
-				const prevStep = Number(stepNumber) - 1;
-				if (prevStep > 0) navigate(`/setlists/${setlistId}/steps/${prevStep}/slide`);
+			if (strophes.length === 0) {
+				// If no song is open, handle setlist navigation
+				if (e.key === "ArrowLeft" && setlistId && stepNumber) {
+					const prevStep = Number(stepNumber) - 1;
+					if (prevStep > 0) navigate(`/setlists/${setlistId}/steps/${prevStep}/slide`);
+				}
+				if (e.key === "ArrowRight" && setlistId && stepNumber) {
+					const nextStep = Number(stepNumber) + 1;
+					navigate(`/setlists/${setlistId}/steps/${nextStep}/slide`);
+				}
+				return;
 			}
-			if (e.key === "ArrowRight" && setlistId && stepNumber) {
-				const nextStep = Number(stepNumber) + 1;
-				navigate(`/setlists/${setlistId}/steps/${nextStep}/slide`);
-			}
+			
+			// If a song is open, handle strophe navigation
+			if (e.key === "ArrowRight") nextStrophe();
+			if (e.key === "ArrowLeft") prevStrophe();
+			if (e.key === "f" || e.key === "F")
+				document.body.requestFullscreen();
 		};
 		document.addEventListener("keydown", handleKey);
 		return () => {
 			document.removeEventListener("keydown", handleKey);
 		};
-	}, [setlistId, stepNumber, navigate, strophes.length]);
+	}, [nextStrophe, prevStrophe, setlistId, stepNumber, navigate, strophes.length]);
 	
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {
@@ -108,7 +149,13 @@ const SlidePage = () => {
 		<div className="absolute z-20 inset-0 flex flex-col justify-center items-center text-white bg-black overflow-clip">
 			<SlideFinder />
 			{strophes.length > 0 ? (
-				<SlideViewer key={songId || stepNumber} strophes={strophes} /> // key to fully dismount child component on song change and thus reset state
+				<>
+					<SlideViewer key={`${songId || stepNumber}-${currentStropheIndex}`} strophe={strophes[currentStropheIndex]} />
+					<div className="absolute inset-0 flex items-stretch justify-stretch">
+						<div className="grow" onTouchStart={prevStrophe} />
+						<div className="grow" onTouchStart={nextStrophe} />
+					</div>
+				</>
 			) : (
 				<img src="/svg/Jubilate_Croix.svg" alt="logo" className="size-36" />
 			)}

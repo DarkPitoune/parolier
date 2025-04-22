@@ -1,4 +1,4 @@
-import { SongViewer } from "@/components";
+import { DynamicText, SongViewer } from "@/components";
 import { type Setlist, setlistQuery } from "@/utils/supabase";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -42,7 +42,7 @@ function SetlistPage() {
 					title: item.text.split(" ")[0],
 					content: (
 						<div className="flex flex-col gap-4 p-4">
-							<div className="whitespace-pre-wrap">{item.text}</div>
+							<DynamicText className="whitespace-pre-wrap text-black dark:text-white" text={item.text} />
 						</div>
 					),
 				};
