@@ -148,7 +148,7 @@ const SlidePage = () => {
 	return (
 		<div className="absolute z-20 inset-0 flex flex-col justify-center items-center text-white bg-black overflow-clip">
 			<SlideFinder />
-			{strophes.length > 0 ? (
+			{strophes.length > 0 && songId ? (
 				<>
 					<SlideViewer key={`${songId || stepNumber}-${currentStropheIndex}`} strophe={strophes[currentStropheIndex]} />
 					<div className="absolute inset-0 flex items-stretch justify-stretch">
