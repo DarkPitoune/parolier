@@ -33,11 +33,10 @@ function SettingsSidePanel({
 	const [leaderList, setLeaderList] = useState<string[]>([]);
 
 	const updateLeaderList = async () => {
-		getLeaderPositionsQuery()
-			.then(({ data }) => {
-				if (data) setLeaderList(data.map((leader) => leader.leader_id));
-			});
-	}
+		getLeaderPositionsQuery().then(({ data }) => {
+			if (data) setLeaderList(data.map((leader) => leader.leader_id));
+		});
+	};
 
 	function handleFontChange(increment: number) {
 		setFontSize((fontSize) => {
@@ -179,20 +178,18 @@ function SettingsSidePanel({
 					<p className="text-jubilateBlue-500 dark:text-jubilateBlue-400 font-flame">
 						Leaders disponibles
 					</p>
-					{
-						leaderList.map((leader) => (
-							<button
-								key={leader}
-								type="button"
-								className="text-jubilateBlue-500 dark:text-jubilateBlue-400 font-flame"
-								onClick={() => {
-									setLeader({ id: leader, leading: false });
-								}}
-							>
-								{leader}
-							</button>
-						))
-					}
+					{leaderList.map((leader) => (
+						<button
+							key={leader}
+							type="button"
+							className="text-jubilateBlue-500 dark:text-jubilateBlue-400 font-flame"
+							onClick={() => {
+								setLeader({ id: leader, leading: false });
+							}}
+						>
+							{leader}
+						</button>
+					))}
 					<button type="button" onClick={updateLeaderList}>
 						Rafraîchir
 					</button>

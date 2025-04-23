@@ -20,6 +20,7 @@ const SlidePage = () => {
 	const { songId, stepNumber, setlistId } = useParams();
 	const [strophes, setStrophes] = useState<Strophe[]>([]);
 	const [currentStropheIndex, setCurrentStropheIndex] = useState(0);
+	const [isLogoSlide, setIsLogoSlide] = useState(false);
 	const [setlistLength, setSetlistLength] = useState(0);
 	const navigate = useNavigate();
 	const [slideHelp, setSlideHelp] = useAtom(slideHelpAtom);
@@ -33,10 +34,11 @@ const SlidePage = () => {
 
 	useEffect(() => {
 		// Reset strophe index when song changes
-		setCurrentStropheIndex(0);
 
 		if (songId) {
 			taggedSongQuery(Number(songId)).then(({ data, error }) => {
+				setCurrentStropheIndex(0);
+				setIsLogoSlide(false);
 				if (data?.strophes) {
 					setStrophes(data.strophes);
 				} else {
@@ -54,11 +56,13 @@ const SlidePage = () => {
 				}
 			});
 		}
-		if (setlistId && stepNumber)
+		if (setlistId && stepNumber) {
 			// showing the page in the context of a set
 			taggedSongFromSetlistStepQuery(setlistId, Number(stepNumber)).then(
 				({ data }) => {
 					if (data?.songs) {
+						setCurrentStropheIndex(0);
+						setIsLogoSlide(false);
 						setStrophes(data.songs.strophes);
 						toast(data.songs.title, {
 							position: "top-center",
@@ -70,6 +74,7 @@ const SlidePage = () => {
 					} else setStrophes([]);
 				},
 			);
+		}
 	}, [songId, setlistId, stepNumber]);
 
 	const nextStrophe = useCallback(() => {
@@ -136,7 +141,7 @@ const SlidePage = () => {
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {
 			if (e.key === "h" || e.key === "H") setSlideHelp((v) => !v);
-			if (e.key === "t" || e.key === "T") navigate("/slides/");
+			if (e.key === "t" || e.key === "T") setIsLogoSlide((v) => !v);
 			if (e.key === "Escape" && !document.fullscreenElement) navigate("/");
 			if (e.key === "q" || e.key === "Q") document.exitFullscreen();
 		};
@@ -166,7 +171,9 @@ const SlidePage = () => {
 	return (
 		<div className="absolute z-20 inset-0 flex flex-col justify-center items-center text-white bg-black overflow-clip">
 			<SlideFinder />
-			{strophes.length > 0 && songId ? (
+			{isLogoSlide || strophes[currentStropheIndex] === undefined ? (
+				<img src="/svg/Jubilate_Croix.svg" alt="logo" className="size-36" />
+			) : (
 				<>
 					<SlideViewer
 						key={`${songId || stepNumber}-${currentStropheIndex}`}
@@ -177,8 +184,6 @@ const SlidePage = () => {
 						<div className="grow" onTouchStart={nextStrophe} />
 					</div>
 				</>
-			) : (
-				<img src="/svg/Jubilate_Croix.svg" alt="logo" className="size-36" />
 			)}
 			{slideHelp && <SlideHelp />}
 			<TouchScreenListener />

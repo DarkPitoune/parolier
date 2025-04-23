@@ -30,5 +30,4 @@ const DropLeadButton = () => {
 	);
 };
 
-
 export { TakeLeadButton, DropLeadButton };

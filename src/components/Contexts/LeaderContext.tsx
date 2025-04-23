@@ -1,11 +1,10 @@
 import { updateLeaderPositionMutation } from "@/utils/supabase";
 import { atom, useAtom } from "jotai";
 
-type Leader =
-	| {
-			id: string;
-			leading: boolean;
-	  };
+type Leader = {
+	id: string;
+	leading: boolean;
+};
 
 export const leaderAtom = atom<Leader | null>(null);
 
