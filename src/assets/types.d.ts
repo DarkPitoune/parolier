@@ -16,9 +16,3 @@ export interface Settings {
 	darkMode: boolean;
 	username: string;
 }
-
-export interface Leader {
-	name: string;
-	song?: number;
-	status: "leader" | "follower";
-}

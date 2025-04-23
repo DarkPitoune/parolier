@@ -2,12 +2,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import "./index.css";
-import {
-	AuthContextProvider,
-	CornerMenu,
-	LeaderContextProvider,
-	darkModeAtom,
-} from "@/components";
+import { AuthContextProvider, CornerMenu, darkModeAtom } from "@/components";
 import { Index, SetlistEditor, Setlists, SlidePage, SongPage } from "@/pages";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
@@ -72,12 +67,10 @@ const App = () => {
 						"min-h-screen",
 					)}
 				>
-					<LeaderContextProvider navigate={router.navigate}>
-						<main>
-							<RouterProvider router={router} />
-							<CornerMenu />
-						</main>
-					</LeaderContextProvider>
+					<main>
+						<RouterProvider router={router} />
+						<CornerMenu />
+					</main>
 				</div>
 			</AuthContextProvider>
 		</>

@@ -35,6 +35,45 @@ export type Database = {
           },
         ]
       }
+      leader_position: {
+        Row: {
+          created_at: string
+          last_edited_at: string
+          leader_id: string
+          setlist_item: number | null
+          song: number | null
+        }
+        Insert: {
+          created_at?: string
+          last_edited_at?: string
+          leader_id: string
+          setlist_item?: number | null
+          song?: number | null
+        }
+        Update: {
+          created_at?: string
+          last_edited_at?: string
+          leader_id?: string
+          setlist_item?: number | null
+          song?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leader_position_setlist_item_fkey"
+            columns: ["setlist_item"]
+            isOneToOne: false
+            referencedRelation: "setlist_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leader_position_song_fkey"
+            columns: ["song"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       setlist_items: {
         Row: {
           id: number

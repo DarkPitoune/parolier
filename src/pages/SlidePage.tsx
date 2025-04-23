@@ -6,7 +6,11 @@ import {
 	TouchScreenListener,
 	slideHelpAtom,
 } from "@/components";
-import { setlistLengthQuery, taggedSongFromSetlistStepQuery, taggedSongQuery } from "@/utils/supabase";
+import {
+	setlistLengthQuery,
+	taggedSongFromSetlistStepQuery,
+	taggedSongQuery,
+} from "@/utils/supabase";
 import { useAtom } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -30,7 +34,7 @@ const SlidePage = () => {
 	useEffect(() => {
 		// Reset strophe index when song changes
 		setCurrentStropheIndex(0);
-		
+
 		if (songId) {
 			taggedSongQuery(Number(songId)).then(({ data, error }) => {
 				if (data?.strophes) {
@@ -70,17 +74,24 @@ const SlidePage = () => {
 
 	const nextStrophe = useCallback(() => {
 		if (strophes.length === 0) return;
-		
+
 		if (currentStropheIndex < strophes.length - 1) {
 			setCurrentStropheIndex(currentStropheIndex + 1);
 		} else if (setlistId && stepNumber && Number(stepNumber) < setlistLength) {
 			navigate(`/setlists/${setlistId}/steps/${Number(stepNumber) + 1}/slide`);
 		}
-	}, [currentStropheIndex, navigate, setlistId, stepNumber, strophes.length, setlistLength]);
+	}, [
+		currentStropheIndex,
+		navigate,
+		setlistId,
+		stepNumber,
+		strophes.length,
+		setlistLength,
+	]);
 
 	const prevStrophe = useCallback(() => {
 		if (strophes.length === 0) return;
-		
+
 		if (currentStropheIndex > 0) {
 			setCurrentStropheIndex(currentStropheIndex - 1);
 		} else if (setlistId && stepNumber && Number(stepNumber) > 0) {
@@ -94,7 +105,8 @@ const SlidePage = () => {
 				// If no song is open, handle setlist navigation
 				if (e.key === "ArrowLeft" && setlistId && stepNumber) {
 					const prevStep = Number(stepNumber) - 1;
-					if (prevStep > 0) navigate(`/setlists/${setlistId}/steps/${prevStep}/slide`);
+					if (prevStep > 0)
+						navigate(`/setlists/${setlistId}/steps/${prevStep}/slide`);
 				}
 				if (e.key === "ArrowRight" && setlistId && stepNumber) {
 					const nextStep = Number(stepNumber) + 1;
@@ -102,19 +114,25 @@ const SlidePage = () => {
 				}
 				return;
 			}
-			
+
 			// If a song is open, handle strophe navigation
 			if (e.key === "ArrowRight") nextStrophe();
 			if (e.key === "ArrowLeft") prevStrophe();
-			if (e.key === "f" || e.key === "F")
-				document.body.requestFullscreen();
+			if (e.key === "f" || e.key === "F") document.body.requestFullscreen();
 		};
 		document.addEventListener("keydown", handleKey);
 		return () => {
 			document.removeEventListener("keydown", handleKey);
 		};
-	}, [nextStrophe, prevStrophe, setlistId, stepNumber, navigate, strophes.length]);
-	
+	}, [
+		nextStrophe,
+		prevStrophe,
+		setlistId,
+		stepNumber,
+		navigate,
+		strophes.length,
+	]);
+
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {
 			if (e.key === "h" || e.key === "H") setSlideHelp((v) => !v);
@@ -150,7 +168,10 @@ const SlidePage = () => {
 			<SlideFinder />
 			{strophes.length > 0 && songId ? (
 				<>
-					<SlideViewer key={`${songId || stepNumber}-${currentStropheIndex}`} strophe={strophes[currentStropheIndex]} />
+					<SlideViewer
+						key={`${songId || stepNumber}-${currentStropheIndex}`}
+						strophe={strophes[currentStropheIndex]}
+					/>
 					<div className="absolute inset-0 flex items-stretch justify-stretch">
 						<div className="grow" onTouchStart={prevStrophe} />
 						<div className="grow" onTouchStart={nextStrophe} />

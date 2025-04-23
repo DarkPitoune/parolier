@@ -4,7 +4,6 @@ import {
 	fontSizeAtom,
 	settingsOpenAtom,
 	showChordsAtom,
-	usernameAtom,
 } from "@/components";
 import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { useAtom, useSetAtom } from "jotai";
@@ -14,6 +13,9 @@ import {
 } from "../../../Contexts/LeaderButtons";
 import { ResetIcon } from "./ResetIcon";
 import { SidePanel } from "../../SidePanel";
+import { useState } from "react";
+import { leaderAtom } from "@/components/Contexts/LeaderContext";
+import { getLeaderPositionsQuery } from "@/utils/supabase";
 
 function SettingsSidePanel({
 	tonality,
@@ -25,8 +27,17 @@ function SettingsSidePanel({
 	const setFontSize = useSetAtom(fontSizeAtom);
 	const [showChords, setShowChords] = useAtom(showChordsAtom);
 	const [addChorus, setAddChorus] = useAtom(addChorusAtom);
-	const [username, setUsername] = useAtom(usernameAtom);
 	const [open, setOpen] = useAtom(settingsOpenAtom);
+	const [username, setUsername] = useState<string>("");
+	const [leader, setLeader] = useAtom(leaderAtom);
+	const [leaderList, setLeaderList] = useState<string[]>([]);
+
+	const updateLeaderList = async () => {
+		getLeaderPositionsQuery()
+			.then(({ data }) => {
+				if (data) setLeaderList(data.map((leader) => leader.leader_id));
+			});
+	}
 
 	function handleFontChange(increment: number) {
 		setFontSize((fontSize) => {
@@ -126,12 +137,7 @@ function SettingsSidePanel({
 					className="size-5 rounded-2xl accent-jubilateBlue-500 dark:accent-jubilateBlue-400"
 				/>
 			</div>
-
-			{/* Hidden until functionnality completed */}
-			<div
-				className="flex-col gap-4 fixed bottom-6 hidden"
-				aria-label="streaming choice"
-			>
+			<div className="flex flex-col gap-4 border border-jubilateBlue-300 bg-jubilateBlue-300 bg-opacity-30 px-4 py-2 rounded-md">
 				<div className="flex md:gap-4 gap-2 items-baseline justify-between">
 					<h1 className="font-flame text-2xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
 						Pseudo
@@ -151,12 +157,45 @@ function SettingsSidePanel({
 						<p className="text-jubilateBlue-500 dark:text-jubilateBlue-400 text-sm md:text-base">
 							Partager
 						</p>
-						<TakeLeadButton />
+						<TakeLeadButton username={username} />
 					</div>
 					<div className="flex md:gap-4 gap-2 items-center">
 						<p className="text-jubilateRed text-sm md:text-base">Stopper</p>
 						<DropLeadButton />
 					</div>
+				</div>
+				{leader && (
+					<div className="flex gap-4 items-center justify-center">
+						<p className="text-jubilateBlue-500 dark:text-jubilateBlue-400 text-sm md:text-base">
+							{leader.leading ? "Leader" : "Follower"}
+						</p>
+						<DynamicText
+							text={leader.id}
+							className="dark:text-white text-black text-center"
+						/>
+					</div>
+				)}
+				<div className="flex gap-4 flex-col items-center justify-center">
+					<p className="text-jubilateBlue-500 dark:text-jubilateBlue-400 font-flame">
+						Leaders disponibles
+					</p>
+					{
+						leaderList.map((leader) => (
+							<button
+								key={leader}
+								type="button"
+								className="text-jubilateBlue-500 dark:text-jubilateBlue-400 font-flame"
+								onClick={() => {
+									setLeader({ id: leader, leading: false });
+								}}
+							>
+								{leader}
+							</button>
+						))
+					}
+					<button type="button" onClick={updateLeaderList}>
+						Rafraîchir
+					</button>
 				</div>
 			</div>
 		</SidePanel>

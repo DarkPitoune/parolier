@@ -26,28 +26,34 @@ function SetlistPage() {
 		// evenuellement remettre les analytics
 	}, [setlistId]);
 
-	const tabs: Tab[] = (setlist ?? []).map((item) => {
-			if (item.songs) return {
-				id: item.id,
-				title: item.songs.title,
-				content: (
-					<div className="flex flex-col gap-4">
-						<SongViewer song={item.songs} />
-					</div>
-				),
-			};
+	const tabs: Tab[] = (setlist ?? [])
+		.map((item) => {
+			if (item.songs)
+				return {
+					id: item.id,
+					title: item.songs.title,
+					content: (
+						<div className="flex flex-col gap-4">
+							<SongViewer song={item.songs} />
+						</div>
+					),
+				};
 			if (item.text)
 				return {
 					id: item.id,
 					title: item.text.split(" ")[0],
 					content: (
 						<div className="flex flex-col gap-4 p-4">
-							<DynamicText className="whitespace-pre-wrap text-black dark:text-white" text={item.text} />
+							<DynamicText
+								className="whitespace-pre-wrap text-black dark:text-white"
+								text={item.text}
+							/>
 						</div>
 					),
 				};
 			return null;
-		}).filter(v=>(v !== null)); 
+		})
+		.filter((v) => v !== null);
 
 	return (
 		<div>

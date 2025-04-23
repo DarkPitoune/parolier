@@ -2,7 +2,6 @@ export { DynamicText } from "./DynamicText";
 export {
 	fontSizeAtom,
 	darkModeAtom,
-	usernameAtom,
 	addChorusAtom,
 	showChordsAtom,
 	slideHelpAtom,
@@ -13,7 +12,7 @@ export {
 	AuthContext,
 } from "./Contexts/AuthContextProvider";
 export { CornerMenu } from "./CornerMenu";
-export { LeaderContextProvider, useLeader } from "./Contexts/LeaderContext";
+export { useLeader } from "./Contexts/LeaderContext";
 export { SettingsSidePanel } from "./SidePanel/variants/SettingsSidePanel";
 export { SlideFinder } from "./Slides/SlideFinder";
 export { SlideViewer } from "./Slides/SlideViewer";

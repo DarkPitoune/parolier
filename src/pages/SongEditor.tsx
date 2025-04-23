@@ -1,10 +1,9 @@
 import type { Line, Strophe } from "@/assets/types";
 import supabase, {
-	type TaggedSong,
-	taggedSongQuery,
-	type Song,
-	type Tags,
-	allTagsQuery,
+  type TaggedSong,
+  taggedSongQuery,
+  type Tags,
+  allTagsQuery
 } from "@/utils/supabase";
 
 import { TextInput } from "@/components";
@@ -78,9 +77,9 @@ const SongEditor = () => {
 		alert("Modifications enregistrées");
 	};
 
-	const handleChange = (field: keyof Song, value: Strophe[] | string) => {
-		setSong((prev) => (prev ? { ...prev, [field]: value } : null));
-	};
+	const handleChange = (field: keyof TaggedSong, value: Strophe[] | string) => {
+    setSong((prev) => (prev ? { ...prev, [field]: value } : null));
+  };
 
 	const handleStropheChange = (
 		index: number,

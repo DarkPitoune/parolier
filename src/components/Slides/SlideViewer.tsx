@@ -11,7 +11,7 @@ const SlideViewer = ({ strophe }: { strophe: Strophe }) => {
 				<div className="col-span-2" key={lineIndex}>
 					{line.text}
 				</div>
-				))}
+			))}
 		</div>
 	);
 };

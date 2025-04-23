@@ -116,7 +116,9 @@ const Setlists = () => {
 						type="button"
 						className="px-2 py-1 text-black dark:text-white dark:hover:bg-slate-700 bg-white hover:bg-slate-200 dark:bg-slate-800 rounded-md transition"
 						onClick={() => {
-							deleteSetlistMutation(rightClickMenuPosition.setListId).then(fetchSetlists);
+							deleteSetlistMutation(rightClickMenuPosition.setListId).then(
+								fetchSetlists,
+							);
 							setRightClickMenuPosition(null);
 						}}
 					>

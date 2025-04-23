@@ -4,7 +4,6 @@ import clsx from "clsx";
 import { useAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { FollowButton } from "./Contexts/LeaderButtons";
 import { darkModeAtom } from "./Contexts/SettingsContext";
 import { SettingsButton } from "./SettingsButton";
 
@@ -93,8 +92,6 @@ export const CornerMenu = () => {
 						<MoonIcon color="white" className="size-8" />
 					)}
 				</button>
-				{/* Hidden until functionnality completed */}
-				<FollowButton isExpanded={false} />
 			</div>
 		</div>
 	);

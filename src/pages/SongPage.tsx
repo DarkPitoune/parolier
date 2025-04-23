@@ -37,9 +37,8 @@ function SongPage() {
 			if (
 				rightClickMenuRef.current &&
 				!rightClickMenuRef.current.contains(e.target as Node)
-			) {
+			)
 				setRightClickMenuPosition(null);
-			}
 		};
 
 		document.addEventListener("click", handleClick);
@@ -50,12 +49,12 @@ function SongPage() {
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: adding setLeader spams BE
 	useEffect(() => {
-		if (songId)
-			// showing the page from a regular song page
+		if (songId) {
 			taggedSongQuery(Number(songId)).then(({ data }) => {
 				if (data) setSong(data);
 			});
-		setLeaderSong(Number(songId));
+			setLeaderSong(Number(songId));
+		}
 		let timeout: NodeJS.Timeout;
 		if (songId && import.meta.env.MODE === "production")
 			timeout = setTimeout(() => {
@@ -92,11 +91,10 @@ function SongPage() {
 					<div
 						ref={rightClickMenuRef}
 						style={{
-							position: "absolute",
 							left: rightClickMenuPosition.x,
 							top: rightClickMenuPosition.y,
 						}}
-						className="rounded-md bg-slate-900 p-1 flex flex-col gap-1"
+						className="absolute rounded-md bg-slate-900 p-1 flex flex-col gap-1"
 					>
 						<p className="text-sm italic px-1">Actions administrateur</p>
 						<Link

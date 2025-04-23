@@ -139,7 +139,36 @@ export type NewSetlistMutation = QueryData<
 >;
 
 export const deleteSetlistMutation = async (setlistId: number) =>
+	supabase.from("setlists").delete().eq("id", setlistId);
+
+export const updateLeaderPositionMutation = async ({
+	leaderId,
+	leaderSongId,
+	leaderSetlistItemId,
+}: {
+	leaderId: string;
+	leaderSongId?: number;
+	leaderSetlistItemId?: number;
+}) =>
 	supabase
-		.from("setlists")
-		.delete()
-		.eq("id", setlistId);
+		.from("leader_position")
+		.upsert({
+			leader_id: leaderId,
+			song: leaderSongId,
+			setlist_item: leaderSetlistItemId,
+			last_edited_at: new Date().toISOString(),
+		})
+		.select()
+		.single();
+export type UpdateLeaderPositionMutation = QueryData<
+	ReturnType<typeof updateLeaderPositionMutation>
+>;
+
+export const getLeaderPositionsQuery = async () =>
+	supabase
+		.from("leader_position")
+		.select("leader_id, song, setlist_item, last_edited_at")
+		.order("last_edited_at", { ascending: false });
+export type GetLeaderPositions = QueryData<
+	ReturnType<typeof getLeaderPositionsQuery>
+>;
