@@ -14,8 +14,9 @@ import {
 import { ResetIcon } from "./ResetIcon";
 import { SidePanel } from "../../SidePanel";
 import { useState } from "react";
-import { leaderAtom } from "@/components/Contexts/LeaderContext";
+import { leaderAtom, useLeader } from "@/components/Contexts/LeaderContext";
 import { getLeaderPositionsQuery } from "@/utils/supabase";
+import clsx from "clsx";
 
 function SettingsSidePanel({
 	tonality,
@@ -26,11 +27,14 @@ function SettingsSidePanel({
 }) {
 	const setFontSize = useSetAtom(fontSizeAtom);
 	const [showChords, setShowChords] = useAtom(showChordsAtom);
+	const [isLeaderPanelOpen, setIsLeaderPanelOpenInternal] = useState(true);
 	const [addChorus, setAddChorus] = useAtom(addChorusAtom);
 	const [open, setOpen] = useAtom(settingsOpenAtom);
 	const [username, setUsername] = useState<string>("");
 	const [leader, setLeader] = useAtom(leaderAtom);
 	const [leaderList, setLeaderList] = useState<string[]>([]);
+
+	const { takeLead } = useLeader();
 
 	const updateLeaderList = async () => {
 		getLeaderPositionsQuery().then(({ data }) => {
@@ -46,6 +50,11 @@ function SettingsSidePanel({
 			return fontSize + increment;
 		});
 	}
+
+	const setIsLeaderPanelOpen = (isLeader: boolean) => {
+		setIsLeaderPanelOpenInternal(isLeader);
+		if (!isLeader) updateLeaderList();
+	};
 
 	return (
 		<SidePanel open={open} onClose={() => setOpen(false)} title="Préférences">
@@ -136,64 +145,116 @@ function SettingsSidePanel({
 					className="size-5 rounded-2xl accent-jubilateBlue-500 dark:accent-jubilateBlue-400"
 				/>
 			</div>
-			<div className="flex flex-col gap-4 border border-jubilateBlue-300 bg-jubilateBlue-300 bg-opacity-30 px-4 py-2 rounded-md">
-				<div className="flex md:gap-4 gap-2 items-baseline justify-between">
-					<h1 className="font-flame text-2xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
-						Pseudo
-					</h1>
-					<input
-						id="username"
-						type="text"
-						onChange={(e) => {
-							setUsername(e.target.value);
-						}}
-						value={username}
-						className="rounded-2xl px-4 py-1 mr-4 text-black dark:text-white accent-jubilateBlue-500 dark:accent-jubilateBlue-400 w-full dark:bg-slate-700 bg-jubilateBlue-100"
-					/>
-				</div>
-				<div className="flex gap-4 items-center justify-center">
-					<div className="flex md:gap-4 gap-2 items-center">
+			<div className="flex flex-col gap-4 border border-jubilateBlue-300 bg-jubilateBlue-300 bg-opacity-30 px-4 py-2 rounded-md items-center">
+				<h2 className="text-center font-flame text-jubilateBlue-500 dark:text-jubilateBlue-400 text-2xl">
+					Leader de chant
+				</h2>
+				{leader ? (
+					<>
 						<p className="text-jubilateBlue-500 dark:text-jubilateBlue-400 text-sm md:text-base">
-							Partager
+							{leader.leading
+								? "Vous partagez votre chant"
+								: `Vous suivez ${leader.id}`}
 						</p>
-						<TakeLeadButton username={username} />
-					</div>
-					<div className="flex md:gap-4 gap-2 items-center">
-						<p className="text-jubilateRed text-sm md:text-base">Stopper</p>
-						<DropLeadButton />
-					</div>
-				</div>
-				{leader && (
-					<div className="flex gap-4 items-center justify-center">
-						<p className="text-jubilateBlue-500 dark:text-jubilateBlue-400 text-sm md:text-base">
-							{leader.leading ? "Leader" : "Follower"}
-						</p>
-						<DynamicText
-							text={leader.id}
-							className="dark:text-white text-black text-center"
-						/>
-					</div>
-				)}
-				<div className="flex gap-4 flex-col items-center justify-center">
-					<p className="text-jubilateBlue-500 dark:text-jubilateBlue-400 font-flame">
-						Leaders disponibles
-					</p>
-					{leaderList.map((leader) => (
 						<button
-							key={leader}
 							type="button"
-							className="text-jubilateBlue-500 dark:text-jubilateBlue-400 font-flame"
-							onClick={() => {
-								setLeader({ id: leader, leading: false });
-							}}
+							onClick={() => setLeader(null)}
+							className="flex md:gap-4 gap-2 items-center"
 						>
-							{leader}
+							<p className="text-jubilateRed text-sm md:text-base">Stopper</p>
+							<DropLeadButton />
 						</button>
-					))}
-					<button type="button" onClick={updateLeaderList}>
-						Rafraîchir
-					</button>
-				</div>
+					</>
+				) : (
+					<>
+						<div className="flex gap-2 w-fit p-1 rounded-full bg-slate-300 dark:bg-slate-700">
+							<button
+								type="button"
+								onClick={() => setIsLeaderPanelOpen(true)}
+								className={clsx([
+									"rounded-full px-2 transition-colors",
+									isLeaderPanelOpen
+										? "bg-white dark:bg-slate-800"
+										: "bg-transparent",
+								])}
+							>
+								Diriger
+							</button>
+							<button
+								type="button"
+								onClick={() => setIsLeaderPanelOpen(false)}
+								className={clsx([
+									"rounded-full px-2 py-1 transition-colors",
+									!isLeaderPanelOpen
+										? "bg-white dark:bg-slate-800"
+										: "bg-transparent",
+								])}
+							>
+								Suivre
+							</button>
+						</div>
+						{!leader && isLeaderPanelOpen ? (
+							<form
+								className="flex flex-col gap-4 items-center"
+								onSubmit={(e) => {
+									e.preventDefault();
+									takeLead(username);
+								}}
+							>
+								<div className="flex md:gap-4 gap-2 items-baseline justify-between">
+									<h1 className="font-flame text-xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
+										Pseudo
+									</h1>
+									<input
+										id="username"
+										type="text"
+										onChange={(e) => {
+											setUsername(e.target.value);
+										}}
+										value={username}
+										className="rounded-2xl px-4 py-1 mr-4 text-black dark:text-white outline outline-jubilateBlue-300 focus:outline-jubilateBlue-500 dark:accent-jubilateBlue-400 w-full dark:bg-slate-700 bg-jubilateBlue-100"
+									/>
+								</div>
+								<button
+									type="submit"
+									className="flex md:gap-4 gap-2 items-center"
+								>
+									<p className="text-jubilateBlue-500 dark:text-jubilateBlue-400 text-sm md:text-base">
+										Partager
+									</p>
+									<TakeLeadButton />
+								</button>
+							</form>
+						) : (
+							<>
+								<div className="flex gap-4 flex-col w-full justify-center">
+									<div className="flex items-center justify-between">
+										<p className="text-jubilateBlue-500 dark:text-jubilateBlue-400 font-flame">
+											Leaders disponibles
+										</p>
+										<button type="button" onClick={updateLeaderList}>
+											<ResetIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
+										</button>
+									</div>
+									<div className="bg-slate-300 dark:bg-slate-700 rounded-lg flex flex-col items-stretch">
+										{leaderList.map((leader) => (
+											<button
+												key={leader}
+												type="button"
+												className="text-jubilateBlue-500 dark:text-jubilateBlue-400 font-flame"
+												onClick={() => {
+													setLeader({ id: leader, leading: false });
+												}}
+											>
+												{leader}
+											</button>
+										))}
+									</div>
+								</div>
+							</>
+						)}
+					</>
+				)}
 			</div>
 		</SidePanel>
 	);

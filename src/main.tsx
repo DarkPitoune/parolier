@@ -9,6 +9,7 @@ import { useAtomValue } from "jotai";
 import { Toaster } from "react-hot-toast";
 import SongEditor from "./pages/SongEditor";
 import { SetlistPage } from "./pages/SetlistPage";
+import { LeaderListener } from "./components/LeaderListener";
 
 const router = createBrowserRouter([
 	{
@@ -68,6 +69,7 @@ const App = () => {
 					)}
 				>
 					<main>
+						<LeaderListener router={router} />
 						<RouterProvider router={router} />
 						<CornerMenu />
 					</main>

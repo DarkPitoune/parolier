@@ -1,12 +1,17 @@
 import { updateLeaderPositionMutation } from "@/utils/supabase";
-import { atom, useAtom } from "jotai";
+import { useAtom } from "jotai";
+import { atomWithStorage, createJSONStorage } from "jotai/utils";
 
 type Leader = {
 	id: string;
 	leading: boolean;
 };
 
-export const leaderAtom = atom<Leader | null>(null);
+export const leaderAtom = atomWithStorage<Leader | null>(
+	"leader",
+	null,
+	createJSONStorage(() => sessionStorage),
+);
 
 const useLeader = () => {
 	const [leader, setLeader] = useAtom(leaderAtom);
