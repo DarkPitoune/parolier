@@ -17,6 +17,13 @@ import { useState } from "react";
 import { leaderAtom, useLeader } from "@/components/Contexts/LeaderContext";
 import { getLeaderPositionsQuery } from "@/utils/supabase";
 import clsx from "clsx";
+import { atomWithStorage, createJSONStorage } from "jotai/utils";
+
+const usernameAtom = atomWithStorage<string>(
+	"username",
+	"",
+	createJSONStorage(() => localStorage),
+);
 
 function SettingsSidePanel({
 	tonality,
@@ -30,7 +37,7 @@ function SettingsSidePanel({
 	const [isLeaderPanelOpen, setIsLeaderPanelOpenInternal] = useState(true);
 	const [addChorus, setAddChorus] = useAtom(addChorusAtom);
 	const [open, setOpen] = useAtom(settingsOpenAtom);
-	const [username, setUsername] = useState<string>("");
+	const [username, setUsername] = useAtom(usernameAtom);
 	const [leader, setLeader] = useAtom(leaderAtom);
 	const [leaderList, setLeaderList] = useState<string[]>([]);
 
@@ -153,7 +160,7 @@ function SettingsSidePanel({
 					<>
 						<p className="text-jubilateBlue-500 dark:text-jubilateBlue-400 text-sm md:text-base">
 							{leader.leading
-								? "Vous partagez votre chant"
+								? `Vous (${leader.id}) partagez votre chant`
 								: `Vous suivez ${leader.id}`}
 						</p>
 						<button
