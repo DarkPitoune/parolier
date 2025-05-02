@@ -156,7 +156,7 @@ export const updateLeaderPositionMutation = async ({
 			leader_id: leaderId,
 			song: leaderSongId,
 			setlist_item: leaderSetlistItemId,
-			last_edited_at: new Date().toISOString(),
+			updated_at: new Date().toISOString(),
 		})
 		.select()
 		.single();
@@ -167,8 +167,8 @@ export type UpdateLeaderPositionMutation = QueryData<
 export const getLeaderPositionsQuery = async () =>
 	supabase
 		.from("leader_position")
-		.select("leader_id, song, setlist_item, last_edited_at")
-		.order("last_edited_at", { ascending: false });
+		.select("leader_id, song, setlist_item, updated_at")
+		.order("updated_at", { ascending: false });
 export type GetLeaderPositions = QueryData<
 	ReturnType<typeof getLeaderPositionsQuery>
 >;

@@ -38,24 +38,24 @@ export type Database = {
       leader_position: {
         Row: {
           created_at: string
-          last_edited_at: string
           leader_id: string
           setlist_item: number | null
           song: number | null
+          updated_at: string
         }
         Insert: {
           created_at?: string
-          last_edited_at?: string
           leader_id: string
           setlist_item?: number | null
           song?: number | null
+          updated_at?: string
         }
         Update: {
           created_at?: string
-          last_edited_at?: string
           leader_id?: string
           setlist_item?: number | null
           song?: number | null
+          updated_at?: string
         }
         Relationships: [
           {

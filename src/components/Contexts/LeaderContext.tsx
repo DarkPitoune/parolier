@@ -17,10 +17,14 @@ const useLeader = () => {
 	const [leader, setLeader] = useAtom(leaderAtom);
 
 	const takeLead = (id: string) =>
-		setLeader({
+		{setLeader({
 			id,
 			leading: true,
 		});
+		updateLeaderPositionMutation({
+			leaderId: id,
+		});
+	};
 
 	const setLeaderSong = async (song: number) => {
 		if (leader) {
