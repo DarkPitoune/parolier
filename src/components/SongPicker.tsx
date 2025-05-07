@@ -120,10 +120,10 @@ const SongPicker = ({ handleClose }: SongPickerProps) => {
 		>
 			{/* biome-ignore lint/a11y/useKeyWithClickEvents: fine here since we're just doing a bubble stopper */}
 			<div
-				className="bg-white dark:bg-gray-800 rounded-lg w-4/5 h-4/5 overflow-y-auto grid grid-cols-3"
+				className="bg-white dark:bg-gray-800 rounded-lg size-11/12 md:size-4/5 overflow-y-auto grid grid-cols-3"
 				onClick={(e) => e.stopPropagation()}
 			>
-				<div className="flex flex-col col-span-1 min-h-0">
+				<div className="flex flex-col col-span-3 md:col-span-1 min-h-0">
 					<h2 className="text-xl font-bold px-4 py-2 shadow dark:text-white text-black">
 						Sélectionner un chant
 					</h2>
@@ -164,7 +164,7 @@ const SongPicker = ({ handleClose }: SongPickerProps) => {
 						</div>
 					)}
 				</div>
-				<div className="col-span-2 min-h-0 overflow-y-auto">
+				<div className="col-span-2 min-h-0 overflow-y-auto hidden md:block">
 					{selectedSong && <SongViewer song={selectedSong} />}
 				</div>
 			</div>

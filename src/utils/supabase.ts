@@ -169,6 +169,6 @@ export const getLeaderPositionsQuery = async () =>
 		.from("leader_position")
 		.select("leader_id, song, setlist_item, updated_at")
 		.order("updated_at", { ascending: false });
-export type GetLeaderPositions = QueryData<
+export type LeaderPositions = QueryData<
 	ReturnType<typeof getLeaderPositionsQuery>
 >;

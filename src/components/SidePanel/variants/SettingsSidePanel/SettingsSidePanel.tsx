@@ -15,9 +15,13 @@ import { ResetIcon } from "./ResetIcon";
 import { SidePanel } from "../../SidePanel";
 import { useState } from "react";
 import { leaderAtom, useLeader } from "@/components/Contexts/LeaderContext";
-import { getLeaderPositionsQuery } from "@/utils/supabase";
+import {
+	getLeaderPositionsQuery,
+	type LeaderPositions,
+} from "@/utils/supabase";
 import clsx from "clsx";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
+import { useNavigate } from "react-router-dom";
 
 const usernameAtom = atomWithStorage<string>(
 	"username",
@@ -39,13 +43,14 @@ function SettingsSidePanel({
 	const [open, setOpen] = useAtom(settingsOpenAtom);
 	const [username, setUsername] = useAtom(usernameAtom);
 	const [leader, setLeader] = useAtom(leaderAtom);
-	const [leaderList, setLeaderList] = useState<string[]>([]);
+	const [leaderList, setLeaderList] = useState<LeaderPositions>([]);
+	const navigate = useNavigate();
 
 	const { takeLead } = useLeader();
 
 	const updateLeaderList = async () => {
 		getLeaderPositionsQuery().then(({ data }) => {
-			if (data) setLeaderList(data.map((leader) => leader.leader_id));
+			if (data) setLeaderList(data);
 		});
 	};
 
@@ -246,14 +251,16 @@ function SettingsSidePanel({
 									<div className="bg-slate-300 dark:bg-slate-700 rounded-lg flex flex-col items-stretch">
 										{leaderList.map((leader) => (
 											<button
-												key={leader}
+												key={leader.leader_id}
 												type="button"
 												className="text-jubilateBlue-500 dark:text-jubilateBlue-400 font-flame"
 												onClick={() => {
-													setLeader({ id: leader, leading: false });
+													setLeader({ id: leader.leader_id, leading: false });
+													if (leader.song !== null)
+														navigate(`/songs/${leader.song}`);
 												}}
 											>
-												{leader}
+												{leader.leader_id}
 											</button>
 										))}
 									</div>

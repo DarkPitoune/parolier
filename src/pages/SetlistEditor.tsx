@@ -131,7 +131,7 @@ const SetlistEditor = () => {
 		<>
 			{setlist ? (
 				<div className="grid grid-cols-3">
-					<ul className="col-span-1 border-r-2 border-gray-200 dark:border-gray-600 h-screen">
+					<ul className="col-span-3 md:col-span-1 border-r-2 border-gray-200 dark:border-gray-600 h-screen overflow-scroll">
 						<li>
 							<Link
 								className="px-2 italic text-slate-600 dark:text-slate-200 hover:underline"
@@ -164,7 +164,7 @@ const SetlistEditor = () => {
 								>
 									{item.songs && <SongItem song={item.songs} hover={false} />}
 									{item.text && (
-										<p className="px-4 dark:text-white truncate">
+										<p className="px-4 text-black dark:text-white truncate">
 											{item.text.split("\n")[0]}
 										</p>
 									)}
@@ -224,15 +224,15 @@ const SetlistEditor = () => {
 						</li>
 					</ul>
 					{selectedSong && (
-						<div className="col-span-2 max-h-screen overflow-y-auto">
+						<div className="col-span-2 max-h-screen overflow-y-auto hidden md:block">
 							<SongViewer song={selectedSong} />
 						</div>
 					)}
 					{textNewValue !== null && (
-						<div className="p-4 col-span-2">
+						<div className="p-4 col-span-2 hidden md:block">
 							<textarea
 								onChange={(value) => setTextNewValue(value.currentTarget.value)}
-								className="h-full w-full outline-none bg-transparent dark:text-white"
+								className="h-full w-full outline-none bg-transparent text-black dark:text-white"
 								onBlur={() => handleSaveNewText()}
 								placeholder="Probablement parler de Jésus..."
 								value={textNewValue}

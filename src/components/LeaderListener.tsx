@@ -4,7 +4,6 @@ import type { createBrowserRouter } from "react-router-dom";
 import type { Database } from "../../database.types";
 import { leaderAtom } from "./Contexts/LeaderContext";
 import { useAtomValue } from "jotai";
-import clsx from "clsx";
 
 type Payload = {
 	new: Database["public"]["Tables"]["leader_position"]["Row"];
@@ -37,13 +36,11 @@ const LeaderListener = ({
 			changes.unsubscribe();
 		};
 	}, [router.navigate, leader]);
+
+	if (!leader) return null;
+
 	return (
-		<div
-			className={clsx([
-				"sticky top-0 bg-jubilateRed text-white text-center font-semibold animate-pulseBg",
-				leader ? "h-6" : "h-0",
-			])}
-		>
+		<div className="sticky top-0 bg-jubilateRed text-white text-center font-semibold animate-pulseBg h-6">
 			{leader?.leading
 				? "Vous partagez votre chant"
 				: `Vous suivez ${leader?.id}`}
