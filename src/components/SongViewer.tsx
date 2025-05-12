@@ -30,33 +30,37 @@ function SongViewer({ song }: { song: TaggedSong }) {
 					))}
 				</div>
 				<div className="flex flex-col gap-4">
-					{strophes?.map((strophe, index) => (
-						<div
-							data-type={strophe.type}
-							className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold grid gap-x-2"
-							style={{
-								gridTemplateColumns: showChords ? "1fr 3fr" : "1fr",
-							}}
-							// biome-ignore lint/suspicious/noArrayIndexKey: in this case, it's not that bad
-							key={index + strophe.content[0].text} // very likely to be the number of the strophe ("1. Par toi Seigneur..")
-						>
-							{strophe.content.map((line, lineIndex) => (
+					{strophes?.map((strophe, index) =>
+						strophe.type !== "section" ? (
+							<div
+								data-type={strophe.type}
+								className="whitespace-pre-wrap data-[type=chorus]:font-bold data-[type=bridge]:italic data-[type=bridge]:font-semibold grid gap-x-2"
+								style={{
+									gridTemplateColumns: showChords ? "1fr 3fr" : "1fr",
+								}}
 								// biome-ignore lint/suspicious/noArrayIndexKey: in this case, it's not that bad
-								<Fragment key={lineIndex}>
-									{showChords && (
+								key={index + strophe.content[0].text} // very likely to be the number of the strophe ("1. Par toi Seigneur..")
+							>
+								{strophe.content.map((line, lineIndex) => (
+									// biome-ignore lint/suspicious/noArrayIndexKey: in this case, it's not that bad
+									<Fragment key={lineIndex}>
+										{showChords && (
+											<DynamicText
+												className="bg-jubilateBlue-100 dark:bg-slate-600 outline-8 border-jubilateBlue-100 dark:border-slate-600 border-4 px-2 text-black dark:text-white first:rounded-t-md [&:nth-last-child(2)]:rounded-b-md"
+												text={transposeLine(line.chords, tonality)}
+											/>
+										)}
 										<DynamicText
-											className="bg-jubilateBlue-100 dark:bg-slate-600 outline-8 border-jubilateBlue-100 dark:border-slate-600 border-4 px-2 text-black dark:text-white first:rounded-t-md [&:nth-last-child(2)]:rounded-b-md"
-											text={transposeLine(line.chords, tonality)}
+											className=" text-black dark:text-white"
+											text={line.text}
 										/>
-									)}
-									<DynamicText
-										className=" text-black dark:text-white"
-										text={line.text}
-									/>
-								</Fragment>
-							))}
-						</div>
-					))}
+									</Fragment>
+								))}
+							</div>
+						) : (
+							<div className="sticky top-0" key={strophe.content}>{strophe.content}</div>
+						),
+					)}
 				</div>
 			</div>
 		</div>

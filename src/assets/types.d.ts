@@ -1,8 +1,13 @@
-export interface Strophe {
-	content: Line[];
-	type: "verse" | "chorus" | "bridge";
-	repetition: boolean;
-}
+export type Strophe =
+	| {
+			content: Line[];
+			type: "verse" | "chorus" | "bridge";
+			repetition: boolean;
+	  }
+	| {
+			type: "section";
+			content: string;
+	  };
 
 export interface Line {
 	text: string;
