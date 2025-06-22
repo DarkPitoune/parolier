@@ -85,14 +85,6 @@ function SongPage() {
           </Link>
         </div>
       </div>
-      <button
-			className="text-sm"
-        onClick={() => {
-          throw new Error("This is your first error!");
-        }}
-      >
-        B
-      </button>
       <div onContextMenu={handleOnContextMenu}>
         <SongViewer song={song} />
         {rightClickMenuPosition && (
