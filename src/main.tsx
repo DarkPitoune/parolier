@@ -17,7 +17,10 @@ Sentry.init({
   dsn: "https://e3d0fd2959dec5c42a29102e0a89423c@o4509542487425024.ingest.de.sentry.io/4509542545162320",
   // Setting this option to true will send default PII data to Sentry.
   // For example, automatic IP address collection on events
-  sendDefaultPii: true
+  sendDefaultPii: true,
+  integrations: [Sentry.browserTracingIntegration()],
+  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
+	tracePropagationTargets: ["localhost", /^https:\/\/parolier.jubilate.fr\/api\//],
 });
 
 
