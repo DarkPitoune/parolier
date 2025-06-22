@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as Sentry from "@sentry/react";
 import * as ReactDOM from "react-dom/client";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import "./index.css";
@@ -10,6 +11,15 @@ import { Toaster } from "react-hot-toast";
 import SongEditor from "./pages/SongEditor";
 import { SetlistPage } from "./pages/SetlistPage";
 import { LeaderListener } from "./components/LeaderListener";
+
+
+Sentry.init({
+  dsn: "https://e3d0fd2959dec5c42a29102e0a89423c@o4509542487425024.ingest.de.sentry.io/4509542545162320",
+  // Setting this option to true will send default PII data to Sentry.
+  // For example, automatic IP address collection on events
+  sendDefaultPii: true
+});
+
 
 const router = createBrowserRouter([
 	{

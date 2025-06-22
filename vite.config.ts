@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA, type VitePWAOptions } from "vite-plugin-pwa";
 import path from "node:path";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 const manifest: Partial<VitePWAOptions> = {
 	manifest: {
@@ -514,11 +515,22 @@ const manifest: Partial<VitePWAOptions> = {
 // https://vitejs.dev/config/
 export default () => {
 	return defineConfig({
-		plugins: [react(), VitePWA(manifest)],
-		resolve: {
-			alias: {
-				"@": path.resolve(__dirname, "src"),
-			},
-		},
-	});
+    build: {
+      sourcemap: true
+    },
+    plugins: [
+      react(),
+      VitePWA(manifest),
+      sentryVitePlugin({
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+        org: "pitoune",
+        project: "parolier"
+      })
+    ],
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "src")
+      }
+    }
+  });
 };

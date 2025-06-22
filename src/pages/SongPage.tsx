@@ -66,48 +66,56 @@ function SongPage() {
 	if (!song) return null;
 
 	return (
-		<div>
-			<div className="flex justify-between items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky bg-white dark:bg-gray-900">
-				<Link
-					className="bg-jubilateBlue-500 dark:bg-jubilateBlue-400 rounded-full hover:bg-jubilateBlue-700"
-					to="/"
-				>
-					<ChevronLeftIcon className="w-10 dark:fill-gray-800 fill-white" />
-				</Link>
+    <div>
+      <div className="flex justify-between items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky bg-white dark:bg-gray-900">
+        <Link
+          className="bg-jubilateBlue-500 dark:bg-jubilateBlue-400 rounded-full hover:bg-jubilateBlue-700"
+          to="/"
+        >
+          <ChevronLeftIcon className="w-10 dark:fill-gray-800 fill-white" />
+        </Link>
 
-				<div className="flex items-center gap-4">
-					<Link
-						className="rounded-full hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-3"
-						onClick={() => document.body.requestFullscreen()}
-						to={`/slides/${song?.id}`}
-					>
-						<ComputerDesktopIcon className="size-6 fill-white" />
-					</Link>
-				</div>
-			</div>
-			<div onContextMenu={handleOnContextMenu}>
-				<SongViewer song={song} />
-				{rightClickMenuPosition && (
-					<div
-						ref={rightClickMenuRef}
-						style={{
-							left: rightClickMenuPosition.x,
-							top: rightClickMenuPosition.y,
-						}}
-						className="absolute rounded-md bg-slate-900 p-1 flex flex-col gap-1"
-					>
-						<p className="text-sm italic px-1">Actions administrateur</p>
-						<Link
-							to={`/songs/${song.id}/edit`}
-							className="px-2 py-1 text-black dark:text-white dark:hover:bg-slate-700 bg-white hover:bg-slate-200 dark:bg-slate-800 rounded-md transition"
-						>
-							Modifier le morceau
-						</Link>
-					</div>
-				)}
-			</div>
-		</div>
-	);
+        <div className="flex items-center gap-4">
+          <Link
+            className="rounded-full hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-3"
+            onClick={() => document.body.requestFullscreen()}
+            to={`/slides/${song?.id}`}
+          >
+            <ComputerDesktopIcon className="size-6 fill-white" />
+          </Link>
+        </div>
+      </div>
+      <button
+			className="text-sm"
+        onClick={() => {
+          throw new Error("This is your first error!");
+        }}
+      >
+        B
+      </button>
+      <div onContextMenu={handleOnContextMenu}>
+        <SongViewer song={song} />
+        {rightClickMenuPosition && (
+          <div
+            ref={rightClickMenuRef}
+            style={{
+              left: rightClickMenuPosition.x,
+              top: rightClickMenuPosition.y
+            }}
+            className="absolute rounded-md bg-slate-900 p-1 flex flex-col gap-1"
+          >
+            <p className="text-sm italic px-1">Actions administrateur</p>
+            <Link
+              to={`/songs/${song.id}/edit`}
+              className="px-2 py-1 text-black dark:text-white dark:hover:bg-slate-700 bg-white hover:bg-slate-200 dark:bg-slate-800 rounded-md transition"
+            >
+              Modifier le morceau
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export { SongPage };
