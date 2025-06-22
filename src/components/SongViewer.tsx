@@ -14,7 +14,9 @@ function SongViewer({ song }: { song: TaggedSong }) {
 
 	const strophes = addChorusSetting
 		? song?.strophes
-		: song?.strophes?.filter((strophe) => !strophe.repetition);
+		: song?.strophes?.filter(
+				(strophe) => strophe.type === "section" || !strophe.repetition,
+			);
 
 	return (
 		<div className="bg-white dark:bg-gray-800">
@@ -41,7 +43,7 @@ function SongViewer({ song }: { song: TaggedSong }) {
 								// biome-ignore lint/suspicious/noArrayIndexKey: in this case, it's not that bad
 								key={index + strophe.content[0].text} // very likely to be the number of the strophe ("1. Par toi Seigneur..")
 							>
-								{strophe.content.map((line, lineIndex) => (
+								{strophe.content?.map((line, lineIndex) => (
 									// biome-ignore lint/suspicious/noArrayIndexKey: in this case, it's not that bad
 									<Fragment key={lineIndex}>
 										{showChords && (
@@ -58,7 +60,9 @@ function SongViewer({ song }: { song: TaggedSong }) {
 								))}
 							</div>
 						) : (
-							<div className="sticky top-0" key={strophe.content}>{strophe.content}</div>
+							<div className="sticky top-0" key={strophe.content}>
+								{strophe.content}
+							</div>
 						),
 					)}
 				</div>

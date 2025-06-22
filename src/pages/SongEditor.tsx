@@ -202,7 +202,7 @@ const SongEditor = () => {
 									</>
 								)}
 							</button>
-							{song.strophes.map((strophe, index) => (
+							{song.strophes.filter((strophe) => strophe.type !== "section").map((strophe, index) => (
 								<div
 									// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 									key={index}
