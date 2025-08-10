@@ -54,6 +54,10 @@ export type TaggedSongFromSetlistStep = QueryData<
 	ReturnType<typeof taggedSongFromSetlistStepQuery>
 >;
 
+export const newSongMutation = async (title: string) =>
+	supabase.from("songs").insert({ title, strophes: [{ content: [{ text: "Louons Dieu", chords: "C" }] }] });
+export type NewSongMutation = QueryData<ReturnType<typeof newSongMutation>>;
+
 export const allSetlistsQuery = async () => supabase.from("setlists").select();
 export type AllSetlists = QueryData<ReturnType<typeof allSetlistsQuery>>;
 

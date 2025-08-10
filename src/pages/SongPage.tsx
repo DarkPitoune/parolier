@@ -94,7 +94,7 @@ function SongPage() {
               left: rightClickMenuPosition.x,
               top: rightClickMenuPosition.y
             }}
-            className="absolute rounded-md bg-slate-900 p-1 flex flex-col gap-1"
+            className="absolute rounded-md bg-gray-100 dark:bg-slate-800 p-1 flex flex-col gap-1"
           >
             <p className="text-sm italic px-1">Actions administrateur</p>
             <Link

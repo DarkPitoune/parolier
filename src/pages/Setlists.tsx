@@ -1,6 +1,7 @@
 import {
 	type AllSetlists,
 	allSetlistsQuery,
+	deleteSetlistMutation,
 	newSetlistMutation,
 } from "@/utils/supabase";
 import {
@@ -21,6 +22,12 @@ const Setlists = () => {
 
 	const handleCreateSetlist = () => {
 		newSetlistMutation().then(fetchSetlists);
+	};
+
+	const handleDeleteSetlist = async (id: number) => {
+		if (!confirm("Êtes-vous sûr de vouloir supprimer cette setlist ?")) return;
+		await deleteSetlistMutation(id);
+		fetchSetlists();
 	};
 
 	useEffect(() => {
@@ -51,6 +58,7 @@ const Setlists = () => {
 						<button
 							type="button"
 							className="absolute -right-5 group-hover:right-2 transition-all"
+							onClick={() => handleDeleteSetlist(setlist.id)}
 						>
 							<TrashIcon className="size-8 rounded-full bg-jubilateRed p-1" />
 						</button>
