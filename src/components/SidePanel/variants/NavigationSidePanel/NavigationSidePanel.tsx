@@ -13,27 +13,32 @@ export function NavigationSidePanel({
 		const { error } = await newSongMutation(title);
 		if (error) {
 			toast.error(`Erreur lors de la création de la chanson: ${error.message}`);
-		}
-		else {
+		} else {
 			toast.success("Chanson créée avec succès");
 			window.location.reload();
 		}
 	};
 	return (
-    <SidePanel open={open} onClose={() => setOpen(false)} title="Navigation">
-      <Link
-        className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-        to="/setlists"
-      >
-        Setlists
-      </Link>
-      <button
-        className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-        type="button"
-        onClick={createNewSong}
-      >
-        Nouvelle chanson
-      </button>
-    </SidePanel>
-  );
+		<SidePanel open={open} onClose={() => setOpen(false)} title="Navigation">
+			<Link
+				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/setlists"
+			>
+				Setlists
+			</Link>
+			<Link
+				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/analytics"
+			>
+				Statistiques
+			</Link>
+			<button
+				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				type="button"
+				onClick={createNewSong}
+			>
+				Nouvelle chanson
+			</button>
+		</SidePanel>
+	);
 }

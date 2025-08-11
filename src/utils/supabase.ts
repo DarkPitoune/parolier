@@ -55,7 +55,10 @@ export type TaggedSongFromSetlistStep = QueryData<
 >;
 
 export const newSongMutation = async (title: string) =>
-	supabase.from("songs").insert({ title, strophes: [{ content: [{ text: "Louons Dieu", chords: "C" }] }] });
+	supabase.from("songs").insert({
+		title,
+		strophes: [{ content: [{ text: "Louons Dieu", chords: "C" }] }],
+	});
 export type NewSongMutation = QueryData<ReturnType<typeof newSongMutation>>;
 
 export const allSetlistsQuery = async () => supabase.from("setlists").select();
@@ -176,3 +179,23 @@ export const getLeaderPositionsQuery = async () =>
 export type LeaderPositions = QueryData<
 	ReturnType<typeof getLeaderPositionsQuery>
 >;
+
+export const getPopularSongsQuery = async (
+	startDate?: string,
+	endDate?: string,
+) => {
+	let query = supabase.from("analytics").select(`
+			songId,
+			songs (title)
+		`);
+
+	if (startDate) {
+		query = query.gte("created_at", startDate);
+	}
+	if (endDate) {
+		query = query.lte("created_at", endDate);
+	}
+
+	return query;
+};
+export type PopularSongs = QueryData<ReturnType<typeof getPopularSongsQuery>>;

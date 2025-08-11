@@ -49,9 +49,10 @@ const SongEditor = () => {
 			title,
 			strophes: strophes.map((strophe) => ({
 				...strophe,
-				content: typeof strophe.content === "string" ? strophe.content : strophe.content.filter(
-					(line) => line.text || line.chords,
-				),
+				content:
+					typeof strophe.content === "string"
+						? strophe.content
+						: strophe.content.filter((line) => line.text || line.chords),
 			})),
 		};
 
@@ -249,7 +250,9 @@ const SongEditor = () => {
 												</h4>
 												<TextInput
 													value={strophe.content}
-													onChange={(value) => handleSectionChange(index, value)}
+													onChange={(value) =>
+														handleSectionChange(index, value)
+													}
 												/>
 											</div>
 											<div className="flex gap-2">
@@ -359,7 +362,11 @@ const SongEditor = () => {
 															onChange={(value) => {
 																const newContent = [...strophe.content];
 																newContent[lineIndex].text = value;
-																handleStropheChange(index, "content", newContent);
+																handleStropheChange(
+																	index,
+																	"content",
+																	newContent,
+																);
 															}}
 														/>
 														<TextInput
@@ -367,7 +374,11 @@ const SongEditor = () => {
 															onChange={(value) => {
 																const newContent = [...strophe.content];
 																newContent[lineIndex].chords = value;
-																handleStropheChange(index, "content", newContent);
+																handleStropheChange(
+																	index,
+																	"content",
+																	newContent,
+																);
 															}}
 														/>
 													</div>
@@ -400,7 +411,9 @@ const SongEditor = () => {
 													type="button"
 													onClick={() => {
 														const newStrophes = [...song.strophes];
-														newStrophes.push(JSON.parse(JSON.stringify(strophe)));
+														newStrophes.push(
+															JSON.parse(JSON.stringify(strophe)),
+														);
 														handleChange("strophes", newStrophes);
 													}}
 												>
@@ -439,8 +452,8 @@ const SongEditor = () => {
 												{strophe.content.length > 6 && (
 													<div>
 														<p>
-															⚠️: Un couplet trop long peut dépasser sur les slides.
-															Cliquez pour{" "}
+															⚠️: Un couplet trop long peut dépasser sur les
+															slides. Cliquez pour{" "}
 															<button
 																type="button"
 																onClick={() => {
