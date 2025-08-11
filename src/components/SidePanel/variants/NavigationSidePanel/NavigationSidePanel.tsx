@@ -34,6 +34,12 @@ export function NavigationSidePanel({
 			>
 				Statistiques
 			</Link>
+			<Link
+				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/zapette"
+			>
+				Zapette
+			</Link>
 			<button
 				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
 				type="button"

@@ -10,6 +10,7 @@ import {
 	Setlists,
 	SlidePage,
 	SongPage,
+	ZapettePage,
 	Analytics,
 } from "@/pages";
 import clsx from "clsx";
@@ -72,6 +73,10 @@ const router = createBrowserRouter([
 	{
 		path: "/analytics",
 		element: <Analytics />,
+	},
+	{
+		path: "/zapette",
+		element: <ZapettePage />,
 	},
 	{
 		path: "*",

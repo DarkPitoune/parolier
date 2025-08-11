@@ -6,7 +6,7 @@ import {
 	TouchScreenListener,
 	slideHelpAtom,
 } from "@/components";
-import {
+import supabase, {
 	setlistLengthQuery,
 	taggedSongFromSetlistStepQuery,
 	taggedSongQuery,
@@ -15,6 +15,8 @@ import { useAtom } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
+
+type Payload = { type: "broadcast"; event: string; payload: { order: "NEXT" | "PREVIOUS" } }
 
 const SlidePage = () => {
 	const { songId, stepNumber, setlistId } = useParams();
@@ -103,6 +105,41 @@ const SlidePage = () => {
 			navigate(`/setlists/${setlistId}/steps/${Number(stepNumber) - 1}/slide`);
 		}
 	}, [currentStropheIndex, navigate, setlistId, stepNumber, strophes.length]);
+	
+	useEffect(() => {
+    let channel = supabase.channel("remote");
+
+    const subscribeToChannel = () => {
+      // Unsubscribe first to avoid duplicate subscription errors
+      channel.unsubscribe();
+      
+      // Create a new channel instance
+      channel = supabase.channel("remote");
+      
+      channel
+        .on("broadcast", { event: "click" }, ({ payload }: Payload) => {
+          if (payload.order === "NEXT") nextStrophe();
+          if (payload.order === "PREVIOUS") prevStrophe();
+        })
+        .subscribe();
+    };
+
+    // Initial subscription
+    subscribeToChannel();
+
+    // Listen for online event to resubscribe
+    const handleOnline = () => {
+      console.log("Connection restored, resubscribing to channel");
+      subscribeToChannel();
+    };
+
+    window.addEventListener("online", handleOnline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      channel.unsubscribe();
+    };
+  }, [nextStrophe, prevStrophe]);
 
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {
