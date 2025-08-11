@@ -58,7 +58,7 @@ export const newSongMutation = async (title: string) =>
 	supabase.from("songs").insert({
 		title,
 		strophes: [{ content: [{ text: "Louons Dieu", chords: "C" }] }],
-	});
+	}).select().single();
 export type NewSongMutation = QueryData<ReturnType<typeof newSongMutation>>;
 
 export const allSetlistsQuery = async () => supabase.from("setlists").select();

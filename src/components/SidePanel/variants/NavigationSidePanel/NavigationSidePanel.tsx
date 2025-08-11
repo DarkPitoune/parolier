@@ -1,21 +1,23 @@
 import { Link } from "react-router-dom";
 import { SidePanel } from "../../SidePanel";
 import { newSongMutation } from "@/utils/supabase";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 export function NavigationSidePanel({
 	open,
 	setOpen,
 }: { open: boolean; setOpen: (open: boolean) => void }) {
+	const navigate = useNavigate();
 	const createNewSong = async () => {
 		const title = prompt("Titre de la chanson");
 		if (!title) return;
-		const { error } = await newSongMutation(title);
+		const { error, data } = await newSongMutation(title);
 		if (error) {
 			toast.error(`Erreur lors de la création de la chanson: ${error.message}`);
 		} else {
 			toast.success("Chanson créée avec succès");
-			window.location.reload();
+			navigate(`/songs/${data.id}`);
 		}
 	};
 	return (
