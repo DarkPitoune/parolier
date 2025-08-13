@@ -6,6 +6,7 @@ import { addChorusAtom, showChordsAtom } from "./Contexts/SettingsContext";
 import { DynamicText } from "./DynamicText";
 import { SettingsSidePanel } from "./SidePanel/variants/SettingsSidePanel";
 import { TagChip } from "./TagChip";
+import { Link } from "react-router-dom";
 
 function SongViewer({ song }: { song: TaggedSong }) {
 	const addChorusSetting = useAtomValue(addChorusAtom);
@@ -25,6 +26,29 @@ function SongViewer({ song }: { song: TaggedSong }) {
 				<div className="flex gap-4 items-center font-flame text-xl lg:text-3xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
 					<h1>{song.id}.</h1>
 					<h1>{song.title}</h1>
+					{song.sheet_music_url && (
+					<Link
+						to={song.sheet_music_url}
+						className="ml-auto px-4 py-2 bg-jubilateBlue-500 hover:bg-jubilateBlue-600 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
+						title="View Sheet Music"
+					>
+						<svg
+							className="w-5 h-5"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+							/>
+						</svg>
+						Sheet Music
+					</Link>
+					)}
 				</div>
 				<div className="flex gap-8 px-4 font-flame">
 					{song.tags?.map((tag) => (
