@@ -1,4 +1,4 @@
-import supabase from "@/utils/supabase";
+import supabase, { getLeaderPositionQuery } from "@/utils/supabase";
 import { useEffect } from "react";
 import type { createBrowserRouter } from "react-router-dom";
 import type { Database } from "../../database.types";
@@ -35,6 +35,15 @@ const LeaderListener = ({
 		return () => {
 			changes.unsubscribe();
 		};
+	}, [router.navigate, leader]);
+
+	useEffect(() => {
+		if (!leader || leader.leading) return;
+		getLeaderPositionQuery(leader.id).then((res) => {
+			if (res.data) {
+				router.navigate(`/songs/${res.data.song}`);
+			}
+		});
 	}, [router.navigate, leader]);
 
 	if (!leader) return null;

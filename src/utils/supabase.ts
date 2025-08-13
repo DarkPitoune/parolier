@@ -171,6 +171,14 @@ export type UpdateLeaderPositionMutation = QueryData<
 	ReturnType<typeof updateLeaderPositionMutation>
 >;
 
+export const getLeaderPositionQuery = async (leaderId: string) =>
+	supabase
+		.from("leader_position")
+		.select("song, setlist_item")
+		.eq("leader_id", leaderId)
+		.single();
+export type GetLeaderPositionQuery = QueryData<ReturnType<typeof getLeaderPositionQuery>>;
+
 export const getLeaderPositionsQuery = async () =>
 	supabase
 		.from("leader_position")
