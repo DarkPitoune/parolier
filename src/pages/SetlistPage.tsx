@@ -33,7 +33,7 @@ function SetlistPage() {
 					title: item.songs.title,
 					content: (
 						<div className="flex flex-col gap-4">
-							<SongViewer song={item.songs} />
+							<SongViewer showTitle song={item.songs} />
 						</div>
 					),
 				};

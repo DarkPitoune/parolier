@@ -148,7 +148,7 @@ export default function SwipeableTabs({
 							type="button"
 							key={tab.id || index}
 							className={clsx(
-								"px-4 py-2 whitespace-nowrap font-medium text-sm transition-colors duration-200 relative",
+								"px-4 py-2 whitespace-nowrap font-medium text-sm transition-colors duration-200 relative max-w-[33vw] text-ellipsis overflow-clip",
 								activeTab === index
 									? "text-jubilateBlue-500 dark:text-jubilateBlue-300"
 									: "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300",
