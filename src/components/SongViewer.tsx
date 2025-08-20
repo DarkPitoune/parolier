@@ -1,13 +1,13 @@
-import type { TaggedSong } from "@/utils/supabase";
+import { type TaggedSong, supabaseUrl } from "@/utils/supabase";
 import { transposeLine } from "@/utils/tonalManipulation";
+import { DocumentTextIcon } from "@heroicons/react/24/outline";
 import { useAtomValue } from "jotai";
 import { Fragment, useState } from "react";
+import { Link } from "react-router-dom";
 import { addChorusAtom, showChordsAtom } from "./Contexts/SettingsContext";
 import { DynamicText } from "./DynamicText";
 import { SettingsSidePanel } from "./SidePanel/variants/SettingsSidePanel";
 import { TagChip } from "./TagChip";
-import { Link } from "react-router-dom";
-import { DocumentTextIcon } from "@heroicons/react/24/outline";
 
 function SongViewer({ song, showTitle=false }: { song: TaggedSong, showTitle?: boolean }) {
 	const addChorusSetting = useAtomValue(addChorusAtom);
@@ -32,9 +32,9 @@ function SongViewer({ song, showTitle=false }: { song: TaggedSong, showTitle?: b
         )}
           {song.sheet_music_url && (
             <Link
-              to={song.sheet_music_url}
+              to={`${supabaseUrl}/storage/v1/object/public${song.sheet_music_url}`}
               className="ml-auto px-4 py-2 bg-jubilateBlue-500 dark:bg-jubilateBlue-400 hover:bg-jubilateBlue-600 dark:hover:bg-jubilateBlue-700 text-white rounded-full transition-colors duration-200 flex items-center gap-2"
-              title="View Sheet Music"
+              title="Voir la partition"
             >
               <DocumentTextIcon className="size-6" />
             </Link>
