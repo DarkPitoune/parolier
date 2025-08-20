@@ -1,3 +1,4 @@
+import { BackButton } from "@/components";
 import {
 	type AllSetlists,
 	allSetlistsQuery,
@@ -10,11 +11,11 @@ import {
 	TrashIcon,
 } from "@heroicons/react/16/solid";
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Setlists = () => {
 	const [setslists, setSetlists] = useState<AllSetlists>([]);
-
+	const navigate = useNavigate();
 	const fetchSetlists = useCallback(async () => {
 		const { data } = await allSetlistsQuery();
 		setSetlists(data || []);
@@ -37,12 +38,7 @@ const Setlists = () => {
 	return (
 		<div className="bg-white dark:bg-gray-800 text-black dark:text-white">
 			<div className="bg-jubilateBlue-500 dark:bg-slate-900 px-6 py-4 flex justify-between items-center">
-				<Link
-					className="bg-jubilateBlue-500 dark:bg-jubilateBlue-400 rounded-full hover:bg-jubilateBlue-700"
-					to="/"
-				>
-					<ChevronLeftIcon className="w-10 dark:fill-gray-800 fill-white" />
-				</Link>
+				<BackButton />
 				<h1 className="font-flame text-xl lg:text-3xl text-white">Setlists</h1>
 				<img className="h-12" src="/svg/logo.svg" alt="Logo" />
 			</div>
@@ -50,21 +46,19 @@ const Setlists = () => {
 				{setslists?.map((setlist) => (
 					<div
 						key={setlist.id}
-						className="px-2 py-4 text-black dark:text-white hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 flex items-center gap-3 group relative overflow-clip"
+						className="px-2 py-4 text-black dark:text-white hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 flex items-center gap-3 relative overflow-clip"
 					>
 						<Link className="grow" to={`/setlists/${setlist.id}`}>
 							{setlist.name}
 						</Link>
 						<button
 							type="button"
-							className="absolute -right-5 group-hover:right-2 transition-all"
 							onClick={() => handleDeleteSetlist(setlist.id)}
 						>
 							<TrashIcon className="size-8 rounded-full bg-jubilateRed p-1" />
 						</button>
 						<Link
 							to={`/setlists/${setlist.id}/edit`}
-							className="absolute -right-5 group-hover:right-11 transition-all z-10"
 						>
 							<PencilSquareIcon className="size-8 p-1 bg-jubilateGreen rounded-full" />
 						</Link>

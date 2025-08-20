@@ -140,7 +140,7 @@ const SetlistEditor = () => {
 								{"<"} Setlists
 							</Link>
 						</li>
-						<li className="h-12 px-4 flex justify-between items-center bg-jubilateBlue-100 hover:bg-jubilateBlue-200 dark:bg-slate-700 dark:hover:bg-slate-600 m-2 rounded-md">
+						<li className="px-4 py-2 bg-jubilateBlue-100 hover:bg-jubilateBlue-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-md">
 							<TextInput
 								value={setlistName}
 								onChange={setSetlistName}
@@ -206,7 +206,7 @@ const SetlistEditor = () => {
 								</div>
 							</li>
 						))}
-						<li className="text-white border-b-2 border-gray-200 dark:border-gray-600 w-full flex justify-between items-center">
+						<li className="text-white border-b-2 border-gray-200 dark:border-gray-600 w-full flex items-center">
 							<button
 								type="button"
 								className="w-fit place-self-start text-left p-2 bg-jubilateBlue-500 hover:bg-jubilateBlue-700 dark:hover:bg-jubilateBlue-400 m-2 rounded-md transition"

@@ -12,7 +12,7 @@ import supabase, {
 	allTagsQuery,
 	type Tags,
 } from "@/utils/supabase";
-import { ChevronUpIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid";
+import { ChevronRightIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import clsx from "clsx";
 import Fuse from "fuse.js";
 import { useAtom } from "jotai";
@@ -24,7 +24,7 @@ import {
 	useState,
 } from "react";
 import toast from "react-hot-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function Index() {
 	const [songs, setSongs] = useState<AllSongs>([]);
@@ -33,6 +33,7 @@ function Index() {
 	const [selectedTags, setSelectedTags] = useAtom<number[]>(filtersAtom);
 	const [tagTabOpen, setTagTabOpen] = useAtom(tagTabOpenAtom);
 	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
+	const navigate = useNavigate();
 	const [selectedSongIndex, setSelectedSongIndex] = useState<number | null>(
 		null,
 	);
@@ -100,6 +101,26 @@ function Index() {
 						Math.min(filteredSongs.length - 1, selectedSongIndex + 1),
 					);
 			}
+			if (event.key === "Enter") {
+				if (selectedSongIndex !== null) {
+					navigate(`/songs/${filteredSongs[selectedSongIndex].id}`);
+				}
+			}
+		// Catch any letter input (a-z, A-Z) and focus the search input
+		if (
+			event.key.length === 1 &&
+			/[a-zA-Z]/.test(event.key)
+		) {
+			const searchInput = document.querySelector('input[type="search"]') as HTMLInputElement | null;
+			if (searchInput) {
+				searchInput.focus();
+				if (document.activeElement !== searchInput) {
+				  searchInput.value += event.key;
+				  const inputEvent = new Event('input', { bubbles: true });
+				  searchInput.dispatchEvent(inputEvent);
+				}
+			}
+		}
 		};
 		window.addEventListener("keydown", handleKeyDown);
 		return () => {
@@ -187,11 +208,11 @@ function Index() {
 						onClick={() => setTagTabOpen((v) => !v)}
 						type="button"
 					>
-						<ChevronUpIcon
+						<ChevronRightIcon
 							data-tabopen={tagTabOpen}
-							className="size-10 data-[tabopen=false]:rotate-180 transition"
+							className="size-6 lg:size-8 data-[tabopen=true]:rotate-90 transition"
 						/>
-						<h3 className="text-2xl font-bold">Filtres</h3>
+						<h3 className="text-lg lg:text-2xl font-bold">Filtres</h3>
 						{selectedTags.length > 0 && (
 							<div className="bg-jubilateBlue-500 rounded-full text-white font-bold w-6">
 								{selectedTags.length}
@@ -220,7 +241,7 @@ function Index() {
 					<Link
 						key={song.id}
 						to={`/songs/${song.id}`}
-						className={index === selectedSongIndex ? "bg-gray-300" : ""}
+						className={index === selectedSongIndex ? "bg-gray-300 dark:bg-slate-700" : ""}
 					>
 						<SongItem song={song} />
 					</Link>

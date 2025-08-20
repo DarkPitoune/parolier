@@ -1,4 +1,4 @@
-import { DynamicText, SongViewer } from "@/components";
+import { BackButton, DynamicText, SongViewer } from "@/components";
 import { type Setlist, setlistQuery } from "@/utils/supabase";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -56,36 +56,31 @@ function SetlistPage() {
 		.filter((v) => v !== null);
 
 	return (
-		<div>
-			<div className="flex justify-between items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky bg-white dark:bg-gray-900">
-				<Link
-					className="bg-jubilateBlue-500 dark:bg-jubilateBlue-400 rounded-full hover:bg-jubilateBlue-700"
-					to="/"
-				>
-					<ChevronLeftIcon className="w-10 dark:fill-gray-800 fill-white" />
-				</Link>
-				<h3 className="text-lg font-flame text-jubilateBlue-500">
-					{setlist ? setlist[0]?.setlists?.name : "Loading..."}
-				</h3>
-				<div className="flex items-center gap-4">
-					<Link
-						className="rounded-full hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-3"
-						onClick={() => document.body.requestFullscreen()}
-						to={`/setlists/${setlistId}/steps/${activeTab}/slide`}
-					>
-						<ComputerDesktopIcon className="size-6 fill-white" />
-					</Link>
-				</div>
-			</div>
-			{setlist && (
-				<SwipeableTabs
-					activeTab={activeTab}
-					setActiveTab={handleChangeTab}
-					tabs={tabs}
-				/>
-			)}
-		</div>
-	);
+    <div>
+      <div className="flex justify-between items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky bg-white dark:bg-gray-900">
+        <BackButton />
+        <h3 className="text-xl lg:text-3xl font-flame text-jubilateBlue-500 dark:text-jubilateBlue-400">
+          {setlist ? setlist[0]?.setlists?.name : "Loading..."}
+        </h3>
+        <div className="flex items-center gap-4">
+          <Link
+            className="rounded-full hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-3"
+            onClick={() => document.body.requestFullscreen()}
+            to={`/setlists/${setlistId}/steps/${activeTab}/slide`}
+          >
+            <ComputerDesktopIcon className="size-6 fill-white" />
+          </Link>
+        </div>
+      </div>
+      {setlist && (
+        <SwipeableTabs
+          activeTab={activeTab}
+          setActiveTab={handleChangeTab}
+          tabs={tabs}
+        />
+      )}
+    </div>
+  );
 }
 
 export { SetlistPage };
