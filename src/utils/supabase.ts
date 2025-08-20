@@ -55,10 +55,14 @@ export type TaggedSongFromSetlistStep = QueryData<
 >;
 
 export const newSongMutation = async (title: string) =>
-	supabase.from("songs").insert({
-		title,
-		strophes: [{ content: [{ text: "Louons Dieu", chords: "C" }] }],
-	}).select().single();
+	supabase
+		.from("songs")
+		.insert({
+			title,
+			strophes: [{ content: [{ text: "Louons Dieu", chords: "C" }] }],
+		})
+		.select()
+		.single();
 export type NewSongMutation = QueryData<ReturnType<typeof newSongMutation>>;
 
 export const allSetlistsQuery = async () => supabase.from("setlists").select();
@@ -177,7 +181,9 @@ export const getLeaderPositionQuery = async (leaderId: string) =>
 		.select("song, setlist_item")
 		.eq("leader_id", leaderId)
 		.single();
-export type GetLeaderPositionQuery = QueryData<ReturnType<typeof getLeaderPositionQuery>>;
+export type GetLeaderPositionQuery = QueryData<
+	ReturnType<typeof getLeaderPositionQuery>
+>;
 
 export const getLeaderPositionsQuery = async () =>
 	supabase

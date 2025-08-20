@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
-import { getPopularSongsQuery, type PopularSongs } from "@/utils/supabase";
 import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
+import { type PopularSongs, getPopularSongsQuery } from "@/utils/supabase";
 import { Bars3Icon, InformationCircleIcon } from "@heroicons/react/16/solid";
 import * as Sentry from "@sentry/react";
+import { useEffect, useMemo, useState } from "react";
 
 function Analytics() {
 	// Component purely vibe coded, no guarantee
@@ -41,11 +41,11 @@ function Analytics() {
 	const songCounts = useMemo(() => {
 		const counts: Record<string, number> = {};
 
-		analytics.forEach((item) => {
+		for (const item of analytics) {
 			if (item.songs?.title) {
 				counts[item.songs.title] = (counts[item.songs.title] || 0) + 1;
 			}
-		});
+		}
 
 		return Object.entries(counts)
 			.map(([title, count]) => ({ title, count }))
@@ -69,7 +69,7 @@ function Analytics() {
 		const now = new Date();
 		const end = now.toISOString().split("T")[0];
 
-		let start = new Date();
+		const start = new Date();
 
 		switch (range) {
 			case "week":
@@ -92,6 +92,7 @@ function Analytics() {
 			<div className="bg-jubilateBlue-500 text-white p-3 sm:p-4 flex items-center justify-between">
 				<h1 className="text-xl sm:text-2xl font-bold">Statistiques</h1>
 				<button
+					type="button"
 					onClick={() => setIsNavigationPanelOpen(true)}
 					className="p-2 hover:bg-jubilateBlue-600 rounded transition-colors"
 				>
@@ -103,18 +104,21 @@ function Analytics() {
 				<div className="flex flex-col gap-3 sm:gap-4">
 					<div className="flex flex-wrap gap-2 items-center">
 						<button
+							type="button"
 							onClick={() => setTimeRange("week")}
 							className="px-3 py-2 bg-jubilateBlue-100 dark:bg-jubilateBlue-900 text-jubilateBlue-700 dark:text-jubilateBlue-300 rounded-md hover:bg-jubilateBlue-200 dark:hover:bg-jubilateBlue-800 transition-colors text-sm font-medium"
 						>
 							Dernière semaine
 						</button>
 						<button
+							type="button"
 							onClick={() => setTimeRange("3months")}
 							className="px-3 py-2 bg-jubilateBlue-100 dark:bg-jubilateBlue-900 text-jubilateBlue-700 dark:text-jubilateBlue-300 rounded-md hover:bg-jubilateBlue-200 dark:hover:bg-jubilateBlue-800 transition-colors text-sm font-medium"
 						>
 							3 derniers mois
 						</button>
 						<button
+							type="button"
 							onClick={() => setTimeRange("year")}
 							className="px-3 py-2 bg-jubilateBlue-100 dark:bg-jubilateBlue-900 text-jubilateBlue-700 dark:text-jubilateBlue-300 rounded-md hover:bg-jubilateBlue-200 dark:hover:bg-jubilateBlue-800 transition-colors text-sm font-medium"
 						>
@@ -179,6 +183,7 @@ function Analytics() {
 						</div>
 					</div>
 					<button
+						type="button"
 						onClick={clearFilters}
 						className="w-full sm:w-auto px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-sm"
 					>
@@ -190,7 +195,7 @@ function Analytics() {
 			<div className="p-3 sm:p-4">
 				{isLoading ? (
 					<div className="flex justify-center items-center py-8">
-						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-jubilateBlue-500"></div>
+						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-jubilateBlue-500" />
 					</div>
 				) : songCounts.length === 0 ? (
 					<div className="text-center py-8 text-gray-500 dark:text-gray-400">
@@ -232,7 +237,7 @@ function Analytics() {
 															100
 														}%`,
 													}}
-												></div>
+												/>
 											</div>
 											<span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[2rem] sm:min-w-[3rem] text-right">
 												{song.count}

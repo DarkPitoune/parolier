@@ -4,6 +4,8 @@ import {
 	allSongsQuery,
 	taggedSongQuery,
 } from "@/utils/supabase";
+import clsx from "clsx";
+import Fuse from "fuse.js";
 import {
 	type ChangeEventHandler,
 	useCallback,
@@ -11,10 +13,8 @@ import {
 	useMemo,
 	useState,
 } from "react";
-import { getSongItemId, SongItem } from "./SongItem";
-import clsx from "clsx";
+import { SongItem, getSongItemId } from "./SongItem";
 import { SongViewer } from "./SongViewer";
-import Fuse from "fuse.js";
 
 type SongPickerProps = {
 	handleClose: (songId?: number) => void;

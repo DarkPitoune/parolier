@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useState, useRef, useEffect, type TouchEventHandler } from "react";
+import { type TouchEventHandler, useEffect, useRef, useState } from "react";
 
 export interface Tab {
 	id?: string | number;

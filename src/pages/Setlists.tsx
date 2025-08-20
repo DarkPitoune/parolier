@@ -5,17 +5,12 @@ import {
 	deleteSetlistMutation,
 	newSetlistMutation,
 } from "@/utils/supabase";
-import {
-	ChevronLeftIcon,
-	PencilSquareIcon,
-	TrashIcon,
-} from "@heroicons/react/16/solid";
+import { PencilSquareIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Setlists = () => {
 	const [setslists, setSetlists] = useState<AllSetlists>([]);
-	const navigate = useNavigate();
 	const fetchSetlists = useCallback(async () => {
 		const { data } = await allSetlistsQuery();
 		setSetlists(data || []);
@@ -57,9 +52,7 @@ const Setlists = () => {
 						>
 							<TrashIcon className="size-8 rounded-full bg-jubilateRed p-1" />
 						</button>
-						<Link
-							to={`/setlists/${setlist.id}/edit`}
-						>
+						<Link to={`/setlists/${setlist.id}/edit`}>
 							<PencilSquareIcon className="size-8 p-1 bg-jubilateGreen rounded-full" />
 						</Link>
 					</div>

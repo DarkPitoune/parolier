@@ -1,6 +1,6 @@
 import type { AllSongs } from "@/utils/supabase";
-import { DynamicText } from "./DynamicText";
 import clsx from "clsx";
+import { DynamicText } from "./DynamicText";
 
 export const getSongItemId = (songId: number) => `song-${songId}`;
 

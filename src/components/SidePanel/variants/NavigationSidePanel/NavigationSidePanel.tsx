@@ -1,8 +1,8 @@
-import { Link } from "react-router-dom";
-import { SidePanel } from "../../SidePanel";
 import { newSongMutation } from "@/utils/supabase";
-import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { SidePanel } from "../../SidePanel";
 
 export function NavigationSidePanel({
 	open,

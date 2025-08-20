@@ -5,23 +5,23 @@ import {
 	settingsOpenAtom,
 	showChordsAtom,
 } from "@/components";
+import { leaderAtom, useLeader } from "@/components/Contexts/LeaderContext";
+import {
+	type LeaderPositions,
+	getLeaderPositionsQuery,
+} from "@/utils/supabase";
 import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
+import clsx from "clsx";
 import { useAtom, useSetAtom } from "jotai";
+import { atomWithStorage, createJSONStorage } from "jotai/utils";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
 	DropLeadButton,
 	TakeLeadButton,
 } from "../../../Contexts/LeaderButtons";
-import { ResetIcon } from "./ResetIcon";
 import { SidePanel } from "../../SidePanel";
-import { useState } from "react";
-import { leaderAtom, useLeader } from "@/components/Contexts/LeaderContext";
-import {
-	getLeaderPositionsQuery,
-	type LeaderPositions,
-} from "@/utils/supabase";
-import clsx from "clsx";
-import { atomWithStorage, createJSONStorage } from "jotai/utils";
-import { useNavigate } from "react-router-dom";
+import { ResetIcon } from "./ResetIcon";
 
 const usernameAtom = atomWithStorage<string>(
 	"username",

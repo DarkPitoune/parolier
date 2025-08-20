@@ -12,7 +12,10 @@ import supabase, {
 	allTagsQuery,
 	type Tags,
 } from "@/utils/supabase";
-import { ChevronRightIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid";
+import {
+	ChevronRightIcon,
+	MagnifyingGlassIcon,
+} from "@heroicons/react/16/solid";
 import clsx from "clsx";
 import Fuse from "fuse.js";
 import { useAtom } from "jotai";
@@ -106,28 +109,27 @@ function Index() {
 					navigate(`/songs/${filteredSongs[selectedSongIndex].id}`);
 				}
 			}
-		// Catch any letter input (a-z, A-Z) and focus the search input
-		if (
-			event.key.length === 1 &&
-			/[a-zA-Z]/.test(event.key)
-		) {
-			const searchInput = document.querySelector('input[type="search"]') as HTMLInputElement | null;
-			if (searchInput) {
-				searchInput.focus();
-				if (document.activeElement !== searchInput) {
-				  searchInput.value += event.key;
-				  const inputEvent = new Event('input', { bubbles: true });
-				  searchInput.dispatchEvent(inputEvent);
+			// Catch any letter input (a-z, A-Z) and focus the search input
+			if (event.key.length === 1 && /[a-zA-Z]/.test(event.key)) {
+				const searchInput = document.querySelector(
+					'input[type="search"]',
+				) as HTMLInputElement | null;
+				if (searchInput) {
+					searchInput.focus();
+					if (document.activeElement !== searchInput) {
+						searchInput.value += event.key;
+						const inputEvent = new Event("input", { bubbles: true });
+						searchInput.dispatchEvent(inputEvent);
+					}
 				}
 			}
-		}
 		};
 		window.addEventListener("keydown", handleKeyDown);
 		return () => {
 			window.removeEventListener("scroll", setScrollY);
 			window.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [selectedSongIndex, filteredSongs]);
+	}, [selectedSongIndex, filteredSongs, navigate]);
 
 	const [searchValue, setSearchValue] = useState("");
 
@@ -241,7 +243,9 @@ function Index() {
 					<Link
 						key={song.id}
 						to={`/songs/${song.id}`}
-						className={index === selectedSongIndex ? "bg-gray-300 dark:bg-slate-700" : ""}
+						className={
+							index === selectedSongIndex ? "bg-gray-300 dark:bg-slate-700" : ""
+						}
 					>
 						<SongItem song={song} />
 					</Link>

@@ -1,9 +1,9 @@
 import supabase, { getLeaderPositionQuery } from "@/utils/supabase";
+import { useAtomValue } from "jotai";
 import { useEffect } from "react";
 import type { createBrowserRouter } from "react-router-dom";
 import type { Database } from "../../database.types";
 import { leaderAtom } from "./Contexts/LeaderContext";
-import { useAtomValue } from "jotai";
 
 type Payload = {
 	new: Database["public"]["Tables"]["leader_position"]["Row"];

@@ -1,10 +1,10 @@
+import { darkModeAtom } from "@/components";
 import {
 	Dialog,
 	DialogBackdrop,
 	DialogPanel,
 	DialogTitle,
 } from "@headlessui/react";
-import { darkModeAtom } from "@/components";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import type { ReactNode } from "react";
