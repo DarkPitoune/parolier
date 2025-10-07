@@ -483,7 +483,9 @@ const manifest: Partial<VitePWAOptions> = {
 		skipWaiting: true,
 		runtimeCaching: [
 			{
-				urlPattern: ({ url }) => url.href.includes("/rest/v1/"), // Match Supabase REST API calls
+				urlPattern: ({ url }) =>
+					url.href.includes("/rest/v1/") &&
+					!url.href.includes("/rest/v1/analytics"), // Match Supabase REST API calls but exclude analytics
 				handler: "NetworkFirst",
 				options: {
 					cacheName: "supabase-api-cache",
