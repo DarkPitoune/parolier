@@ -33,7 +33,7 @@ export const setlistQuery = async (setlistId: string) =>
 		.from("setlist_items")
 		.select(
 			`id,
-			songs (id, strophes, title, tags (id, name, svg, color)),
+			songs (id, sheet_music_url, strophes, title, tags (id, name, svg, color)),
 			text, position,
 			setlists (id, name)`,
 		)

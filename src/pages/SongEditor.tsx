@@ -5,6 +5,7 @@ import supabase, {
 	taggedSongQuery,
 	type Tags,
 } from "@/utils/supabase";
+import type { Json } from "../../database.types";
 
 import { TextInput } from "@/components";
 import { songEditorHelpOpen } from "@/components/Contexts/SettingsContext";
@@ -54,7 +55,7 @@ const SongEditor = () => {
 					typeof strophe.content === "string"
 						? strophe.content
 						: strophe.content.filter((line) => line.text || line.chords),
-			})),
+			})) as Json[],
 		};
 
 		const { error: errorSong } = await supabase
