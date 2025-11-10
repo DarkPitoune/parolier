@@ -14,9 +14,7 @@ const SlideViewer = ({ strophe }: { strophe: Strophe }) => {
 					</div>
 				))
 			) : (
-				<div className="col-span-2">
-					{strophe.content}
-				</div>
+				<div className="col-span-2">{strophe.content}</div>
 			)}
 		</div>
 	);
