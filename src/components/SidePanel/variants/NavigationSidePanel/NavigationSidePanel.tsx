@@ -36,12 +36,6 @@ export function NavigationSidePanel({
 			</Link>
 			<Link
 				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-				to="/zapette"
-			>
-				Zapette
-			</Link>
-			<Link
-				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
 				to="/presenter"
 			>
 				Mode Présentateur

@@ -17,10 +17,16 @@ import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
-type Payload = {
-	type: "broadcast";
-	event: string;
+type NavigationEvent = {
 	payload: { order: "NEXT" | "PREVIOUS" };
+};
+
+type LogoEvent = {
+	payload: { isLogoSlide: boolean };
+};
+
+type SongChangeEvent = {
+	payload: { songId: number; stropheIndex: number };
 };
 
 const SlidePage = () => {
@@ -30,7 +36,7 @@ const SlidePage = () => {
 	const navigate = useNavigate();
 	const [slideHelp, setSlideHelp] = useAtom(slideHelpAtom);
 
-	const { slideState, nextStrophe, prevStrophe, toggleLogoSlide } =
+	const { slideState, nextStrophe, prevStrophe, toggleLogoSlide, navigateToSong } =
 		useSlideController("slideshow");
 	const { currentStropheIndex, isLogoSlide } = slideState;
 
@@ -153,9 +159,19 @@ const SlidePage = () => {
 			channel = supabase.channel("remote");
 
 			channel
-				.on("broadcast", { event: "click" }, ({ payload }: Payload) => {
+				.on("broadcast", { event: "click" }, ({ payload }: NavigationEvent) => {
 					if (payload.order === "NEXT") handleNextStrophe();
 					if (payload.order === "PREVIOUS") handlePrevStrophe();
+				})
+				.on("broadcast", { event: "logo_toggle" }, ({ payload }: LogoEvent) => {
+					// Update slide controller to match remote logo state
+					if (payload.isLogoSlide !== isLogoSlide) {
+						toggleLogoSlide();
+					}
+				})
+				.on("broadcast", { event: "song_change" }, ({ payload }: SongChangeEvent) => {
+					// Navigate to the song sent from remote
+					navigateToSong(payload.songId);
 				})
 				.subscribe();
 		};
@@ -175,7 +191,7 @@ const SlidePage = () => {
 			window.removeEventListener("online", handleOnline);
 			channel.unsubscribe();
 		};
-	}, [handleNextStrophe, handlePrevStrophe]);
+	}, [handleNextStrophe, handlePrevStrophe, toggleLogoSlide, navigateToSong, isLogoSlide]);
 
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {

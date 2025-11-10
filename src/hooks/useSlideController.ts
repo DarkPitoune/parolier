@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import supabase from "@/utils/supabase";
 
 export type SlideState = {
 	currentSongId: number | null;
@@ -22,14 +23,14 @@ const getInitialState = (): SlideState => ({
 	source: "initial",
 });
 
-export const useSlideController = (source = "unknown") => {
+export const useSlideController = (source = "unknown", enableNetworkBroadcast = false) => {
 	const [slideState, setSlideState] = useState<SlideState>(() => {
 		const stored = localStorage.getItem(SLIDE_STATE_KEY);
 		return stored ? JSON.parse(stored) : getInitialState();
 	});
 
 	const updateSlideState = useCallback(
-		(updates: Partial<SlideState>) => {
+		(updates: Partial<SlideState>, broadcastToNetwork = false) => {
 			const newState = {
 				...slideState,
 				...updates,
@@ -38,8 +39,47 @@ export const useSlideController = (source = "unknown") => {
 			};
 			setSlideState(newState);
 			localStorage.setItem(SLIDE_STATE_KEY, JSON.stringify(newState));
+
+			// Broadcast to network if enabled and requested
+			if (enableNetworkBroadcast && broadcastToNetwork) {
+				try {
+					// Send navigation commands for network compatibility
+					if (updates.currentStropheIndex !== undefined) {
+						const isNext = updates.currentStropheIndex > slideState.currentStropheIndex;
+						const order = isNext ? "NEXT" : "PREVIOUS";
+						supabase.channel("remote").send({
+							type: "broadcast",
+							event: "click",
+							payload: { order },
+						});
+					}
+
+					// Send logo toggle events
+					if (updates.isLogoSlide !== undefined) {
+						supabase.channel("remote").send({
+							type: "broadcast",
+							event: "logo_toggle",
+							payload: { isLogoSlide: updates.isLogoSlide },
+						});
+					}
+
+					// Send song change events
+					if (updates.currentSongId !== undefined) {
+						supabase.channel("remote").send({
+							type: "broadcast",
+							event: "song_change",
+							payload: {
+								songId: updates.currentSongId,
+								stropheIndex: updates.currentStropheIndex || 0
+							},
+						});
+					}
+				} catch (error) {
+					console.error("Failed to broadcast to network:", error);
+				}
+			}
 		},
-		[slideState, source],
+		[slideState, source, enableNetworkBroadcast],
 	);
 
 	const clearSlideState = useCallback(() => {
@@ -83,7 +123,7 @@ export const useSlideController = (source = "unknown") => {
 				updates.isLogoSlide = false;
 			}
 
-			updateSlideState(updates);
+			updateSlideState(updates, true); // Broadcast to network
 		},
 		[updateSlideState],
 	);
@@ -101,19 +141,19 @@ export const useSlideController = (source = "unknown") => {
 	const nextStrophe = useCallback(() => {
 		updateSlideState({
 			currentStropheIndex: slideState.currentStropheIndex + 1,
-		});
+		}, true); // Broadcast to network
 	}, [updateSlideState, slideState.currentStropheIndex]);
 
 	const prevStrophe = useCallback(() => {
 		updateSlideState({
 			currentStropheIndex: Math.max(0, slideState.currentStropheIndex - 1),
-		});
+		}, true); // Broadcast to network
 	}, [updateSlideState, slideState.currentStropheIndex]);
 
 	const toggleLogoSlide = useCallback(() => {
 		updateSlideState({
 			isLogoSlide: !slideState.isLogoSlide,
-		});
+		}, true); // Broadcast to network
 	}, [updateSlideState, slideState.isLogoSlide]);
 
 	return {

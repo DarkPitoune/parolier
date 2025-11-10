@@ -7,7 +7,6 @@ import {
 	Setlists,
 	SlidePage,
 	SongPage,
-	ZapettePage,
 } from "@/pages";
 import * as Sentry from "@sentry/react";
 import clsx from "clsx";
@@ -74,10 +73,6 @@ const router = createBrowserRouter([
 	{
 		path: "/analytics",
 		element: <Analytics />,
-	},
-	{
-		path: "/zapette",
-		element: <ZapettePage />,
 	},
 	{
 		path: "/presenter",

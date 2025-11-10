@@ -28,7 +28,7 @@ const PresenterPage = () => {
     nextStrophe,
     prevStrophe,
     toggleLogoSlide,
-  } = useSlideController("presenter");
+  } = useSlideController("presenter", true); // Enable network broadcast
 
   const { currentStropheIndex, isLogoSlide, currentSongId } = slideState;
 
