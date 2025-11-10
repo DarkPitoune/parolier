@@ -2,6 +2,7 @@ import { AuthContextProvider, CornerMenu, darkModeAtom } from "@/components";
 import {
 	Analytics,
 	Index,
+	PresenterPage,
 	SetlistEditor,
 	Setlists,
 	SlidePage,
@@ -77,6 +78,14 @@ const router = createBrowserRouter([
 	{
 		path: "/zapette",
 		element: <ZapettePage />,
+	},
+	{
+		path: "/presenter",
+		element: <PresenterPage />,
+	},
+	{
+		path: "/presenter/:setlistId/:stepNumber",
+		element: <PresenterPage />,
 	},
 	{
 		path: "*",

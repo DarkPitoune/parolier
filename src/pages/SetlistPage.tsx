@@ -1,7 +1,10 @@
 import { BackButton, DynamicText, SongViewer } from "@/components";
 import SwipeableTabs, { type Tab } from "@/components/SwipeableTabs";
 import { type Setlist, setlistQuery } from "@/utils/supabase";
-import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
+import {
+	ComputerDesktopIcon,
+	PresentationChartLineIcon,
+} from "@heroicons/react/24/solid";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
@@ -61,11 +64,17 @@ function SetlistPage() {
 				<h3 className="text-xl lg:text-3xl font-flame text-jubilateBlue-500 dark:text-jubilateBlue-400">
 					{setlist ? setlist[0]?.setlists?.name : "Loading..."}
 				</h3>
-				<div className="flex items-center gap-4">
+				<div className="flex items-center gap-2">
+					<Link
+						className="rounded-full hidden md:block bg-green-500 hover:bg-green-600 text-white p-3"
+						to={`/presenter/${setlistId}/${activeTab + 1}`}
+					>
+						<PresentationChartLineIcon className="size-6 fill-white" />
+					</Link>
 					<Link
 						className="rounded-full hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-3"
 						onClick={() => document.body.requestFullscreen()}
-						to={`/setlists/${setlistId}/steps/${activeTab}/slide`}
+						to={`/setlists/${setlistId}/steps/${activeTab + 1}/slide`}
 					>
 						<ComputerDesktopIcon className="size-6 fill-white" />
 					</Link>

@@ -6,6 +6,7 @@ import {
 	TouchScreenListener,
 	slideHelpAtom,
 } from "@/components";
+import { useSlideController } from "@/hooks/useSlideController";
 import supabase, {
 	setlistLengthQuery,
 	taggedSongFromSetlistStepQuery,
@@ -25,11 +26,13 @@ type Payload = {
 const SlidePage = () => {
 	const { songId, stepNumber, setlistId } = useParams();
 	const [strophes, setStrophes] = useState<Strophe[]>([]);
-	const [currentStropheIndex, setCurrentStropheIndex] = useState(0);
-	const [isLogoSlide, setIsLogoSlide] = useState(false);
 	const [setlistLength, setSetlistLength] = useState(0);
 	const navigate = useNavigate();
 	const [slideHelp, setSlideHelp] = useAtom(slideHelpAtom);
+
+	const { slideState, nextStrophe, prevStrophe, toggleLogoSlide } =
+		useSlideController("slideshow");
+	const { currentStropheIndex, isLogoSlide } = slideState;
 
 	useEffect(() => {
 		if (setlistId)
@@ -38,13 +41,36 @@ const SlidePage = () => {
 			});
 	}, [setlistId]);
 
+	// Load songs from URL params or slide controller state
 	useEffect(() => {
-		// Reset strophe index when song changes
+		// Check if we should load from slide controller state
+		if (
+			slideState.currentSongId &&
+			(!songId || Number(songId) !== slideState.currentSongId)
+		) {
+			taggedSongQuery(slideState.currentSongId).then(({ data, error }) => {
+				if (data?.strophes) {
+					setStrophes(data.strophes);
+				} else {
+					setStrophes([]);
+					const errorMessage =
+						error?.code === "PGRST116"
+							? "Morceau non trouvé !"
+							: "Connexion à internet requise";
+					toast.error(errorMessage, {
+						style: {
+							backgroundColor: "black",
+							color: "white",
+						},
+					});
+				}
+			});
+			return;
+		}
 
+		// Fallback to URL params if no slide controller state
 		if (songId) {
 			taggedSongQuery(Number(songId)).then(({ data, error }) => {
-				setCurrentStropheIndex(0);
-				setIsLogoSlide(false);
 				if (data?.strophes) {
 					setStrophes(data.strophes);
 				} else {
@@ -67,8 +93,6 @@ const SlidePage = () => {
 			taggedSongFromSetlistStepQuery(setlistId, Number(stepNumber)).then(
 				({ data }) => {
 					if (data?.songs) {
-						setCurrentStropheIndex(0);
-						setIsLogoSlide(false);
 						setStrophes(data.songs.strophes);
 						toast(data.songs.title, {
 							position: "top-center",
@@ -81,13 +105,13 @@ const SlidePage = () => {
 				},
 			);
 		}
-	}, [songId, setlistId, stepNumber]);
+	}, [songId, setlistId, stepNumber, slideState.currentSongId]);
 
-	const nextStrophe = useCallback(() => {
+	const handleNextStrophe = useCallback(() => {
 		if (strophes.length === 0) return;
 
 		if (currentStropheIndex < strophes.length - 1) {
-			setCurrentStropheIndex(currentStropheIndex + 1);
+			nextStrophe();
 		} else if (setlistId && stepNumber && Number(stepNumber) < setlistLength) {
 			navigate(`/setlists/${setlistId}/steps/${Number(stepNumber) + 1}/slide`);
 		}
@@ -98,17 +122,25 @@ const SlidePage = () => {
 		stepNumber,
 		strophes.length,
 		setlistLength,
+		nextStrophe,
 	]);
 
-	const prevStrophe = useCallback(() => {
+	const handlePrevStrophe = useCallback(() => {
 		if (strophes.length === 0) return;
 
 		if (currentStropheIndex > 0) {
-			setCurrentStropheIndex(currentStropheIndex - 1);
+			prevStrophe();
 		} else if (setlistId && stepNumber && Number(stepNumber) > 0) {
 			navigate(`/setlists/${setlistId}/steps/${Number(stepNumber) - 1}/slide`);
 		}
-	}, [currentStropheIndex, navigate, setlistId, stepNumber, strophes.length]);
+	}, [
+		currentStropheIndex,
+		navigate,
+		setlistId,
+		stepNumber,
+		strophes.length,
+		prevStrophe,
+	]);
 
 	useEffect(() => {
 		let channel = supabase.channel("remote");
@@ -122,8 +154,8 @@ const SlidePage = () => {
 
 			channel
 				.on("broadcast", { event: "click" }, ({ payload }: Payload) => {
-					if (payload.order === "NEXT") nextStrophe();
-					if (payload.order === "PREVIOUS") prevStrophe();
+					if (payload.order === "NEXT") handleNextStrophe();
+					if (payload.order === "PREVIOUS") handlePrevStrophe();
 				})
 				.subscribe();
 		};
@@ -143,7 +175,7 @@ const SlidePage = () => {
 			window.removeEventListener("online", handleOnline);
 			channel.unsubscribe();
 		};
-	}, [nextStrophe, prevStrophe]);
+	}, [handleNextStrophe, handlePrevStrophe]);
 
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {
@@ -162,8 +194,8 @@ const SlidePage = () => {
 			}
 
 			// If a song is open, handle strophe navigation
-			if (e.key === "ArrowRight") nextStrophe();
-			if (e.key === "ArrowLeft") prevStrophe();
+			if (e.key === "ArrowRight") handleNextStrophe();
+			if (e.key === "ArrowLeft") handlePrevStrophe();
 			if (e.key === "f" || e.key === "F") document.body.requestFullscreen();
 		};
 		document.addEventListener("keydown", handleKey);
@@ -171,8 +203,8 @@ const SlidePage = () => {
 			document.removeEventListener("keydown", handleKey);
 		};
 	}, [
-		nextStrophe,
-		prevStrophe,
+		handleNextStrophe,
+		handlePrevStrophe,
 		setlistId,
 		stepNumber,
 		navigate,
@@ -182,7 +214,7 @@ const SlidePage = () => {
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {
 			if (e.key === "h" || e.key === "H") setSlideHelp((v) => !v);
-			if (e.key === "t" || e.key === "T") setIsLogoSlide((v) => !v);
+			if (e.key === "t" || e.key === "T") toggleLogoSlide();
 			if (e.key === "Escape" && !document.fullscreenElement) navigate("/");
 			if (e.key === "q" || e.key === "Q") document.exitFullscreen();
 		};
@@ -207,7 +239,7 @@ const SlidePage = () => {
 			document.removeEventListener("fullscreenchange", handleQuit);
 			wakeLock?.release();
 		};
-	}, [navigate, setSlideHelp]);
+	}, [navigate, setSlideHelp, toggleLogoSlide]);
 
 	return (
 		<div className="absolute z-20 inset-0 flex flex-col justify-center items-center text-white bg-black overflow-clip">
@@ -221,8 +253,8 @@ const SlidePage = () => {
 						strophe={strophes[currentStropheIndex]}
 					/>
 					<div className="absolute inset-0 flex items-stretch justify-stretch">
-						<div className="grow" onTouchStart={prevStrophe} />
-						<div className="grow" onTouchStart={nextStrophe} />
+						<div className="grow" onTouchStart={handlePrevStrophe} />
+						<div className="grow" onTouchStart={handleNextStrophe} />
 					</div>
 				</>
 			)}
