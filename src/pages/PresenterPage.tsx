@@ -1,5 +1,5 @@
 import type { Strophe } from "@/assets/types";
-import { BackButton, SlideViewer, SongPickerInline } from "@/components";
+import { BackButton, SlideViewer, SongPickerInline, SongPicker } from "@/components";
 import { useSlideController } from "@/hooks/useSlideController";
 import {
   setlistLengthQuery,
@@ -11,6 +11,7 @@ import {
   ChevronRightIcon,
   EyeSlashIcon,
   PlayIcon,
+  MusicalNoteIcon,
 } from "@heroicons/react/24/outline";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -76,26 +77,142 @@ const PresenterPage = () => {
   }, [currentSongId]);
 
   // Launch slideshow window
-  const openSlideshow = useCallback(() => {
+  const openSlideshow = useCallback(async () => {
     if (slideshowWindow && !slideshowWindow.closed) {
       slideshowWindow.focus();
       return;
     }
 
-    const newWindow = window.open(
-      "/slides",
-      "slideshow",
-      "width=800,height=600,toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=yes,fullscreen=yes",
-    );
+    // Detect second display and position window accordingly
+    let windowFeatures =
+      "toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=yes";
 
-    if (newWindow) {
+    try {
+      // Try to get screen details for multi-display setup
+      if ("getScreenDetails" in window) {
+        // @ts-ignore - New Screen API
+        const screenDetails = await window.getScreenDetails();
+        const screens = screenDetails.screens;
+
+        if (screens.length > 1) {
+          // Find external display (not the primary one)
+          const externalScreen =
+            screens.find((screen: any) => !screen.isPrimary) || screens[1];
+          if (externalScreen) {
+            windowFeatures += `,width=${externalScreen.availWidth},height=${externalScreen.availHeight},left=${externalScreen.left},top=${externalScreen.top}`;
+            console.log(
+              `Opening slideshow on external display: ${externalScreen.availWidth}x${externalScreen.availHeight}`,
+            );
+          }
+        } else {
+          // Fallback to main screen
+          windowFeatures += ",width=1920,height=1080,left=0,top=0";
+        }
+      } else {
+        // Fallback for browsers without Screen API - try to detect second monitor
+        const totalWidth = window.screen.availWidth;
+        const screenWidth = window.screen.width;
+
+        // Simple heuristic: if total available width > screen width, likely multi-monitor
+        if (totalWidth > screenWidth) {
+          windowFeatures += `,width=${screenWidth},height=${window.screen.availHeight},left=${screenWidth},top=0`;
+          console.log(
+            "Detected possible second monitor, positioning slideshow to the right",
+          );
+        } else {
+          windowFeatures += ",width=1920,height=1080,left=0,top=0";
+        }
+      }
+    } catch (error) {
+      console.log("Screen detection failed, using default positioning:", error);
+      windowFeatures += ",width=1920,height=1080,left=0,top=0";
+    }
+
+    // Chrome-compatible window opening with display-aware positioning
+    const newWindow = window.open("/slides", "slideshow", windowFeatures);
+
+    // Chrome sometimes takes a moment to create the window object
+    setTimeout(() => {
+      if (
+        !newWindow ||
+        newWindow.closed ||
+        typeof newWindow.closed === "undefined"
+      ) {
+        // Fallback: ask user to allow popups or use current tab
+        const useCurrentTab = confirm(
+          "Le navigateur bloque les fenêtres pop-up. Voulez-vous ouvrir le diaporama dans cet onglet ? (Sinon, autorisez les pop-ups et réessayez)",
+        );
+        if (useCurrentTab) {
+          window.location.href = "/slides";
+        }
+        return;
+      }
+
       setSlideshowWindow(newWindow);
 
-      // Try to make it fullscreen after loading
+      // Setup fullscreen request after page loads
       newWindow.addEventListener("load", () => {
-        newWindow.document.body.requestFullscreen?.();
+        // Add a click handler to the new window that will trigger fullscreen
+        // This ensures we have a user gesture required by modern browsers
+        const requestFullscreenOnInteraction = () => {
+          newWindow.document.documentElement
+            .requestFullscreen?.()
+            .catch((err) => {
+              console.log("Fullscreen request failed:", err);
+            });
+          // Remove the listener after first use
+          newWindow.document.removeEventListener(
+            "click",
+            requestFullscreenOnInteraction,
+          );
+          newWindow.document.removeEventListener(
+            "keydown",
+            requestFullscreenOnInteraction,
+          );
+        };
+
+        // Try immediate fullscreen (may work in some browsers/contexts)
+        newWindow.document.documentElement.requestFullscreen?.().catch(() => {
+          // If immediate fullscreen fails, set up interaction listeners
+          newWindow.document.addEventListener(
+            "click",
+            requestFullscreenOnInteraction,
+          );
+          newWindow.document.addEventListener(
+            "keydown",
+            requestFullscreenOnInteraction,
+          );
+
+          // Show a brief instruction to the user
+          const instruction = newWindow.document.createElement("div");
+          instruction.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 18px;
+            text-align: center;
+            z-index: 9999;
+            pointer-events: none;
+          `;
+          instruction.textContent =
+            "Cliquez ou appuyez sur une touche pour passer en plein écran";
+          newWindow.document.body.appendChild(instruction);
+
+          // Remove instruction after 3 seconds
+          setTimeout(() => {
+            if (instruction.parentNode) {
+              instruction.parentNode.removeChild(instruction);
+            }
+          }, 3000);
+        });
       });
-    }
+    }, 100);
   }, [slideshowWindow]);
 
   // Handle song selection from inline picker
@@ -125,7 +242,11 @@ const PresenterPage = () => {
     const handleKey = (e: KeyboardEvent) => {
       // Don't handle keyboard shortcuts if user is typing in an input field
       const target = e.target as HTMLElement;
-      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.contentEditable === "true") {
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.contentEditable === "true"
+      ) {
         return;
       }
 
@@ -160,7 +281,7 @@ const PresenterPage = () => {
         <button
           type="button"
           onClick={openSlideshow}
-          className="bg-jubilateBlue-500 hover:bg-jubilateBlue-700 text-white px-4 py-2 rounded-md flex items-center gap-2"
+          className="hidden md:flex bg-jubilateBlue-500 hover:bg-jubilateBlue-700 text-white px-4 py-2 rounded-md items-center gap-2"
         >
           <PlayIcon className="w-5 h-5" />
           {slideshowWindow && !slideshowWindow.closed
@@ -173,7 +294,7 @@ const PresenterPage = () => {
       {/* Main Content */}
       <div className="flex grow min-h-0">
         {/* Left Panel: Song Picker - 1/3 width */}
-        <div className="w-1/3 border-r border-gray-200 dark:border-gray-700">
+        <div className="hidden md:block w-1/3 border-r border-gray-200 dark:border-gray-700">
           <SongPickerInline onSongSelect={handleSongSelect} />
         </div>
 
@@ -189,7 +310,7 @@ const PresenterPage = () => {
           {/* Slides Side by Side */}
           <div className="flex-1 grid grid-rows-5 gap-6 min-h-0">
             {/* Current Slide */}
-            <div className="row-span-3">
+            <div className="row-span-3 flex justify-center">
               <div className="bg-black rounded-lg flex items-center justify-center text-white relative overflow-hidden aspect-video h-full max-w-full">
                 {isLogoSlide ? (
                   <>
@@ -223,9 +344,9 @@ const PresenterPage = () => {
             </div>
             {/* Next Slide */}
             <div className="row-span-2 flex justify-center">
-              <div className="bg-black rounded-lg flex items-center justify-center text-white aspect-video h-full max-w-full">
+              <div className="bg-black rounded-lg flex items-center text-white aspect-video h-full max-w-full overflow-clip">
                 {nextStropheData ? (
-                  <div className="scale-50 opacity-60 text-3xl">
+                  <div className="scale-50 opacity-60 text-xl">
                     <SlideViewer strophe={nextStropheData} />
                   </div>
                 ) : (
