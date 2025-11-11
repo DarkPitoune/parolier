@@ -9,6 +9,7 @@ import {
 	useMemo,
 	useState,
 } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface BibleBook {
 	[key: string]: {
@@ -27,13 +28,13 @@ interface BibleVerse {
 
 function Bible() {
 	const [bible, setBible] = useState<BibleBook>({});
-	const [selectedBook, setSelectedBook] = useState<string | null>(null);
-	const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
 	const [verses, setVerses] = useState<BibleVerse[]>([]);
 	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
 	const [searchValue, setSearchValue] = useState("");
 	const [filteredBooks, setFilteredBooks] = useState<string[]>([]);
 	const { leader } = useLeader();
+	const { book: selectedBook, chapter: selectedChapter } = useParams();
+	const navigate = useNavigate();
 
 	const books = useMemo(() => Object.keys(bible), [bible]);
 	const chapters = useMemo(
@@ -89,21 +90,22 @@ function Bible() {
 	);
 
 	const selectBook = (book: string) => {
-		setSelectedBook(book);
-		setSelectedChapter(null);
-		setVerses([]);
+		navigate(`/bible/${encodeURIComponent(book)}`);
 	};
 
 	const selectChapter = (chapter: string) => {
-		setSelectedChapter(chapter);
+		if (selectedBook) {
+			navigate(
+				`/bible/${encodeURIComponent(selectedBook)}/${encodeURIComponent(chapter)}`,
+			);
+		}
 	};
 
 	const goBack = () => {
 		if (selectedChapter) {
-			setSelectedChapter(null);
-			setVerses([]);
+			navigate(`/bible/${encodeURIComponent(selectedBook)}`);
 		} else if (selectedBook) {
-			setSelectedBook(null);
+			navigate("/bible");
 		}
 	};
 

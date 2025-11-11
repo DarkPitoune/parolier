@@ -55,6 +55,14 @@ const router = createBrowserRouter([
 		element: <Bible />,
 	},
 	{
+		path: "/bible/:book",
+		element: <Bible />,
+	},
+	{
+		path: "/bible/:book/:chapter",
+		element: <Bible />,
+	},
+	{
 		path: "/messe",
 		element: <Messe />,
 	},
