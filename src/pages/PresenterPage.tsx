@@ -1,191 +1,197 @@
 import type { Strophe } from "@/assets/types";
-import { BackButton, SlideViewer, SongPickerInline, SongPicker } from "@/components";
+import {
+	BackButton,
+	SlideViewer,
+	SongPicker,
+	SongPickerInline,
+} from "@/components";
 import { useSlideController } from "@/hooks/useSlideController";
 import {
-  setlistLengthQuery,
-  taggedSongFromSetlistStepQuery,
-  taggedSongQuery,
+	setlistLengthQuery,
+	taggedSongFromSetlistStepQuery,
+	taggedSongQuery,
 } from "@/utils/supabase";
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  EyeSlashIcon,
-  PlayIcon,
-  MusicalNoteIcon,
+	ChevronLeftIcon,
+	ChevronRightIcon,
+	EyeSlashIcon,
+	MusicalNoteIcon,
+	PlayIcon,
 } from "@heroicons/react/24/outline";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 
 const PresenterPage = () => {
-  const { setlistId, stepNumber } = useParams();
-  const [strophes, setStrophes] = useState<Strophe[]>([]);
-  const [setlistLength, setSetlistLength] = useState(0);
-  const [slideshowWindow, setSlideshowWindow] = useState<Window | null>(null);
+	const { setlistId, stepNumber } = useParams();
+	const [strophes, setStrophes] = useState<Strophe[]>([]);
+	const [setlistLength, setSetlistLength] = useState(0);
+	const [slideshowWindow, setSlideshowWindow] = useState<Window | null>(null);
+	const [showMobileSongPicker, setShowMobileSongPicker] = useState(false);
 
-  const {
-    slideState,
-    navigateToSong,
-    nextStrophe,
-    prevStrophe,
-    toggleLogoSlide,
-  } = useSlideController("presenter", true); // Enable network broadcast
+	const {
+		slideState,
+		navigateToSong,
+		nextStrophe,
+		prevStrophe,
+		toggleLogoSlide,
+	} = useSlideController("presenter", true); // Enable network broadcast
 
-  const { currentStropheIndex, isLogoSlide, currentSongId } = slideState;
+	const { currentStropheIndex, isLogoSlide, currentSongId } = slideState;
 
-  // Load setlist length if in setlist context
-  useEffect(() => {
-    if (setlistId)
-      setlistLengthQuery(setlistId).then(({ data }) => {
-        if (data) setSetlistLength(data[0].position);
-      });
-  }, [setlistId]);
+	// Load setlist length if in setlist context
+	useEffect(() => {
+		if (setlistId)
+			setlistLengthQuery(setlistId).then(({ data }) => {
+				if (data) setSetlistLength(data[0].position);
+			});
+	}, [setlistId]);
 
-  // Load initial song from URL params
-  useEffect(() => {
-    if (setlistId && stepNumber) {
-      taggedSongFromSetlistStepQuery(setlistId, Number(stepNumber)).then(
-        ({ data }) => {
-          if (data?.songs) {
-            setStrophes(data.songs.strophes);
-            navigateToSong(data.songs.id, setlistId, Number(stepNumber));
-            toast.success(`Loaded: ${data.songs.title}`, {
-              position: "top-center",
-            });
-          }
-        },
-      );
-    }
-  }, [setlistId, stepNumber, navigateToSong]);
+	// Load initial song from URL params
+	useEffect(() => {
+		if (setlistId && stepNumber) {
+			taggedSongFromSetlistStepQuery(setlistId, Number(stepNumber)).then(
+				({ data }) => {
+					if (data?.songs) {
+						setStrophes(data.songs.strophes);
+						navigateToSong(data.songs.id, setlistId, Number(stepNumber));
+						toast.success(`Loaded: ${data.songs.title}`, {
+							position: "top-center",
+						});
+					}
+				},
+			);
+		}
+	}, [setlistId, stepNumber, navigateToSong]);
 
-  // Load strophes when current song changes
-  useEffect(() => {
-    if (currentSongId) {
-      taggedSongQuery(currentSongId).then(({ data, error }) => {
-        if (data?.strophes) {
-          setStrophes(data.strophes);
-        } else {
-          setStrophes([]);
-          const errorMessage =
-            error?.code === "PGRST116"
-              ? "Song not found!"
-              : "Internet connection required";
-          toast.error(errorMessage);
-        }
-      });
-    }
-  }, [currentSongId]);
+	// Load strophes when current song changes
+	useEffect(() => {
+		if (currentSongId) {
+			taggedSongQuery(currentSongId).then(({ data, error }) => {
+				if (data?.strophes) {
+					setStrophes(data.strophes);
+				} else {
+					setStrophes([]);
+					const errorMessage =
+						error?.code === "PGRST116"
+							? "Song not found!"
+							: "Internet connection required";
+					toast.error(errorMessage);
+				}
+			});
+		}
+	}, [currentSongId]);
 
-  // Launch slideshow window
-  const openSlideshow = useCallback(async () => {
-    if (slideshowWindow && !slideshowWindow.closed) {
-      slideshowWindow.focus();
-      return;
-    }
+	// Launch slideshow window
+	const openSlideshow = useCallback(async () => {
+		if (slideshowWindow && !slideshowWindow.closed) {
+			slideshowWindow.focus();
+			return;
+		}
 
-    // Detect second display and position window accordingly
-    let windowFeatures =
-      "toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=yes";
+		// Detect second display and position window accordingly
+		let windowFeatures =
+			"toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=yes";
 
-    try {
-      // Try to get screen details for multi-display setup
-      if ("getScreenDetails" in window) {
-        // @ts-ignore - New Screen API
-        const screenDetails = await window.getScreenDetails();
-        const screens = screenDetails.screens;
+		try {
+			// Try to get screen details for multi-display setup
+			if ("getScreenDetails" in window) {
+				// @ts-ignore - New Screen API
+				const screenDetails = await window.getScreenDetails();
+				const screens = screenDetails.screens;
 
-        if (screens.length > 1) {
-          // Find external display (not the primary one)
-          const externalScreen =
-            screens.find((screen: any) => !screen.isPrimary) || screens[1];
-          if (externalScreen) {
-            windowFeatures += `,width=${externalScreen.availWidth},height=${externalScreen.availHeight},left=${externalScreen.left},top=${externalScreen.top}`;
-            console.log(
-              `Opening slideshow on external display: ${externalScreen.availWidth}x${externalScreen.availHeight}`,
-            );
-          }
-        } else {
-          // Fallback to main screen
-          windowFeatures += ",width=1920,height=1080,left=0,top=0";
-        }
-      } else {
-        // Fallback for browsers without Screen API - try to detect second monitor
-        const totalWidth = window.screen.availWidth;
-        const screenWidth = window.screen.width;
+				if (screens.length > 1) {
+					// Find external display (not the primary one)
+					const externalScreen =
+						screens.find((screen) => !screen.isPrimary) || screens[1];
+					if (externalScreen) {
+						windowFeatures += `,width=${externalScreen.availWidth},height=${externalScreen.availHeight},left=${externalScreen.left},top=${externalScreen.top}`;
+						console.log(
+							`Opening slideshow on external display: ${externalScreen.availWidth}x${externalScreen.availHeight}`,
+						);
+					}
+				} else {
+					// Fallback to main screen
+					windowFeatures += ",width=1920,height=1080,left=0,top=0";
+				}
+			} else {
+				// Fallback for browsers without Screen API - try to detect second monitor
+				const totalWidth = window.screen.availWidth;
+				const screenWidth = window.screen.width;
 
-        // Simple heuristic: if total available width > screen width, likely multi-monitor
-        if (totalWidth > screenWidth) {
-          windowFeatures += `,width=${screenWidth},height=${window.screen.availHeight},left=${screenWidth},top=0`;
-          console.log(
-            "Detected possible second monitor, positioning slideshow to the right",
-          );
-        } else {
-          windowFeatures += ",width=1920,height=1080,left=0,top=0";
-        }
-      }
-    } catch (error) {
-      console.log("Screen detection failed, using default positioning:", error);
-      windowFeatures += ",width=1920,height=1080,left=0,top=0";
-    }
+				// Simple heuristic: if total available width > screen width, likely multi-monitor
+				if (totalWidth > screenWidth) {
+					windowFeatures += `,width=${screenWidth},height=${window.screen.availHeight},left=${screenWidth},top=0`;
+					console.log(
+						"Detected possible second monitor, positioning slideshow to the right",
+					);
+				} else {
+					windowFeatures += ",width=1920,height=1080,left=0,top=0";
+				}
+			}
+		} catch (error) {
+			console.log("Screen detection failed, using default positioning:", error);
+			windowFeatures += ",width=1920,height=1080,left=0,top=0";
+		}
 
-    // Chrome-compatible window opening with display-aware positioning
-    const newWindow = window.open("/slides", "slideshow", windowFeatures);
+		// Chrome-compatible window opening with display-aware positioning
+		const newWindow = window.open("/slides", "slideshow", windowFeatures);
 
-    // Chrome sometimes takes a moment to create the window object
-    setTimeout(() => {
-      if (
-        !newWindow ||
-        newWindow.closed ||
-        typeof newWindow.closed === "undefined"
-      ) {
-        // Fallback: ask user to allow popups or use current tab
-        const useCurrentTab = confirm(
-          "Le navigateur bloque les fenêtres pop-up. Voulez-vous ouvrir le diaporama dans cet onglet ? (Sinon, autorisez les pop-ups et réessayez)",
-        );
-        if (useCurrentTab) {
-          window.location.href = "/slides";
-        }
-        return;
-      }
+		// Chrome sometimes takes a moment to create the window object
+		setTimeout(() => {
+			if (
+				!newWindow ||
+				newWindow.closed ||
+				typeof newWindow.closed === "undefined"
+			) {
+				// Fallback: ask user to allow popups or use current tab
+				const useCurrentTab = confirm(
+					"Le navigateur bloque les fenêtres pop-up. Voulez-vous ouvrir le diaporama dans cet onglet ? (Sinon, autorisez les pop-ups et réessayez)",
+				);
+				if (useCurrentTab) {
+					window.location.href = "/slides";
+				}
+				return;
+			}
 
-      setSlideshowWindow(newWindow);
+			setSlideshowWindow(newWindow);
 
-      // Setup fullscreen request after page loads
-      newWindow.addEventListener("load", () => {
-        // Add a click handler to the new window that will trigger fullscreen
-        // This ensures we have a user gesture required by modern browsers
-        const requestFullscreenOnInteraction = () => {
-          newWindow.document.documentElement
-            .requestFullscreen?.()
-            .catch((err) => {
-              console.log("Fullscreen request failed:", err);
-            });
-          // Remove the listener after first use
-          newWindow.document.removeEventListener(
-            "click",
-            requestFullscreenOnInteraction,
-          );
-          newWindow.document.removeEventListener(
-            "keydown",
-            requestFullscreenOnInteraction,
-          );
-        };
+			// Setup fullscreen request after page loads
+			newWindow.addEventListener("load", () => {
+				// Add a click handler to the new window that will trigger fullscreen
+				// This ensures we have a user gesture required by modern browsers
+				const requestFullscreenOnInteraction = () => {
+					newWindow.document.documentElement
+						.requestFullscreen?.()
+						.catch((err) => {
+							console.log("Fullscreen request failed:", err);
+						});
+					// Remove the listener after first use
+					newWindow.document.removeEventListener(
+						"click",
+						requestFullscreenOnInteraction,
+					);
+					newWindow.document.removeEventListener(
+						"keydown",
+						requestFullscreenOnInteraction,
+					);
+				};
 
-        // Try immediate fullscreen (may work in some browsers/contexts)
-        newWindow.document.documentElement.requestFullscreen?.().catch(() => {
-          // If immediate fullscreen fails, set up interaction listeners
-          newWindow.document.addEventListener(
-            "click",
-            requestFullscreenOnInteraction,
-          );
-          newWindow.document.addEventListener(
-            "keydown",
-            requestFullscreenOnInteraction,
-          );
+				// Try immediate fullscreen (may work in some browsers/contexts)
+				newWindow.document.documentElement.requestFullscreen?.().catch(() => {
+					// If immediate fullscreen fails, set up interaction listeners
+					newWindow.document.addEventListener(
+						"click",
+						requestFullscreenOnInteraction,
+					);
+					newWindow.document.addEventListener(
+						"keydown",
+						requestFullscreenOnInteraction,
+					);
 
-          // Show a brief instruction to the user
-          const instruction = newWindow.document.createElement("div");
-          instruction.style.cssText = `
+					// Show a brief instruction to the user
+					const instruction = newWindow.document.createElement("div");
+					instruction.style.cssText = `
             position: fixed;
             top: 50%;
             left: 50%;
@@ -200,234 +206,254 @@ const PresenterPage = () => {
             z-index: 9999;
             pointer-events: none;
           `;
-          instruction.textContent =
-            "Cliquez ou appuyez sur une touche pour passer en plein écran";
-          newWindow.document.body.appendChild(instruction);
+					instruction.textContent =
+						"Cliquez ou appuyez sur une touche pour passer en plein écran";
+					newWindow.document.body.appendChild(instruction);
 
-          // Remove instruction after 3 seconds
-          setTimeout(() => {
-            if (instruction.parentNode) {
-              instruction.parentNode.removeChild(instruction);
-            }
-          }, 3000);
-        });
-      });
-    }, 100);
-  }, [slideshowWindow]);
+					// Remove instruction after 3 seconds
+					setTimeout(() => {
+						if (instruction.parentNode) {
+							instruction.parentNode.removeChild(instruction);
+						}
+					}, 3000);
+				});
+			});
+		}, 100);
+	}, [slideshowWindow]);
 
-  // Handle song selection from inline picker
-  const handleSongSelect = useCallback(
-    (songId: number) => {
-      // Preserve logo slide state when changing songs in presenter mode
-      navigateToSong(songId, undefined, undefined, isLogoSlide);
-    },
-    [navigateToSong, isLogoSlide],
-  );
+	// Handle song selection from inline picker
+	const handleSongSelect = useCallback(
+		(songId: number) => {
+			// Preserve logo slide state when changing songs in presenter mode
+			navigateToSong(songId, undefined, undefined, isLogoSlide);
+		},
+		[navigateToSong, isLogoSlide],
+	);
 
-  // Navigation helpers
-  const canGoNext = currentStropheIndex < strophes.length - 1;
-  const canGoPrev = currentStropheIndex > 0;
+	// Handle song selection from mobile modal
+	const handleMobileSongSelect = useCallback(
+		(songId?: number) => {
+			setShowMobileSongPicker(false);
+			if (songId) {
+				handleSongSelect(songId);
+			}
+		},
+		[handleSongSelect],
+	);
 
-  const currentStrophe = strophes[currentStropheIndex];
-  const nextStropheData = strophes[currentStropheIndex + 1];
+	// Navigation helpers
+	const canGoNext = currentStropheIndex < strophes.length - 1;
+	const canGoPrev = currentStropheIndex > 0;
 
-  // Progress calculation
-  const totalSlides = strophes.length;
-  const currentSlideNumber = currentStropheIndex + 1;
+	const currentStrophe = strophes[currentStropheIndex];
+	const nextStropheData = strophes[currentStropheIndex + 1];
 
-  // Set 4:3 aspect ratio for slide previews
+	// Progress calculation
+	const totalSlides = strophes.length;
+	const currentSlideNumber = currentStropheIndex + 1;
 
-  // Add keyboard controls (same as slideshow mode)
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      // Don't handle keyboard shortcuts if user is typing in an input field
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.contentEditable === "true"
-      ) {
-        return;
-      }
+	// Add keyboard controls (same as slideshow mode)
+	useEffect(() => {
+		const handleKey = (e: KeyboardEvent) => {
+			// Don't handle keyboard shortcuts if user is typing in an input field
+			const target = e.target as HTMLElement;
+			if (
+				target.tagName === "INPUT" ||
+				target.tagName === "TEXTAREA" ||
+				target.contentEditable === "true"
+			) {
+				return;
+			}
 
-      // Navigation controls
-      if (e.key === "ArrowRight") {
-        e.preventDefault();
-        if (canGoNext) nextStrophe();
-      }
-      if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        if (canGoPrev) prevStrophe();
-      }
-      // Logo toggle
-      if (e.key === "t" || e.key === "T") {
-        e.preventDefault();
-        toggleLogoSlide();
-      }
-    };
+			// Navigation controls
+			if (e.key === "ArrowRight") {
+				e.preventDefault();
+				if (canGoNext) nextStrophe();
+			}
+			if (e.key === "ArrowLeft") {
+				e.preventDefault();
+				if (canGoPrev) prevStrophe();
+			}
+			// Logo toggle
+			if (e.key === "t" || e.key === "T") {
+				e.preventDefault();
+				toggleLogoSlide();
+			}
+		};
 
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [canGoNext, canGoPrev, nextStrophe, prevStrophe, toggleLogoSlide]);
+		document.addEventListener("keydown", handleKey);
+		return () => document.removeEventListener("keydown", handleKey);
+	}, [canGoNext, canGoPrev, nextStrophe, prevStrophe, toggleLogoSlide]);
 
-  return (
-    <div className="bg-white dark:bg-gray-800 h-screen flex flex-col">
-      {/* Header */}
-      <div className="flex justify-between items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky top-0 bg-white dark:bg-gray-900 z-10">
-        <BackButton />
-        <h1 className="text-2xl font-flame text-jubilateBlue-500 dark:text-jubilateBlue-400">
-          Mode Présentateur
-        </h1>
-        <button
-          type="button"
-          onClick={openSlideshow}
-          className="hidden md:flex bg-jubilateBlue-500 hover:bg-jubilateBlue-700 text-white px-4 py-2 rounded-md items-center gap-2"
-        >
-          <PlayIcon className="w-5 h-5" />
-          {slideshowWindow && !slideshowWindow.closed
-            ? "Afficher"
-            : "Lancer"}{" "}
-          Diaporama
-        </button>
-      </div>
+	return (
+		<div className="bg-white dark:bg-gray-800 h-screen flex flex-col">
+			{/* Header */}
+			<div className="flex justify-between items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky top-0 bg-white dark:bg-gray-900 z-10">
+				<BackButton />
+				<h1 className="text-2xl font-flame text-jubilateBlue-500 dark:text-jubilateBlue-400">
+					Mode Présentateur
+				</h1>
 
-      {/* Main Content */}
-      <div className="flex grow min-h-0">
-        {/* Left Panel: Song Picker - 1/3 width */}
-        <div className="hidden md:block w-1/3 border-r border-gray-200 dark:border-gray-700">
-          <SongPickerInline onSongSelect={handleSongSelect} />
-        </div>
+				{/* Desktop button */}
+				<button
+					type="button"
+					onClick={openSlideshow}
+					className="hidden md:flex bg-jubilateBlue-500 hover:bg-jubilateBlue-700 text-white px-4 py-2 rounded-md items-center gap-2"
+				>
+					<PlayIcon className="w-5 h-5" />
+					{slideshowWindow && !slideshowWindow.closed ? "Afficher" : "Lancer"}{" "}
+					Diaporama
+				</button>
 
-        {/* Right Panel: Slides and Controls */}
-        <div className="flex-1 flex flex-col p-6 h-full">
-          {/* Setlist Info */}
-          {setlistId && stepNumber && (
-            <div className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Chant {stepNumber}/{setlistLength}
-            </div>
-          )}
+				{/* Mobile button */}
+				<div className="md:hidden">
+					<button
+						type="button"
+						onClick={() => setShowMobileSongPicker(true)}
+						className="bg-gray-500 hover:bg-gray-700 text-white p-2 rounded-md"
+						title="Choisir un chant"
+					>
+						<MusicalNoteIcon className="w-5 h-5" />
+					</button>
+				</div>
+			</div>
 
-          {/* Slides Side by Side */}
-          <div className="flex-1 grid grid-rows-5 gap-6 min-h-0">
-            {/* Current Slide */}
-            <div className="row-span-3 flex justify-center">
-              <div className="bg-black rounded-lg flex items-center justify-center text-white relative overflow-hidden aspect-video h-full max-w-full">
-                {isLogoSlide ? (
-                  <>
-                    {/* Show hidden slide content in background */}
-                    {currentStrophe && (
-                      <div className="absolute inset-0 flex items-center justify-center opacity-30">
-                        <div className="scale-50 text-3xl">
-                          <SlideViewer strophe={currentStrophe} />
-                        </div>
-                      </div>
-                    )}
-                    {/* Logo on top */}
-                    <img
-                      src="/svg/Jubilate_Croix.svg"
-                      alt="logo"
-                      className="size-24 relative z-10"
-                    />
-                  </>
-                ) : !currentStrophe ? (
-                  <img
-                    src="/svg/Jubilate_Croix.svg"
-                    alt="logo"
-                    className="size-24"
-                  />
-                ) : (
-                  <div className="scale-50 text-3xl">
-                    <SlideViewer strophe={currentStrophe} />
-                  </div>
-                )}
-              </div>
-            </div>
-            {/* Next Slide */}
-            <div className="row-span-2 flex justify-center">
-              <div className="bg-black rounded-lg flex items-center text-white aspect-video h-full max-w-full overflow-clip">
-                {nextStropheData ? (
-                  <div className="scale-50 opacity-60 text-xl">
-                    <SlideViewer strophe={nextStropheData} />
-                  </div>
-                ) : (
-                  <div className="text-gray-400 text-center">
-                    <EyeSlashIcon className="w-12 h-12 mx-auto mb-2" />
-                    <p>Aucune diapositive suivante</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+			{/* Main Content */}
+			<div className="flex grow min-h-0">
+				{/* Left Panel: Song Picker - 1/3 width */}
+				<div className="hidden md:block w-1/3 border-r border-gray-200 dark:border-gray-700">
+					<SongPickerInline onSongSelect={handleSongSelect} />
+				</div>
 
-          {/* Progress Bar */}
-          <div className="py-4 flex-shrink-0">
-            <div className="flex items-center justify-center gap-4">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {totalSlides > 0
-                  ? `${currentSlideNumber}/${totalSlides}`
-                  : "Aucune diapositive"}
-              </span>
-              {totalSlides > 0 && (
-                <div className="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-3">
-                  <div
-                    className="bg-jubilateBlue-500 h-3 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${(currentSlideNumber / totalSlides) * 100}%`,
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+				{/* Right Panel: Slides and Controls */}
+				<div className="flex-1 flex flex-col p-6 h-full">
+					{/* Setlist Info */}
+					{setlistId && stepNumber && (
+						<div className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+							Chant {stepNumber}/{setlistLength}
+						</div>
+					)}
 
-          {/* Controls at Bottom */}
-          <div className="flex-shrink-0">
-            <div className="flex items-center justify-center gap-6">
-              {/* Previous Button */}
-              <button
-                type="button"
-                onClick={prevStrophe}
-                disabled={!canGoPrev}
-                className="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-4 rounded-full transition-colors"
-                title="Précédent (←)"
-              >
-                <ChevronLeftIcon className="w-6 h-6" />
-              </button>
+					{/* Slides Side by Side */}
+					<div className="flex-1 grid grid-rows-5 gap-6 min-h-0">
+						{/* Current Slide */}
+						<div className="row-span-3 flex justify-center">
+							<div className="bg-black rounded-lg flex items-center justify-center text-white relative overflow-hidden aspect-video h-full max-w-full">
+								{isLogoSlide ? (
+									<>
+										{/* Show hidden slide content in background */}
+										{currentStrophe && (
+											<div className="absolute inset-0 flex items-center justify-center opacity-30">
+												<SlideViewer strophe={currentStrophe} />
+											</div>
+										)}
+										{/* Logo on top */}
+										<img
+											src="/svg/Jubilate_Croix.svg"
+											alt="logo"
+											className="size-24 relative z-10"
+										/>
+									</>
+								) : !currentStrophe ? (
+									<img
+										src="/svg/Jubilate_Croix.svg"
+										alt="logo"
+										className="size-24"
+									/>
+								) : (
+									<SlideViewer strophe={currentStrophe} />
+								)}
+							</div>
+						</div>
+						{/* Next Slide */}
+						<div className="row-span-2 flex justify-center">
+							<div className="bg-black rounded-lg flex justify-center items-center text-white aspect-video h-full max-w-full overflow-clip">
+								{nextStropheData ? (
+									<SlideViewer strophe={nextStropheData} />
+								) : (
+									<div className="text-gray-400 text-center">
+										<EyeSlashIcon className="w-12 h-12 mx-auto mb-2" />
+										<p>Aucune diapositive suivante</p>
+									</div>
+								)}
+							</div>
+						</div>
+					</div>
 
-              {/* Logo Toggle */}
-              <button
-                type="button"
-                onClick={toggleLogoSlide}
-                className={`p-3 rounded-full transition-colors ${
-                  isLogoSlide
-                    ? "bg-yellow-500 hover:bg-yellow-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300"
-                }`}
-                title="Afficher/Masquer Logo (T)"
-              >
-                <img
-                  src="/svg/Jubilate_Croix.svg"
-                  alt="logo toggle"
-                  className="w-7 h-7"
-                />
-              </button>
+					{/* Progress Bar */}
+					<div className="py-4 flex-shrink-0">
+						<div className="flex items-center justify-center gap-4">
+							<span className="text-sm text-gray-600 dark:text-gray-400">
+								{totalSlides > 0
+									? `${currentSlideNumber}/${totalSlides}`
+									: "Aucune diapositive"}
+							</span>
+							{totalSlides > 0 && (
+								<div className="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-3">
+									<div
+										className="bg-jubilateBlue-500 h-3 rounded-full transition-all duration-300"
+										style={{
+											width: `${(currentSlideNumber / totalSlides) * 100}%`,
+										}}
+									/>
+								</div>
+							)}
+						</div>
+					</div>
 
-              {/* Next Button */}
-              <button
-                type="button"
-                onClick={nextStrophe}
-                disabled={!canGoNext}
-                className="bg-jubilateBlue-500 hover:bg-jubilateBlue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-4 rounded-full transition-colors"
-                title="Suivant (→)"
-              >
-                <ChevronRightIcon className="w-6 h-6" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+					{/* Controls at Bottom */}
+					<div className="flex-shrink-0">
+						<div className="flex items-center justify-center gap-6">
+							{/* Previous Button */}
+							<button
+								type="button"
+								onClick={prevStrophe}
+								disabled={!canGoPrev}
+								className="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-4 rounded-full transition-colors"
+								title="Précédent (←)"
+							>
+								<ChevronLeftIcon className="w-6 h-6" />
+							</button>
+
+							{/* Logo Toggle */}
+							<button
+								type="button"
+								onClick={toggleLogoSlide}
+								className={`p-3 rounded-full transition-colors ${
+									isLogoSlide
+										? "bg-yellow-500 hover:bg-yellow-600 text-white"
+										: "bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300"
+								}`}
+								title="Afficher/Masquer Logo (T)"
+							>
+								<img
+									src="/svg/Jubilate_Croix.svg"
+									alt="logo toggle"
+									className="w-7 h-7"
+								/>
+							</button>
+
+							{/* Next Button */}
+							<button
+								type="button"
+								onClick={nextStrophe}
+								disabled={!canGoNext}
+								className="bg-jubilateBlue-500 hover:bg-jubilateBlue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-4 rounded-full transition-colors"
+								title="Suivant (→)"
+							>
+								<ChevronRightIcon className="w-6 h-6" />
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{/* Mobile Song Picker Modal */}
+			{showMobileSongPicker && (
+				<SongPicker handleClose={handleMobileSongSelect} />
+			)}
+		</div>
+	);
 };
 
 export { PresenterPage };

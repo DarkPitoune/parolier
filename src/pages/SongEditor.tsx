@@ -93,9 +93,12 @@ const SongEditor = () => {
 		toast.success("Modifications enregistrées");
 	};
 
-	const handleChange = (field: keyof TaggedSong, value: Strophe[] | string) => {
-		setSong((prev) => (prev ? { ...prev, [field]: value } : null));
-	};
+	const handleChange = useCallback(
+		(field: keyof TaggedSong, value: Strophe[] | string) => {
+			setSong((prev) => (prev ? { ...prev, [field]: value } : null));
+		},
+		[],
+	);
 
 	const handleStropheChange = (
 		index: number,
@@ -168,7 +171,11 @@ const SongEditor = () => {
 	const compressImage = useCallback((file: File): Promise<File> => {
 		return new Promise((resolve) => {
 			const canvas = document.createElement("canvas");
-			const ctx = canvas.getContext("2d")!;
+			const ctx = canvas.getContext("2d");
+			if (!ctx) {
+				resolve(file);
+				return;
+			}
 			const img = new Image();
 
 			img.onload = () => {
@@ -273,7 +280,7 @@ const SongEditor = () => {
 				}
 
 				// Update song title if provided
-				if (result.title && result.title.trim()) {
+				if (result.title?.trim()) {
 					handleChange("title", result.title.trim());
 				}
 
@@ -289,7 +296,7 @@ const SongEditor = () => {
 				setProcessingStep("");
 			}
 		},
-		[compressImage],
+		[compressImage, handleChange],
 	);
 
 	const handleFileSelect = useCallback(
@@ -378,6 +385,15 @@ const SongEditor = () => {
 								onDragOver={handleDragOver}
 								className="border-2 border-dashed border-jubilateBlue-300 dark:border-slate-400 rounded-lg p-6 text-center cursor-pointer hover:bg-jubilateBlue-50 dark:hover:bg-slate-700 transition-colors"
 								onClick={() => fileInputRef.current?.click()}
+								onKeyDown={(e) => {
+									if (e.key === "Enter" || e.key === " ") {
+										e.preventDefault();
+										fileInputRef.current?.click();
+									}
+								}}
+								tabIndex={0}
+								role="button"
+								aria-label="Upload image"
 							>
 								<CameraIcon className="mx-auto h-12 w-12 text-jubilateBlue-400 dark:text-slate-400 mb-3" />
 								<p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
@@ -396,7 +412,7 @@ const SongEditor = () => {
 							</div>
 						) : (
 							<div className="text-center py-8">
-								<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-jubilateBlue-500 mx-auto mb-3"></div>
+								<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-jubilateBlue-500 mx-auto mb-3" />
 								<p className="text-sm font-medium text-jubilateBlue-600 dark:text-jubilateBlue-400">
 									{processingStep}
 								</p>
@@ -429,7 +445,7 @@ const SongEditor = () => {
 
 							<div className="bg-white dark:bg-gray-800 p-3 rounded border mb-4 max-h-40 overflow-y-auto">
 								{suggestedLyrics.map((strophe, index) => (
-									<div key={index} className="mb-2">
+									<div key={`${strophe.type}-${index}`} className="mb-2">
 										<div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
 											{strophe.type === "verse"
 												? "Couplet"
@@ -443,7 +459,10 @@ const SongEditor = () => {
 											<p className="text-sm">{strophe.content}</p>
 										) : (
 											strophe.content.map((line, lineIndex) => (
-												<div key={lineIndex} className="text-sm">
+												<div
+													key={`line-${lineIndex}-${line.text?.slice(0, 10) || ""}`}
+													className="text-sm"
+												>
 													{line.chords && (
 														<span className="text-jubilateBlue-600 dark:text-jubilateBlue-400 text-xs font-mono">
 															{line.chords}{" "}

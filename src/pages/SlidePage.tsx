@@ -36,8 +36,13 @@ const SlidePage = () => {
 	const navigate = useNavigate();
 	const [slideHelp, setSlideHelp] = useAtom(slideHelpAtom);
 
-	const { slideState, nextStrophe, prevStrophe, toggleLogoSlide, navigateToSong } =
-		useSlideController("slideshow");
+	const {
+		slideState,
+		nextStrophe,
+		prevStrophe,
+		toggleLogoSlide,
+		navigateToSong,
+	} = useSlideController("slideshow");
 	const { currentStropheIndex, isLogoSlide } = slideState;
 
 	useEffect(() => {
@@ -169,10 +174,14 @@ const SlidePage = () => {
 						toggleLogoSlide();
 					}
 				})
-				.on("broadcast", { event: "song_change" }, ({ payload }: SongChangeEvent) => {
-					// Navigate to the song sent from remote
-					navigateToSong(payload.songId);
-				})
+				.on(
+					"broadcast",
+					{ event: "song_change" },
+					({ payload }: SongChangeEvent) => {
+						// Navigate to the song sent from remote
+						navigateToSong(payload.songId);
+					},
+				)
 				.subscribe();
 		};
 
@@ -191,7 +200,13 @@ const SlidePage = () => {
 			window.removeEventListener("online", handleOnline);
 			channel.unsubscribe();
 		};
-	}, [handleNextStrophe, handlePrevStrophe, toggleLogoSlide, navigateToSong, isLogoSlide]);
+	}, [
+		handleNextStrophe,
+		handlePrevStrophe,
+		toggleLogoSlide,
+		navigateToSong,
+		isLogoSlide,
+	]);
 
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {

@@ -1,3 +1,4 @@
+import { useIsMobile } from "@/hooks/useIsMobile";
 import {
 	type AllSongs,
 	type TaggedSong,
@@ -21,6 +22,7 @@ type SongPickerProps = {
 };
 
 const SongPicker = ({ handleClose }: SongPickerProps) => {
+	const isMobile = useIsMobile();
 	const [songs, setSongs] = useState<AllSongs>([]);
 	const [filteredSongs, setFilteredSongs] = useState<AllSongs>([]);
 	const [selectedSongId, setSelectedSongId] = useState<number | null>(null);
@@ -146,13 +148,19 @@ const SongPicker = ({ handleClose }: SongPickerProps) => {
 									selectedSongId === song.id && "bg-gray-100 dark:bg-gray-900",
 								)}
 								type="button"
-								onClick={() => setSelectedSongId(song.id)}
+								onClick={() => {
+									if (isMobile) {
+										handleClose(song.id);
+									} else {
+										setSelectedSongId(song.id);
+									}
+								}}
 							>
 								<SongItem song={song} />
 							</button>
 						))}
 					</div>
-					{selectedSongId !== null && (
+					{selectedSongId !== null && !isMobile && (
 						<div className="p-2 flex shadow">
 							<button
 								className="bg-jubilateBlue-500 text-white hover:bg-jubilateBlue-300 py-1 px-4 rounded grow transition-colors"

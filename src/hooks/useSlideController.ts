@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
 import supabase from "@/utils/supabase";
+import { useCallback, useEffect, useState } from "react";
 
 export type SlideState = {
 	currentSongId: number | null;
@@ -23,7 +23,10 @@ const getInitialState = (): SlideState => ({
 	source: "initial",
 });
 
-export const useSlideController = (source = "unknown", enableNetworkBroadcast = false) => {
+export const useSlideController = (
+	source = "unknown",
+	enableNetworkBroadcast = false,
+) => {
 	const [slideState, setSlideState] = useState<SlideState>(() => {
 		const stored = localStorage.getItem(SLIDE_STATE_KEY);
 		return stored ? JSON.parse(stored) : getInitialState();
@@ -45,7 +48,8 @@ export const useSlideController = (source = "unknown", enableNetworkBroadcast = 
 				try {
 					// Send navigation commands for network compatibility
 					if (updates.currentStropheIndex !== undefined) {
-						const isNext = updates.currentStropheIndex > slideState.currentStropheIndex;
+						const isNext =
+							updates.currentStropheIndex > slideState.currentStropheIndex;
 						const order = isNext ? "NEXT" : "PREVIOUS";
 						supabase.channel("remote").send({
 							type: "broadcast",
@@ -70,7 +74,7 @@ export const useSlideController = (source = "unknown", enableNetworkBroadcast = 
 							event: "song_change",
 							payload: {
 								songId: updates.currentSongId,
-								stropheIndex: updates.currentStropheIndex || 0
+								stropheIndex: updates.currentStropheIndex || 0,
 							},
 						});
 					}
@@ -139,21 +143,30 @@ export const useSlideController = (source = "unknown", enableNetworkBroadcast = 
 	);
 
 	const nextStrophe = useCallback(() => {
-		updateSlideState({
-			currentStropheIndex: slideState.currentStropheIndex + 1,
-		}, true); // Broadcast to network
+		updateSlideState(
+			{
+				currentStropheIndex: slideState.currentStropheIndex + 1,
+			},
+			true,
+		); // Broadcast to network
 	}, [updateSlideState, slideState.currentStropheIndex]);
 
 	const prevStrophe = useCallback(() => {
-		updateSlideState({
-			currentStropheIndex: Math.max(0, slideState.currentStropheIndex - 1),
-		}, true); // Broadcast to network
+		updateSlideState(
+			{
+				currentStropheIndex: Math.max(0, slideState.currentStropheIndex - 1),
+			},
+			true,
+		); // Broadcast to network
 	}, [updateSlideState, slideState.currentStropheIndex]);
 
 	const toggleLogoSlide = useCallback(() => {
-		updateSlideState({
-			isLogoSlide: !slideState.isLogoSlide,
-		}, true); // Broadcast to network
+		updateSlideState(
+			{
+				isLogoSlide: !slideState.isLogoSlide,
+			},
+			true,
+		); // Broadcast to network
 	}, [updateSlideState, slideState.isLogoSlide]);
 
 	return {
