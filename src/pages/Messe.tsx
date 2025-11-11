@@ -109,7 +109,7 @@ function Messe() {
 				</div>
 			</div>
 
-			<div className="p-6">
+			<div className="p-2 md:p-6">
 				<h1 className="text-2xl font-bold text-black dark:text-white mb-6">
 					Liturgie du jour
 				</h1>
@@ -194,10 +194,7 @@ function Messe() {
 
 						{/* Messes */}
 						{messeData.messes.map((messe, messeIndex) => (
-							<div
-								key={`messe-${messe.nom}-${messeIndex}`}
-								className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-6"
-							>
+							<div key={`messe-${messe.nom}-${messeIndex}`}>
 								<h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
 									{messe.nom}
 								</h2>
@@ -219,17 +216,25 @@ function Messe() {
 
 											{lecture.verset_evangile && (
 												<div className="mb-3 p-3 bg-green-50 dark:bg-green-900 rounded">
-													<div className="text-sm font-medium text-green-800 dark:text-green-200">
-														Verset de l'Évangile : {lecture.verset_evangile}
-													</div>
+													<div
+														className="text-sm font-medium text-green-800 dark:text-green-200"
+														// biome-ignore lint/security/noDangerouslySetInnerHtml: Gospel verse from trusted AELF API may contain HTML formatting
+														dangerouslySetInnerHTML={{
+															__html: `Verset de l'Évangile : ${lecture.verset_evangile}`,
+														}}
+													/>
 												</div>
 											)}
 
 											{lecture.refrain_psalmique && (
 												<div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900 rounded">
-													<div className="text-sm font-medium text-blue-800 dark:text-blue-200">
-														Refrain : {lecture.refrain_psalmique}
-													</div>
+													<div
+														className="text-sm font-medium text-blue-800 dark:text-blue-200"
+														// biome-ignore lint/security/noDangerouslySetInnerHtml: Psalm refrain from trusted AELF API may contain HTML formatting
+														dangerouslySetInnerHTML={{
+															__html: `Refrain : ${lecture.refrain_psalmique}`,
+														}}
+													/>
 												</div>
 											)}
 
