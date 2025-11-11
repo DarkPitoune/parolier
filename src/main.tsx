@@ -1,7 +1,9 @@
 import { AuthContextProvider, CornerMenu, darkModeAtom } from "@/components";
 import {
 	Analytics,
+	Bible,
 	Index,
+	Messe,
 	PresenterPage,
 	SetlistEditor,
 	Setlists,
@@ -47,6 +49,14 @@ const router = createBrowserRouter([
 	{
 		path: "/texts/:textId",
 		element: <TextPage />,
+	},
+	{
+		path: "/bible",
+		element: <Bible />,
+	},
+	{
+		path: "/messe",
+		element: <Messe />,
 	},
 	{
 		path: "/setlists",

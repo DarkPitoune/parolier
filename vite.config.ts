@@ -510,6 +510,20 @@ const manifest: Partial<VitePWAOptions> = {
 					],
 				},
 			},
+			{
+				urlPattern: ({ url }) => url.hostname === "bible-api-lovat.vercel.app",
+				handler: "CacheFirst",
+				options: {
+					cacheName: "bible-api-cache",
+					expiration: {
+						maxEntries: 100,
+						maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
+					},
+					cacheableResponse: {
+						statuses: [200],
+					},
+				},
+			},
 		],
 	},
 };

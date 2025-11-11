@@ -5,3 +5,5 @@ export { Index } from "./List";
 export { Setlists } from "./Setlists";
 export { SetlistEditor } from "./SetlistEditor";
 export { default as Analytics } from "./Analytics";
+export { Bible } from "./Bible";
+export { Messe } from "./Messe";

@@ -35,7 +35,7 @@ export const setlistQuery = async (setlistId: string) =>
 			`id,
 			songs (id, sheet_music_url, strophes, title, tags (id, name, svg, color)),
 			text, position,
-			texts (id, title, content),
+			texts (id, title, content, created_at),
 			setlists (id, name)`,
 		)
 		.eq("setlist_id", setlistId);
@@ -48,7 +48,7 @@ export const taggedSongFromSetlistStepQuery = async (
 	supabase
 		.from("setlist_items")
 		.select(
-			"id, songs (*, tags (id, name, svg, color)), texts (id, title, content), text, position",
+			"id, songs (*, tags (id, name, svg, color)), texts (id, title, content, created_at), text, position",
 		)
 		.eq("setlist_id", setlistId)
 		.eq("position", stepNumber)

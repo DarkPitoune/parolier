@@ -36,6 +36,18 @@ export function NavigationSidePanel({
 			</Link>
 			<Link
 				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/bible"
+			>
+				Bible
+			</Link>
+			<Link
+				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/messe"
+			>
+				Messe
+			</Link>
+			<Link
+				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
 				to="/setlists"
 			>
 				Setlists

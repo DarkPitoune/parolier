@@ -1,4 +1,4 @@
-import { BackButton, useLeader } from "@/components";
+import { BackButton } from "@/components";
 import { type Text, textQuery } from "@/utils/supabase";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";

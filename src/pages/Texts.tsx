@@ -1,7 +1,7 @@
 import { SettingsSidePanel, useLeader } from "@/components";
 import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
 import { TextItem, getTextItemId } from "@/components/TextItem";
-import supabase, {
+import {
 	type AllTexts,
 	allTextsQuery,
 	newTextMutation,

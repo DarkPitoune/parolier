@@ -103,7 +103,9 @@ const PresenterPage = () => {
 				if (screens.length > 1) {
 					// Find external display (not the primary one)
 					const externalScreen =
-						screens.find((screen) => !screen.isPrimary) || screens[1];
+						screens.find(
+							(screen: { isPrimary: boolean }) => !screen.isPrimary,
+						) || screens[1];
 					if (externalScreen) {
 						windowFeatures += `,width=${externalScreen.availWidth},height=${externalScreen.availHeight},left=${externalScreen.left},top=${externalScreen.top}`;
 						console.log(
