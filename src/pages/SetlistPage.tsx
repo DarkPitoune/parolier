@@ -40,6 +40,21 @@ function SetlistPage() {
 						</div>
 					),
 				};
+			if (item.texts)
+				return {
+					id: item.id,
+					title: item.texts.title,
+					content: (
+						<div className="flex flex-col gap-4 p-6">
+							<h2 className="text-2xl font-bold text-black dark:text-white">
+								{item.texts.title}
+							</h2>
+							<div className="whitespace-pre-wrap text-black dark:text-white leading-relaxed">
+								{item.texts.content}
+							</div>
+						</div>
+					),
+				};
 			if (item.text)
 				return {
 					id: item.id,

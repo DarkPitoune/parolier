@@ -33,6 +33,7 @@ const SlidePage = () => {
 	const { songId, stepNumber, setlistId } = useParams();
 	const [strophes, setStrophes] = useState<Strophe[]>([]);
 	const [setlistLength, setSetlistLength] = useState(0);
+	const [isTextSlide, setIsTextSlide] = useState(false);
 	const navigate = useNavigate();
 	const [slideHelp, setSlideHelp] = useAtom(slideHelpAtom);
 
@@ -105,6 +106,7 @@ const SlidePage = () => {
 				({ data }) => {
 					if (data?.songs) {
 						setStrophes(data.songs.strophes);
+						setIsTextSlide(false);
 						toast(data.songs.title, {
 							position: "top-center",
 							style: {
@@ -112,14 +114,51 @@ const SlidePage = () => {
 								color: "white",
 							},
 						});
-					} else setStrophes([]);
+					} else {
+						// This setlist item is either a text or inline text - show cross
+						setStrophes([]);
+						setIsTextSlide(true);
+						if (data?.texts) {
+							toast(data.texts.title, {
+								position: "top-center",
+								style: {
+									backgroundColor: "black",
+									color: "white",
+								},
+							});
+						} else if (data?.text) {
+							toast("Texte libre", {
+								position: "top-center",
+								style: {
+									backgroundColor: "black",
+									color: "white",
+								},
+							});
+						} else {
+							toast("Texte", {
+								position: "top-center",
+								style: {
+									backgroundColor: "black",
+									color: "white",
+								},
+							});
+						}
+					}
 				},
 			);
 		}
 	}, [songId, setlistId, stepNumber, slideState.currentSongId]);
 
 	const handleNextStrophe = useCallback(() => {
-		if (strophes.length === 0) return;
+		if (isTextSlide || strophes.length === 0) {
+			// If this is a text slide, go to next setlist item
+			if (setlistId && stepNumber && Number(stepNumber) < setlistLength) {
+				navigate(
+					`/setlists/${setlistId}/steps/${Number(stepNumber) + 1}/slide`,
+				);
+			}
+			return;
+		}
 
 		if (currentStropheIndex < strophes.length - 1) {
 			nextStrophe();
@@ -134,10 +173,19 @@ const SlidePage = () => {
 		strophes.length,
 		setlistLength,
 		nextStrophe,
+		isTextSlide,
 	]);
 
 	const handlePrevStrophe = useCallback(() => {
-		if (strophes.length === 0) return;
+		if (isTextSlide || strophes.length === 0) {
+			// If this is a text slide, go to previous setlist item
+			if (setlistId && stepNumber && Number(stepNumber) > 0) {
+				navigate(
+					`/setlists/${setlistId}/steps/${Number(stepNumber) - 1}/slide`,
+				);
+			}
+			return;
+		}
 
 		if (currentStropheIndex > 0) {
 			prevStrophe();
@@ -151,6 +199,7 @@ const SlidePage = () => {
 		stepNumber,
 		strophes.length,
 		prevStrophe,
+		isTextSlide,
 	]);
 
 	useEffect(() => {
@@ -210,17 +259,11 @@ const SlidePage = () => {
 
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {
-			if (strophes.length === 0) {
-				// If no song is open, handle setlist navigation
-				if (e.key === "ArrowLeft" && setlistId && stepNumber) {
-					const prevStep = Number(stepNumber) - 1;
-					if (prevStep > 0)
-						navigate(`/setlists/${setlistId}/steps/${prevStep}/slide`);
-				}
-				if (e.key === "ArrowRight" && setlistId && stepNumber) {
-					const nextStep = Number(stepNumber) + 1;
-					navigate(`/setlists/${setlistId}/steps/${nextStep}/slide`);
-				}
+			if (isTextSlide || strophes.length === 0) {
+				// If text slide or no song is open, handle setlist navigation
+				if (e.key === "ArrowLeft") handlePrevStrophe();
+				if (e.key === "ArrowRight") handleNextStrophe();
+				if (e.key === "f" || e.key === "F") document.body.requestFullscreen();
 				return;
 			}
 
@@ -233,14 +276,7 @@ const SlidePage = () => {
 		return () => {
 			document.removeEventListener("keydown", handleKey);
 		};
-	}, [
-		handleNextStrophe,
-		handlePrevStrophe,
-		setlistId,
-		stepNumber,
-		navigate,
-		strophes.length,
-	]);
+	}, [handleNextStrophe, handlePrevStrophe, isTextSlide, strophes.length]);
 
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {
@@ -275,7 +311,9 @@ const SlidePage = () => {
 	return (
 		<div className="absolute z-20 inset-0 flex flex-col justify-center items-center text-white bg-black overflow-clip">
 			<SlideFinder />
-			{isLogoSlide || strophes[currentStropheIndex] === undefined ? (
+			{isLogoSlide ||
+			isTextSlide ||
+			strophes[currentStropheIndex] === undefined ? (
 				<img src="/svg/Jubilate_Croix.svg" alt="logo" className="size-36" />
 			) : (
 				<>

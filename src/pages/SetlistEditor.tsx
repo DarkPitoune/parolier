@@ -1,4 +1,11 @@
-import { SongItem, SongPicker, SongViewer, TextInput } from "@/components";
+import {
+	SongItem,
+	SongPicker,
+	SongViewer,
+	TextInput,
+	TextItem,
+	TextPicker,
+} from "@/components";
 import {
 	type Setlist,
 	setlistItemAppendMutation,
@@ -25,6 +32,7 @@ const SetlistEditor = () => {
 	const [selectedItem, setSelectedItem] = useState<number>();
 	const [setlistName, setSetlistName] = useState<string>("");
 	const [isSongPickerOpen, setIsSongPickerOpen] = useState(false);
+	const [isTextPickerOpen, setIsTextPickerOpen] = useState(false);
 	const [textNewValue, setTextNewValue] = useState<string | null>(null);
 
 	const handleSelectItem = (id: number) => {
@@ -32,6 +40,7 @@ const SetlistEditor = () => {
 		const textValue = setlist?.find((item) => item.id === id)?.text;
 		if (textValue !== undefined && textValue !== null)
 			setTextNewValue(textValue);
+		else setTextNewValue(null);
 	};
 
 	const handleSetlistQuery = useCallback(() => {
@@ -86,6 +95,21 @@ const SetlistEditor = () => {
 			Number(setlistId),
 			songId,
 			null,
+			null,
+		).then(() => {
+			handleSetlistQuery();
+		});
+	};
+
+	const handleCloseTextPicker = (textId?: number) => {
+		setIsTextPickerOpen(false);
+		if (!textId || !setlistId || setlist === null) return;
+		setlistItemAppendMutation(
+			setlist.length,
+			Number(setlistId),
+			null,
+			null,
+			textId,
 		).then(() => {
 			handleSetlistQuery();
 		});
@@ -102,11 +126,15 @@ const SetlistEditor = () => {
 
 	const handleNewTextItem = () => {
 		if (!setlistId || setlist === null) return;
-		setlistItemAppendMutation(setlist.length, Number(setlistId), null, "").then(
-			() => {
-				handleSetlistQuery();
-			},
-		);
+		setlistItemAppendMutation(
+			setlist.length,
+			Number(setlistId),
+			null,
+			"",
+			null,
+		).then(() => {
+			handleSetlistQuery();
+		});
 	};
 
 	useEffect(() => {
@@ -126,6 +154,7 @@ const SetlistEditor = () => {
 	}, [textNewValue, selectedItem, setlistId, handleSetlistQuery]);
 
 	const selectedSong = setlist?.find((item) => item.id === selectedItem)?.songs;
+	const selectedText = setlist?.find((item) => item.id === selectedItem)?.texts;
 
 	return (
 		<>
@@ -163,6 +192,7 @@ const SetlistEditor = () => {
 									}}
 								>
 									{item.songs && <SongItem song={item.songs} hover={false} />}
+									{item.texts && <TextItem text={item.texts} hover={false} />}
 									{item.text && (
 										<p className="px-4 text-black dark:text-white truncate">
 											{item.text.split("\n")[0]}
@@ -206,7 +236,7 @@ const SetlistEditor = () => {
 								</div>
 							</li>
 						))}
-						<li className="text-white border-b-2 border-gray-200 dark:border-gray-600 w-full flex items-center">
+						<li className="text-white border-b-2 border-gray-200 dark:border-gray-600 w-full flex items-center flex-wrap gap-1">
 							<button
 								type="button"
 								className="w-fit place-self-start text-left p-2 bg-jubilateBlue-500 hover:bg-jubilateBlue-700 dark:hover:bg-jubilateBlue-400 m-2 rounded-md transition"
@@ -216,16 +246,35 @@ const SetlistEditor = () => {
 							</button>
 							<button
 								type="button"
-								className="w-fit place-self-start text-left p-2 bg-jubilateBlue-500 hover:bg-jubilateBlue-700 dark:hover:bg-jubilateBlue-400 m-2 rounded-md transition"
+								className="w-fit place-self-start text-left p-2 bg-green-500 hover:bg-green-700 dark:hover:bg-green-400 m-2 rounded-md transition"
+								onClick={() => setIsTextPickerOpen(true)}
+							>
+								+ Ajouter Texte
+							</button>
+							<button
+								type="button"
+								className="w-fit place-self-start text-left p-2 bg-purple-500 hover:bg-purple-700 dark:hover:bg-purple-400 m-2 rounded-md transition"
 								onClick={() => handleNewTextItem()}
 							>
-								+ Texte
+								+ Texte libre
 							</button>
 						</li>
 					</ul>
 					{selectedSong && (
 						<div className="col-span-2 max-h-screen overflow-y-auto hidden md:block">
 							<SongViewer song={selectedSong} />
+						</div>
+					)}
+					{selectedText && (
+						<div className="col-span-2 max-h-screen overflow-y-auto hidden md:block p-6">
+							<div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+								<h2 className="text-2xl font-bold mb-4 text-black dark:text-white">
+									{selectedText.title}
+								</h2>
+								<div className="whitespace-pre-wrap text-black dark:text-white leading-relaxed">
+									{selectedText.content}
+								</div>
+							</div>
 						</div>
 					)}
 					{textNewValue !== null && (
@@ -244,6 +293,7 @@ const SetlistEditor = () => {
 				<p>Chargement...</p>
 			)}
 			{isSongPickerOpen && <SongPicker handleClose={handleClose} />}
+			{isTextPickerOpen && <TextPicker handleClose={handleCloseTextPicker} />}
 		</>
 	);
 };

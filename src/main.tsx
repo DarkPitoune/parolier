@@ -16,6 +16,8 @@ import * as ReactDOM from "react-dom/client";
 import { Toaster } from "react-hot-toast";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { LeaderListener } from "./components/LeaderListener";
+import { TextPage } from "./pages/TextPage";
+import { Texts } from "./pages/Texts";
 import "./index.css";
 import { SetlistPage } from "./pages/SetlistPage";
 import SongEditor from "./pages/SongEditor";
@@ -37,6 +39,14 @@ const router = createBrowserRouter([
 	{
 		path: "/",
 		element: <Index />,
+	},
+	{
+		path: "/texts",
+		element: <Texts />,
+	},
+	{
+		path: "/texts/:textId",
+		element: <TextPage />,
 	},
 	{
 		path: "/setlists",

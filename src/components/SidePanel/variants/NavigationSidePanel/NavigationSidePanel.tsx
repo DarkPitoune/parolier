@@ -24,6 +24,18 @@ export function NavigationSidePanel({
 		<SidePanel open={open} onClose={() => setOpen(false)} title="Navigation">
 			<Link
 				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/"
+			>
+				Liste des chants
+			</Link>
+			<Link
+				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/texts"
+			>
+				Textes
+			</Link>
+			<Link
+				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
 				to="/setlists"
 			>
 				Setlists

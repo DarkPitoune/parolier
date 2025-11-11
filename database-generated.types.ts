@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -86,6 +86,7 @@ export type Database = {
           setlist_id: number
           song_id: number | null
           text: string | null
+          text_id: number | null
         }
         Insert: {
           id?: number
@@ -93,6 +94,7 @@ export type Database = {
           setlist_id: number
           song_id?: number | null
           text?: string | null
+          text_id?: number | null
         }
         Update: {
           id?: number
@@ -100,6 +102,7 @@ export type Database = {
           setlist_id?: number
           song_id?: number | null
           text?: string | null
+          text_id?: number | null
         }
         Relationships: [
           {
@@ -114,6 +117,13 @@ export type Database = {
             columns: ["song_id"]
             isOneToOne: false
             referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "setlist_items_text_id_fkey"
+            columns: ["text_id"]
+            isOneToOne: false
+            referencedRelation: "texts"
             referencedColumns: ["id"]
           },
         ]
@@ -255,6 +265,27 @@ export type Database = {
           id?: number
           name?: string | null
           svg?: string | null
+        }
+        Relationships: []
+      }
+      texts: {
+        Row: {
+          content: string
+          created_at: string
+          id: number
+          title: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: number
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: number
+          title?: string
         }
         Relationships: []
       }

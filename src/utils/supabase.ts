@@ -35,6 +35,7 @@ export const setlistQuery = async (setlistId: string) =>
 			`id,
 			songs (id, sheet_music_url, strophes, title, tags (id, name, svg, color)),
 			text, position,
+			texts (id, title, content),
 			setlists (id, name)`,
 		)
 		.eq("setlist_id", setlistId);
@@ -46,7 +47,9 @@ export const taggedSongFromSetlistStepQuery = async (
 ) =>
 	supabase
 		.from("setlist_items")
-		.select("id, songs (*, tags (id, name, svg, color)), position")
+		.select(
+			"id, songs (*, tags (id, name, svg, color)), texts (id, title, content), text, position",
+		)
 		.eq("setlist_id", setlistId)
 		.eq("position", stepNumber)
 		.single();
@@ -133,10 +136,15 @@ export const setlistItemAppendMutation = async (
 	setlistId: number,
 	songId: number | null,
 	text: string | null,
+	textId: number | null = null,
 ) =>
-	supabase
-		.from("setlist_items")
-		.insert({ setlist_id: setlistId, song_id: songId, position, text });
+	supabase.from("setlist_items").insert({
+		setlist_id: setlistId,
+		song_id: songId,
+		position,
+		text,
+		text_id: textId,
+	});
 export type SetlistItemAppendMutation = QueryData<
 	ReturnType<typeof setlistItemAppendMutation>
 >;
@@ -213,3 +221,23 @@ export const getPopularSongsQuery = async (
 	return query;
 };
 export type PopularSongs = QueryData<ReturnType<typeof getPopularSongsQuery>>;
+
+// Texts queries
+export const allTextsQuery = async () =>
+	supabase.from("texts").select("id, title, content, created_at").order("id");
+export type AllTexts = QueryData<ReturnType<typeof allTextsQuery>>;
+
+export const textQuery = async (textId: number) =>
+	supabase.from("texts").select("*").eq("id", textId).single();
+export type Text = QueryData<ReturnType<typeof textQuery>>;
+
+export const newTextMutation = async (title: string, content: string) =>
+	supabase
+		.from("texts")
+		.insert({
+			title,
+			content,
+		})
+		.select()
+		.single();
+export type NewTextMutation = QueryData<ReturnType<typeof newTextMutation>>;

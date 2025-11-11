@@ -23,4 +23,6 @@ export { TextInput } from "./TextInput";
 export { SongPicker } from "./SongPicker";
 export { SongPickerInline } from "./SongPickerInline";
 export { SongItem } from "./SongItem";
+export { TextItem } from "./TextItem";
+export { TextPicker } from "./TextPicker";
 export { BackButton } from "./BackButton";
