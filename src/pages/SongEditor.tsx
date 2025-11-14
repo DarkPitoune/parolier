@@ -15,6 +15,8 @@ import {
 	ArrowDownIcon,
 	ArrowUpIcon,
 	CameraIcon,
+	DocumentTextIcon,
+	TrashIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useAtom } from "jotai";
@@ -40,12 +42,17 @@ const SongEditor = () => {
 	const [showWarning, setShowWarning] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
+	// PDF upload state
+	const [isPdfUploading, setIsPdfUploading] = useState(false);
+	const pdfInputRef = useRef<HTMLInputElement>(null);
+
 	useEffect(() => {
 		taggedSongQuery(Number(songId)).then(({ data, error }) => {
 			if (error) throw error;
 			setSong(data);
 			setSelectedTags(data.tags.map((tag) => tag.id));
 			setLoading(false);
+			document.title = `Modifier "${data.title}" - Parolier`;
 		});
 
 		allTagsQuery().then(({ data, error }) => {
@@ -333,10 +340,98 @@ const SongEditor = () => {
 		}
 	}, [suggestedLyrics, song, handleChange]);
 
+	const handlePdfUpload = useCallback(
+		async (file: File) => {
+			if (!file.type.includes("pdf")) {
+				toast.error("Veuillez sélectionner un fichier PDF");
+				return;
+			}
+
+			if (!song) {
+				toast.error("Erreur: chanson non trouvée");
+				return;
+			}
+
+			setIsPdfUploading(true);
+
+			try {
+				// Create filename with song title (replace spaces with underscores)
+				const sanitizedTitle = song.title
+					.replace(/\s+/g, "_")
+					.replace(/[^\w.-]/g, "");
+				const fileName = `${sanitizedTitle}.pdf`;
+
+				// Upload PDF to Supabase Storage
+				const { error: uploadError } = await supabase.storage
+					.from("sheet-music")
+					.upload(fileName, file, { upsert: true });
+
+				if (uploadError) {
+					throw new Error(`Erreur de téléchargement: ${uploadError.message}`);
+				}
+
+				// Update song with sheet music URL
+				const sheetMusicUrl = `/sheet-music/${fileName}`;
+				handleChange("sheet_music_url", sheetMusicUrl);
+
+				toast.success("Partition PDF ajoutée avec succès!");
+			} catch (error) {
+				console.error("Error uploading PDF:", error);
+				toast.error(
+					error instanceof Error
+						? error.message
+						: "Erreur lors du téléchargement",
+				);
+			} finally {
+				setIsPdfUploading(false);
+			}
+		},
+		[song, handleChange],
+	);
+
+	const handlePdfFileSelect = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			const file = e.target.files?.[0];
+			if (file) {
+				handlePdfUpload(file);
+			}
+		},
+		[handlePdfUpload],
+	);
+
+	const handleDeletePdf = useCallback(async () => {
+		if (!song?.sheet_music_url) return;
+
+		try {
+			// Extract filename from URL
+			const fileName = song.sheet_music_url.replace("/sheet-music/", "");
+
+			// Delete from Supabase Storage
+			const { error } = await supabase.storage
+				.from("sheet-music")
+				.remove([fileName]);
+
+			if (error) {
+				throw new Error(`Erreur de suppression: ${error.message}`);
+			}
+
+			// Update song to remove sheet music URL
+			handleChange("sheet_music_url", null);
+			toast.success("Partition supprimée avec succès!");
+		} catch (error) {
+			console.error("Error deleting PDF:", error);
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Erreur lors de la suppression",
+			);
+		}
+	}, [song?.sheet_music_url, handleChange]);
+
 	// Warn user before leaving page during processing or with unsaved suggestions
 	useEffect(() => {
 		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-			if (isProcessing || suggestedLyrics) {
+			if (isProcessing || suggestedLyrics || isPdfUploading) {
 				e.preventDefault();
 				e.returnValue =
 					"Vous avez un traitement en cours ou des paroles suggérées non appliquées. Êtes-vous sûr de vouloir quitter?";
@@ -345,7 +440,7 @@ const SongEditor = () => {
 
 		window.addEventListener("beforeunload", handleBeforeUnload);
 		return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-	}, [isProcessing, suggestedLyrics]);
+	}, [isProcessing, suggestedLyrics, isPdfUploading]);
 
 	if (loading) return <div className="text-center">Loading...</div>;
 
@@ -371,6 +466,70 @@ const SongEditor = () => {
 							value={song.title}
 							onChange={(value) => handleChange("title", value)}
 						/>
+					</div>
+
+					{/* PDF Sheet Music Section */}
+					<div className="border p-4 rounded-md border-jubilateBlue-100 dark:border-slate-500">
+						<h3 className="text-lg font-semibold mb-3">Partition (PDF)</h3>
+
+						{song.sheet_music_url ? (
+							<div className="flex items-center justify-between bg-green-50 dark:bg-green-900 dark:bg-opacity-20 border border-green-200 dark:border-green-600 rounded-md p-3">
+								<div className="flex items-center gap-2">
+									<DocumentTextIcon className="h-5 w-5 text-green-600 dark:text-green-400" />
+									<span className="text-sm text-green-800 dark:text-green-200">
+										Partition PDF disponible
+									</span>
+								</div>
+								<button
+									type="button"
+									onClick={handleDeletePdf}
+									className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition-colors"
+								>
+									<TrashIcon className="h-4 w-4" />
+									Supprimer
+								</button>
+							</div>
+						) : (
+							<>
+								{!isPdfUploading ? (
+									<div
+										className="border-2 border-dashed border-jubilateBlue-300 dark:border-slate-400 rounded-lg p-4 text-center cursor-pointer hover:bg-jubilateBlue-50 dark:hover:bg-slate-700 transition-colors"
+										onClick={() => pdfInputRef.current?.click()}
+										onKeyDown={(e) => {
+											if (e.key === "Enter" || e.key === " ") {
+												e.preventDefault();
+												pdfInputRef.current?.click();
+											}
+										}}
+										tabIndex={0}
+										role="button"
+										aria-label="Upload PDF"
+									>
+										<DocumentTextIcon className="mx-auto h-8 w-8 text-jubilateBlue-400 dark:text-slate-400 mb-2" />
+										<p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
+											Cliquez pour ajouter une partition PDF
+										</p>
+										<p className="text-xs text-gray-500 dark:text-gray-400">
+											Le fichier sera renommé avec le titre du chant
+										</p>
+										<input
+											ref={pdfInputRef}
+											type="file"
+											accept=".pdf,application/pdf"
+											onChange={handlePdfFileSelect}
+											className="hidden"
+										/>
+									</div>
+								) : (
+									<div className="text-center py-4">
+										<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-jubilateBlue-500 mx-auto mb-2" />
+										<p className="text-sm font-medium text-jubilateBlue-600 dark:text-jubilateBlue-400">
+											Téléchargement de la partition...
+										</p>
+									</div>
+								)}
+							</>
+						)}
 					</div>
 
 					{/* Image Upload Section */}

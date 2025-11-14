@@ -3,6 +3,16 @@ import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { SidePanel } from "../../SidePanel";
+import {
+	MusicalNoteIcon,
+	DocumentTextIcon,
+	BookOpenIcon,
+	CalendarDaysIcon,
+	QueueListIcon,
+	ChartBarIcon,
+	PresentationChartLineIcon,
+	PlusIcon,
+} from "@heroicons/react/16/solid";
 
 export function NavigationSidePanel({
 	open,
@@ -22,55 +32,65 @@ export function NavigationSidePanel({
 	};
 	return (
 		<SidePanel open={open} onClose={() => setOpen(false)} title="Navigation">
-			<Link
-				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-				to="/"
-			>
-				Liste des chants
-			</Link>
-			<Link
-				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-				to="/texts"
-			>
-				Textes
-			</Link>
-			<Link
-				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-				to="/bible"
-			>
-				Bible
-			</Link>
-			<Link
-				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-				to="/messe"
-			>
-				Messe
-			</Link>
-			<Link
-				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-				to="/setlists"
-			>
-				Setlists
-			</Link>
-			<Link
-				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-				to="/analytics"
-			>
-				Statistiques
-			</Link>
-			<Link
-				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-				to="/presenter"
-			>
-				Mode Présentateur
-			</Link>
-			<button
-				className="text-center py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-				type="button"
-				onClick={createNewSong}
-			>
-				Nouvelle chanson
-			</button>
+			<div className="flex flex-col gap-1">
+				<Link
+					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					to="/"
+				>
+					<MusicalNoteIcon className="w-4 h-4" />
+					Liste des chants
+				</Link>
+				<Link
+					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					to="/texts"
+				>
+					<DocumentTextIcon className="w-4 h-4" />
+					Textes
+				</Link>
+				<Link
+					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					to="/bible"
+				>
+					<BookOpenIcon className="w-4 h-4" />
+					Bible
+				</Link>
+				<Link
+					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					to="/messe"
+				>
+					<CalendarDaysIcon className="w-4 h-4" />
+					Messe
+				</Link>
+				<Link
+					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					to="/setlists"
+				>
+					<QueueListIcon className="w-4 h-4" />
+					Setlists
+				</Link>
+				<Link
+					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					to="/analytics"
+				>
+					<ChartBarIcon className="w-4 h-4" />
+					Statistiques
+				</Link>
+				<Link
+					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					to="/presenter"
+				>
+					<PresentationChartLineIcon className="w-4 h-4" />
+					Mode Présentateur
+				</Link>
+				<button
+					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					type="button"
+					onClick={createNewSong}
+				>
+					<PlusIcon className="w-4 h-4" />
+					Nouvelle chanson
+				</button>
+			</div>
 		</SidePanel>
 	);
 }

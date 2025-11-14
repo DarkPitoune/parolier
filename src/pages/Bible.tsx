@@ -32,6 +32,7 @@ function Bible() {
 	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
 	const [searchValue, setSearchValue] = useState("");
 	const [filteredBooks, setFilteredBooks] = useState<string[]>([]);
+	const [searchResults, setSearchResults] = useState<BibleVerse[]>([]);
 	const { leader } = useLeader();
 	const { book: selectedBook, chapter: selectedChapter } = useParams();
 	const navigate = useNavigate();
@@ -68,25 +69,64 @@ function Bible() {
 				}))
 				.sort((a, b) => Number(a.verse) - Number(b.verse));
 			setVerses(verseList);
+			document.title = `${selectedBook} ${selectedChapter} - Bible - Parolier`;
 		} else {
 			setVerses([]);
+			if (selectedBook) {
+				document.title = `${selectedBook} - Bible - Parolier`;
+			} else {
+				document.title = "Bible - Parolier";
+			}
 		}
 	}, [selectedBook, selectedChapter, bible]);
 
 	const search: ChangeEventHandler<HTMLInputElement> = useCallback(
 		(event) => {
 			setSearchValue(event.target.value);
-			if (event.target.value.length === 0) {
+			const query = event.target.value.toLowerCase();
+
+			// Navigate back to main Bible page when typing
+			if (selectedBook || selectedChapter) {
+				navigate("/bible");
+			}
+
+			if (query.length === 0) {
 				setFilteredBooks(books);
-			} else {
+				setSearchResults([]);
+			} else if (query.length < 3) {
+				// For short queries, only search book names
 				setFilteredBooks(
 					books.filter((book) =>
-						book.toLowerCase().includes(event.target.value.toLowerCase()),
+						book.toLowerCase().includes(query),
+					),
+				);
+				setSearchResults([]);
+			} else {
+				// For longer queries, search through all verses
+				const results: BibleVerse[] = [];
+				for (const book of books) {
+					for (const chapter of Object.keys(bible[book] || {})) {
+						for (const [verseNum, text] of Object.entries(bible[book][chapter] || {})) {
+							if (text.toLowerCase().includes(query)) {
+								results.push({
+									book,
+									chapter,
+									verse: verseNum,
+									text,
+								});
+							}
+						}
+					}
+				}
+				setSearchResults(results.slice(0, 50)); // Limit to 50 results
+				setFilteredBooks(
+					books.filter((book) =>
+						book.toLowerCase().includes(query),
 					),
 				);
 			}
 		},
-		[books],
+		[books, bible, selectedBook, selectedChapter, navigate],
 	);
 
 	const selectBook = (book: string) => {
@@ -130,7 +170,7 @@ function Bible() {
 							type="search"
 							onChange={search}
 							value={searchValue}
-							placeholder="Rechercher un livre..."
+							placeholder="Rechercher un livre ou un texte..."
 						/>
 					</div>
 					<button type="button" onClick={() => setIsNavigationPanelOpen(true)}>
@@ -199,26 +239,79 @@ function Bible() {
 
 				{/* Verse display */}
 				{selectedBook && selectedChapter && verses.length > 0 && (
-					<div className="space-y-4">
-						{verses.map((verse) => (
-							<div
-								key={`${verse.verse}`}
-								className="flex gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
-							>
-								<span className="text-sm font-bold text-jubilateBlue-600 dark:text-jubilateBlue-400 min-w-[2rem]">
-									{Number(verse.verse)}
+					<>
+						<div className="text-gray-800 dark:text-gray-200 leading-loose text-lg max-w-4xl mx-auto px-4">
+							{verses.map((verse, index) => (
+								<span
+									key={`${verse.verse}`}
+									id={`verse-${verse.verse}`}
+									className="hover:bg-gray-100 dark:hover:bg-gray-700 hover:bg-opacity-50 transition-colors duration-200 rounded px-1 py-0.5 -mx-1 -my-0.5 scroll-mt-24"
+								>
+									<span className="text-sm font-medium text-red-700 dark:text-jubilateBlue-400 mr-1">
+										{Number(verse.verse)}
+									</span>
+									{verse.text}
+									{index < verses.length - 1 && " "}
 								</span>
-								<p className="text-gray-800 dark:text-gray-200 leading-relaxed">
+							))}
+						</div>
+
+						{/* Chapter navigation */}
+						<div className="flex justify-between items-center mt-8 max-w-4xl mx-auto px-4">
+							<div>
+								{Number(selectedChapter) > 1 && (
+									<button
+										onClick={() => selectChapter(String(Number(selectedChapter) - 1))}
+										className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+										type="button"
+									>
+										← Chapitre {Number(selectedChapter) - 1}
+									</button>
+								)}
+							</div>
+							<div>
+								{Number(selectedChapter) < chapters.length && (
+									<button
+										onClick={() => selectChapter(String(Number(selectedChapter) + 1))}
+										className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+										type="button"
+									>
+										Chapitre {Number(selectedChapter) + 1} →
+									</button>
+								)}
+							</div>
+						</div>
+					</>
+				)}
+
+				{/* Search results */}
+				{searchResults.length > 0 && (
+					<div className="space-y-4">
+						<h2 className="text-xl font-bold text-black dark:text-white">
+							Résultats de recherche ({searchResults.length})
+						</h2>
+						{searchResults.map((verse, index) => (
+							<a
+								key={`${verse.book}-${verse.chapter}-${verse.verse}`}
+								href={`/bible/${encodeURIComponent(verse.book)}/${encodeURIComponent(verse.chapter)}#verse-${verse.verse}`}
+								className="block p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition"
+							>
+								<div className="flex justify-between items-start mb-2">
+									<span className="text-sm font-medium text-jubilateBlue-600 dark:text-jubilateBlue-400">
+										{verse.book} {verse.chapter}:{verse.verse}
+									</span>
+								</div>
+								<p className="text-gray-800 dark:text-gray-200">
 									{verse.text}
 								</p>
-							</div>
+							</a>
 						))}
 					</div>
 				)}
 
-				{filteredBooks.length === 0 && searchValue && (
+				{filteredBooks.length === 0 && searchValue && searchResults.length === 0 && (
 					<div className="px-2 py-8 text-center text-gray-500 dark:text-gray-400">
-						Aucun livre trouvé pour "{searchValue}"
+						Aucun résultat trouvé pour "{searchValue}"
 					</div>
 				)}
 			</div>

@@ -1,4 +1,5 @@
 import { BackButton } from "@/components";
+import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel/NavigationSidePanel";
 import {
 	type AllSetlists,
 	allSetlistsQuery,
@@ -16,6 +17,7 @@ const Setlists = () => {
 		setSetlists(data || []);
 	}, []);
 
+	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
 	const handleCreateSetlist = () => {
 		newSetlistMutation().then(fetchSetlists);
 	};
@@ -28,6 +30,7 @@ const Setlists = () => {
 
 	useEffect(() => {
 		fetchSetlists();
+		document.title = "Setlists - Parolier";
 	}, [fetchSetlists]);
 
 	return (
@@ -35,7 +38,13 @@ const Setlists = () => {
 			<div className="bg-jubilateBlue-500 dark:bg-slate-900 px-6 py-4 flex justify-between items-center">
 				<BackButton />
 				<h1 className="font-flame text-xl lg:text-3xl text-white">Setlists</h1>
-				<img className="h-12" src="/svg/logo.svg" alt="Logo" />
+				<button type="button" onClick={() => setIsNavigationPanelOpen(true)}>
+					<img className="h-12" src="/svg/logo.svg" alt="Logo" />
+				</button>
+				<NavigationSidePanel
+					open={isNavigationPanelOpen}
+					setOpen={setIsNavigationPanelOpen}
+				/>
 			</div>
 			<div className="flex flex-col items-stretch divide-y">
 				{setslists?.map((setlist) => (
