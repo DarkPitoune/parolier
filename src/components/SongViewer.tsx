@@ -25,7 +25,7 @@ function SongViewer({
 
 	return (
 		<div className="bg-white dark:bg-gray-800">
-			<SettingsSidePanel tonality={tonality} setTonality={setTonality} />
+			<SettingsSidePanel tonality={tonality} setTonality={setTonality} song={song} />
 			<div className="flex flex-col gap-2 lg:gap-4 p-4">
 				{showTitle && (
 					<div className="flex gap-4 items-center font-flame text-xl lg:text-3xl text-jubilateBlue-500 dark:text-jubilateBlue-400">

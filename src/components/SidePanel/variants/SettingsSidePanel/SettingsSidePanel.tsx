@@ -9,13 +9,15 @@ import { leaderAtom, useLeader } from "@/components/Contexts/LeaderContext";
 import {
 	type LeaderPositions,
 	getLeaderPositionsQuery,
+	type TaggedSong,
 } from "@/utils/supabase";
 import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
+import { PencilIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useAtom, useSetAtom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
 	DropLeadButton,
 	TakeLeadButton,
@@ -32,9 +34,11 @@ const usernameAtom = atomWithStorage<string>(
 function SettingsSidePanel({
 	tonality,
 	setTonality,
+	song,
 }: {
 	tonality?: number;
 	setTonality?: (newT: number) => void;
+	song?: TaggedSong;
 }) {
 	const setFontSize = useSetAtom(fontSizeAtom);
 	const [showChords, setShowChords] = useAtom(showChordsAtom);
@@ -157,6 +161,7 @@ function SettingsSidePanel({
 					className="size-5 rounded-2xl accent-jubilateBlue-500 dark:accent-jubilateBlue-400"
 				/>
 			</div>
+
 			<div className="flex flex-col gap-4 border border-jubilateBlue-300 bg-jubilateBlue-300 bg-opacity-30 px-4 py-2 rounded-md items-center">
 				<h2 className="text-center font-flame text-jubilateBlue-500 dark:text-jubilateBlue-400 text-2xl">
 					Leader de chant
@@ -270,6 +275,20 @@ function SettingsSidePanel({
 					</>
 				)}
 			</div>
+			{song && (
+				<div className="flex flex-col gap-2 border border-jubilateBlue-300 bg-jubilateBlue-300 bg-opacity-30 px-4 py-2 rounded-md">
+					<h2 className="text-center font-flame text-jubilateBlue-500 dark:text-jubilateBlue-400 text-2xl">
+						Administration
+					</h2>
+					<Link
+						to={`/songs/${song.id}/edit`}
+						className="flex items-center justify-center gap-2 bg-jubilateBlue-500 hover:bg-jubilateBlue-600 dark:bg-jubilateBlue-400 dark:hover:bg-jubilateBlue-300 text-white px-4 py-2 rounded-md transition-colors"
+					>
+						<PencilIcon className="h-4 w-4" />
+						<span className="text-sm font-medium">Modifier le chant</span>
+					</Link>
+				</div>
+			)}
 		</SidePanel>
 	);
 }
