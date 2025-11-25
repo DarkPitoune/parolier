@@ -17,8 +17,8 @@ import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
-type NavigationEvent = {
-	payload: { order: "NEXT" | "PREVIOUS" };
+type StropheChangeEvent = {
+	payload: { songId: number; stropheIndex: number };
 };
 
 type LogoEvent = {
@@ -43,6 +43,7 @@ const SlidePage = () => {
 		prevStrophe,
 		toggleLogoSlide,
 		navigateToSong,
+		navigateToStrophe,
 	} = useSlideController("slideshow");
 	const { currentStropheIndex, isLogoSlide } = slideState;
 
@@ -213,10 +214,19 @@ const SlidePage = () => {
 			channel = supabase.channel("remote");
 
 			channel
-				.on("broadcast", { event: "click" }, ({ payload }: NavigationEvent) => {
-					if (payload.order === "NEXT") handleNextStrophe();
-					if (payload.order === "PREVIOUS") handlePrevStrophe();
-				})
+				.on(
+					"broadcast",
+					{ event: "strophe_change" },
+					({ payload }: StropheChangeEvent) => {
+						// Navigate to absolute strophe position
+						if (
+							payload.songId === slideState.currentSongId &&
+							payload.stropheIndex !== currentStropheIndex
+						) {
+							navigateToStrophe(payload.stropheIndex);
+						}
+					},
+				)
 				.on("broadcast", { event: "logo_toggle" }, ({ payload }: LogoEvent) => {
 					// Update slide controller to match remote logo state
 					if (payload.isLogoSlide !== isLogoSlide) {
@@ -250,11 +260,12 @@ const SlidePage = () => {
 			channel.unsubscribe();
 		};
 	}, [
-		handleNextStrophe,
-		handlePrevStrophe,
+		navigateToStrophe,
 		toggleLogoSlide,
 		navigateToSong,
 		isLogoSlide,
+		slideState.currentSongId,
+		currentStropheIndex,
 	]);
 
 	useEffect(() => {

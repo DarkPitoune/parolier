@@ -46,15 +46,15 @@ export const useSlideController = (
 			// Broadcast to network if enabled and requested
 			if (enableNetworkBroadcast && broadcastToNetwork) {
 				try {
-					// Send navigation commands for network compatibility
+					// Send absolute strophe position for network sync
 					if (updates.currentStropheIndex !== undefined) {
-						const isNext =
-							updates.currentStropheIndex > slideState.currentStropheIndex;
-						const order = isNext ? "NEXT" : "PREVIOUS";
 						supabase.channel("remote").send({
 							type: "broadcast",
-							event: "click",
-							payload: { order },
+							event: "strophe_change",
+							payload: {
+								songId: updates.currentSongId ?? slideState.currentSongId,
+								stropheIndex: updates.currentStropheIndex,
+							},
 						});
 					}
 

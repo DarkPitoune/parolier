@@ -142,7 +142,7 @@ function Bible() {
 	};
 
 	const goBack = () => {
-		if (selectedChapter) {
+		if (selectedChapter && selectedBook) {
 			navigate(`/bible/${encodeURIComponent(selectedBook)}`);
 		} else if (selectedBook) {
 			navigate("/bible");
@@ -290,7 +290,7 @@ function Bible() {
 						<h2 className="text-xl font-bold text-black dark:text-white">
 							Résultats de recherche ({searchResults.length})
 						</h2>
-						{searchResults.map((verse, index) => (
+						{searchResults.map((verse) => (
 							<a
 								key={`${verse.book}-${verse.chapter}-${verse.verse}`}
 								href={`/bible/${encodeURIComponent(verse.book)}/${encodeURIComponent(verse.chapter)}#verse-${verse.verse}`}

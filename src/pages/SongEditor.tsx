@@ -101,7 +101,7 @@ const SongEditor = () => {
 	};
 
 	const handleChange = useCallback(
-		(field: keyof TaggedSong, value: Strophe[] | string) => {
+		(field: keyof TaggedSong, value: Strophe[] | string | null) => {
 			setSong((prev) => (prev ? { ...prev, [field]: value } : null));
 		},
 		[],
