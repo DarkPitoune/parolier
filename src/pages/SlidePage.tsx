@@ -6,8 +6,10 @@ import {
 	TouchScreenListener,
 	slideHelpAtom,
 } from "@/components";
+import { useMqttConnectionStatus } from "@/hooks/useMqttConnectionStatus";
 import { useSlideController } from "@/hooks/useSlideController";
-import supabase, {
+import { subscribeToEvents } from "@/utils/mqtt";
+import {
 	setlistLengthQuery,
 	taggedSongFromSetlistStepQuery,
 	taggedSongQuery,
@@ -16,18 +18,6 @@ import { useAtom } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
-
-type StropheChangeEvent = {
-	payload: { songId: number; stropheIndex: number };
-};
-
-type LogoEvent = {
-	payload: { isLogoSlide: boolean };
-};
-
-type SongChangeEvent = {
-	payload: { songId: number; stropheIndex: number };
-};
 
 const SlidePage = () => {
 	const { songId, stepNumber, setlistId } = useParams();
@@ -46,6 +36,9 @@ const SlidePage = () => {
 		navigateToStrophe,
 	} = useSlideController("slideshow");
 	const { currentStropheIndex, isLogoSlide } = slideState;
+
+	// Monitor MQTT connection status
+	useMqttConnectionStatus({ position: "top-center" });
 
 	useEffect(() => {
 		if (setlistId)
@@ -204,60 +197,31 @@ const SlidePage = () => {
 	]);
 
 	useEffect(() => {
-		let channel = supabase.channel("remote");
-
-		const subscribeToChannel = () => {
-			// Unsubscribe first to avoid duplicate subscription errors
-			channel.unsubscribe();
-
-			// Create a new channel instance
-			channel = supabase.channel("remote");
-
-			channel
-				.on(
-					"broadcast",
-					{ event: "strophe_change" },
-					({ payload }: StropheChangeEvent) => {
-						// Navigate to absolute strophe position
-						if (
-							payload.songId === slideState.currentSongId &&
-							payload.stropheIndex !== currentStropheIndex
-						) {
-							navigateToStrophe(payload.stropheIndex);
-						}
-					},
-				)
-				.on("broadcast", { event: "logo_toggle" }, ({ payload }: LogoEvent) => {
-					// Update slide controller to match remote logo state
-					if (payload.isLogoSlide !== isLogoSlide) {
-						toggleLogoSlide();
-					}
-				})
-				.on(
-					"broadcast",
-					{ event: "song_change" },
-					({ payload }: SongChangeEvent) => {
-						// Navigate to the song sent from remote
-						navigateToSong(payload.songId);
-					},
-				)
-				.subscribe();
-		};
-
-		// Initial subscription
-		subscribeToChannel();
-
-		// Listen for online event to resubscribe
-		const handleOnline = () => {
-			console.log("Connection restored, resubscribing to channel");
-			subscribeToChannel();
-		};
-
-		window.addEventListener("online", handleOnline);
+		// Subscribe to MQTT events
+		const unsubscribe = subscribeToEvents({
+			onStropheChange: (payload) => {
+				// Navigate to absolute strophe position
+				if (
+					payload.songId === slideState.currentSongId &&
+					payload.stropheIndex !== currentStropheIndex
+				) {
+					navigateToStrophe(payload.stropheIndex);
+				}
+			},
+			onLogoToggle: (payload) => {
+				// Update slide controller to match remote logo state
+				if (payload.isLogoSlide !== isLogoSlide) {
+					toggleLogoSlide();
+				}
+			},
+			onSongChange: (payload) => {
+				// Navigate to the song sent from remote
+				navigateToSong(payload.songId);
+			},
+		});
 
 		return () => {
-			window.removeEventListener("online", handleOnline);
-			channel.unsubscribe();
+			unsubscribe();
 		};
 	}, [
 		navigateToStrophe,

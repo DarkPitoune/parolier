@@ -5,6 +5,7 @@ import {
 	SongPicker,
 	SongPickerInline,
 } from "@/components";
+import { useMqttConnectionStatus } from "@/hooks/useMqttConnectionStatus";
 import { useSlideController } from "@/hooks/useSlideController";
 import {
 	setlistLengthQuery,
@@ -38,6 +39,9 @@ const PresenterPage = () => {
 	} = useSlideController("presenter", true); // Enable network broadcast
 
 	const { currentStropheIndex, isLogoSlide, currentSongId } = slideState;
+
+	// Monitor MQTT connection status
+	useMqttConnectionStatus({ position: "top-center" });
 
 	// Load setlist length if in setlist context
 	useEffect(() => {
@@ -270,11 +274,24 @@ const PresenterPage = () => {
 			// Navigation controls
 			if (e.key === "ArrowRight") {
 				e.preventDefault();
-				if (canGoNext) nextStrophe();
+				if (canGoNext) {
+					const nextStropheData = strophes[currentStropheIndex + 1];
+					const nextStropheContent = Array.isArray(nextStropheData?.content)
+						? nextStropheData.content
+						: undefined;
+					nextStrophe(nextStropheContent);
+				}
 			}
 			if (e.key === "ArrowLeft") {
 				e.preventDefault();
-				if (canGoPrev) prevStrophe();
+				if (canGoPrev) {
+					const prevStropheData =
+						strophes[Math.max(0, currentStropheIndex - 1)];
+					const prevStropheContent = Array.isArray(prevStropheData?.content)
+						? prevStropheData.content
+						: undefined;
+					prevStrophe(prevStropheContent);
+				}
 			}
 			// Logo toggle
 			if (e.key === "t" || e.key === "T") {
@@ -285,7 +302,15 @@ const PresenterPage = () => {
 
 		document.addEventListener("keydown", handleKey);
 		return () => document.removeEventListener("keydown", handleKey);
-	}, [canGoNext, canGoPrev, nextStrophe, prevStrophe, toggleLogoSlide]);
+	}, [
+		canGoNext,
+		canGoPrev,
+		nextStrophe,
+		prevStrophe,
+		toggleLogoSlide,
+		strophes,
+		currentStropheIndex,
+	]);
 
 	return (
 		<div className="bg-white dark:bg-gray-800 h-screen flex flex-col">
@@ -409,7 +434,16 @@ const PresenterPage = () => {
 							{/* Previous Button */}
 							<button
 								type="button"
-								onClick={prevStrophe}
+								onClick={() => {
+									const prevStropheData =
+										strophes[Math.max(0, currentStropheIndex - 1)];
+									const prevStropheContent = Array.isArray(
+										prevStropheData?.content,
+									)
+										? prevStropheData.content
+										: undefined;
+									prevStrophe(prevStropheContent);
+								}}
 								disabled={!canGoPrev}
 								className="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-4 rounded-full transition-colors"
 								title="Précédent (←)"
@@ -438,7 +472,15 @@ const PresenterPage = () => {
 							{/* Next Button */}
 							<button
 								type="button"
-								onClick={nextStrophe}
+								onClick={() => {
+									const nextStropheData = strophes[currentStropheIndex + 1];
+									const nextStropheContent = Array.isArray(
+										nextStropheData?.content,
+									)
+										? nextStropheData.content
+										: undefined;
+									nextStrophe(nextStropheContent);
+								}}
 								disabled={!canGoNext}
 								className="bg-jubilateBlue-500 hover:bg-jubilateBlue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-4 rounded-full transition-colors"
 								title="Suivant (→)"

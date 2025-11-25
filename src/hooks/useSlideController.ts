@@ -1,4 +1,8 @@
-import supabase from "@/utils/supabase";
+import {
+	publishLogoToggle,
+	publishSongChange,
+	publishStropheChange,
+} from "@/utils/mqtt";
 import { useCallback, useEffect, useState } from "react";
 
 export type SlideState = {
@@ -33,7 +37,11 @@ export const useSlideController = (
 	});
 
 	const updateSlideState = useCallback(
-		(updates: Partial<SlideState>, broadcastToNetwork = false) => {
+		(
+			updates: Partial<SlideState>,
+			broadcastToNetwork = false,
+			stropheContent?: Array<{ text: string; chords?: string }>,
+		) => {
 			const newState = {
 				...slideState,
 				...updates,
@@ -48,34 +56,27 @@ export const useSlideController = (
 				try {
 					// Send absolute strophe position for network sync
 					if (updates.currentStropheIndex !== undefined) {
-						supabase.channel("remote").send({
-							type: "broadcast",
-							event: "strophe_change",
-							payload: {
-								songId: updates.currentSongId ?? slideState.currentSongId,
-								stropheIndex: updates.currentStropheIndex,
-							},
+						publishStropheChange({
+							songId: updates.currentSongId ?? slideState.currentSongId ?? 0,
+							stropheIndex: updates.currentStropheIndex,
+							content: stropheContent,
 						});
 					}
 
 					// Send logo toggle events
 					if (updates.isLogoSlide !== undefined) {
-						supabase.channel("remote").send({
-							type: "broadcast",
-							event: "logo_toggle",
-							payload: { isLogoSlide: updates.isLogoSlide },
-						});
+						publishLogoToggle({ isLogoSlide: updates.isLogoSlide });
 					}
 
 					// Send song change events
-					if (updates.currentSongId !== undefined) {
-						supabase.channel("remote").send({
-							type: "broadcast",
-							event: "song_change",
-							payload: {
-								songId: updates.currentSongId,
-								stropheIndex: updates.currentStropheIndex || 0,
-							},
+					if (
+						updates.currentSongId !== undefined &&
+						updates.currentSongId !== null
+					) {
+						publishSongChange({
+							songId: updates.currentSongId,
+							stropheIndex: updates.currentStropheIndex || 0,
+							content: stropheContent,
 						});
 					}
 				} catch (error) {
@@ -114,6 +115,7 @@ export const useSlideController = (
 			setlistId?: string,
 			stepNumber?: number,
 			preserveLogoSlide = false,
+			stropheContent?: Array<{ text: string; chords?: string }>,
 		) => {
 			const updates: Partial<SlideState> = {
 				currentSongId: songId,
@@ -127,7 +129,7 @@ export const useSlideController = (
 				updates.isLogoSlide = false;
 			}
 
-			updateSlideState(updates, true); // Broadcast to network
+			updateSlideState(updates, true, stropheContent); // Broadcast to network
 		},
 		[updateSlideState],
 	);
@@ -142,23 +144,31 @@ export const useSlideController = (
 		[updateSlideState],
 	);
 
-	const nextStrophe = useCallback(() => {
-		updateSlideState(
-			{
-				currentStropheIndex: slideState.currentStropheIndex + 1,
-			},
-			true,
-		); // Broadcast to network
-	}, [updateSlideState, slideState.currentStropheIndex]);
+	const nextStrophe = useCallback(
+		(stropheContent?: Array<{ text: string; chords?: string }>) => {
+			updateSlideState(
+				{
+					currentStropheIndex: slideState.currentStropheIndex + 1,
+				},
+				true,
+				stropheContent,
+			); // Broadcast to network
+		},
+		[updateSlideState, slideState.currentStropheIndex],
+	);
 
-	const prevStrophe = useCallback(() => {
-		updateSlideState(
-			{
-				currentStropheIndex: Math.max(0, slideState.currentStropheIndex - 1),
-			},
-			true,
-		); // Broadcast to network
-	}, [updateSlideState, slideState.currentStropheIndex]);
+	const prevStrophe = useCallback(
+		(stropheContent?: Array<{ text: string; chords?: string }>) => {
+			updateSlideState(
+				{
+					currentStropheIndex: Math.max(0, slideState.currentStropheIndex - 1),
+				},
+				true,
+				stropheContent,
+			); // Broadcast to network
+		},
+		[updateSlideState, slideState.currentStropheIndex],
+	);
 
 	const toggleLogoSlide = useCallback(() => {
 		updateSlideState(
