@@ -8,6 +8,7 @@ import {
 } from "@/components";
 import { useMqttConnectionStatus } from "@/hooks/useMqttConnectionStatus";
 import { useSlideController } from "@/hooks/useSlideController";
+import { useWakeLock } from "@/hooks/useWakeLock";
 import { subscribeToEvents } from "@/utils/mqtt";
 import {
 	setlistLengthQuery,
@@ -40,6 +41,9 @@ const SlidePage = () => {
 	// Monitor MQTT connection status
 	useMqttConnectionStatus({ position: "top-center" });
 
+	// Keep screen awake during slideshow
+	useWakeLock();
+
 	useEffect(() => {
 		if (setlistId)
 			setlistLengthQuery(setlistId).then(({ data }) => {
@@ -49,11 +53,35 @@ const SlidePage = () => {
 
 	// Load songs from URL params or slide controller state
 	useEffect(() => {
-		// Check if we should load from slide controller state
-		if (
-			slideState.currentSongId &&
-			(!songId || Number(songId) !== slideState.currentSongId)
-		) {
+		// Priority 1: If there's a songId in the URL, load that song and update slide state
+		if (songId) {
+			const songIdNum = Number(songId);
+			taggedSongQuery(songIdNum).then(({ data, error }) => {
+				if (data?.strophes) {
+					setStrophes(data.strophes);
+					// Update slide state to match URL
+					if (slideState.currentSongId !== songIdNum) {
+						navigateToSong(songIdNum);
+					}
+				} else {
+					setStrophes([]);
+					const errorMessage =
+						error?.code === "PGRST116"
+							? "Morceau non trouvé !"
+							: "Connexion à internet requise";
+					toast.error(errorMessage, {
+						style: {
+							backgroundColor: "black",
+							color: "white",
+						},
+					});
+				}
+			});
+			return;
+		}
+
+		// Priority 2: If no URL songId but we have slide state, use that (for MQTT remote control)
+		if (slideState.currentSongId) {
 			taggedSongQuery(slideState.currentSongId).then(({ data, error }) => {
 				if (data?.strophes) {
 					setStrophes(data.strophes);
@@ -72,27 +100,6 @@ const SlidePage = () => {
 				}
 			});
 			return;
-		}
-
-		// Fallback to URL params if no slide controller state
-		if (songId) {
-			taggedSongQuery(Number(songId)).then(({ data, error }) => {
-				if (data?.strophes) {
-					setStrophes(data.strophes);
-				} else {
-					setStrophes([]);
-					const errorMessage =
-						error?.code === "PGRST116"
-							? "Morceau non trouvé !"
-							: "Connexion à internet requise";
-					toast.error(errorMessage, {
-						style: {
-							backgroundColor: "black",
-							color: "white",
-						},
-					});
-				}
-			});
 		}
 		if (setlistId && stepNumber) {
 			// showing the page in the context of a set
@@ -141,7 +148,7 @@ const SlidePage = () => {
 				},
 			);
 		}
-	}, [songId, setlistId, stepNumber, slideState.currentSongId]);
+	}, [songId, setlistId, stepNumber, slideState.currentSongId, navigateToSong]);
 
 	const handleNextStrophe = useCallback(() => {
 		if (isTextSlide || strophes.length === 0) {
@@ -262,16 +269,6 @@ const SlidePage = () => {
 		};
 		document.addEventListener("keydown", handleKey);
 
-		// request for screen to keep awake : does not work on iOS PWAs
-		let wakeLock: WakeLockSentinel | null = null;
-		const requestWakeLock = async () => {
-			try {
-				wakeLock = await navigator.wakeLock.request("screen");
-			} catch (err) {
-				console.error(`Failed to request wake lock: ${err}`);
-			}
-		};
-		requestWakeLock();
 		const handleQuit = () => {
 			if (!document.fullscreenElement) navigate("/");
 		};
@@ -279,7 +276,6 @@ const SlidePage = () => {
 		return () => {
 			document.removeEventListener("keydown", handleKey);
 			document.removeEventListener("fullscreenchange", handleQuit);
-			wakeLock?.release();
 		};
 	}, [navigate, setSlideHelp, toggleLogoSlide]);
 

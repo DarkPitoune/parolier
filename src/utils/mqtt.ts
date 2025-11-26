@@ -1,7 +1,7 @@
 import mqtt from "mqtt";
 
 // MQTT Configuration
-const MQTT_BROKER_URL = "ws://192.168.8.1:9001";
+const MQTT_BROKER_URL = "wss://192.168.8.1:9003";
 const MQTT_TOPIC_PREFIX = "parolier";
 
 // Event topics
@@ -30,6 +30,8 @@ export type SongChangePayload = {
 
 // Create MQTT client
 let mqttClient: mqtt.MqttClient | null = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
 
 export const getMqttClient = (): mqtt.MqttClient => {
 	if (!mqttClient) {
@@ -41,10 +43,18 @@ export const getMqttClient = (): mqtt.MqttClient => {
 
 		mqttClient.on("connect", () => {
 			console.log("Connected to MQTT broker");
+			reconnectAttempts = 0; // Reset counter on successful connection
 		});
 
 		mqttClient.on("error", (error) => {
 			console.error("MQTT connection error:", error);
+			reconnectAttempts++;
+
+			// Stop reconnecting after max attempts
+			if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+				console.log("Max reconnect attempts reached, stopping reconnection");
+				disconnectMqtt();
+			}
 		});
 
 		mqttClient.on("offline", () => {
@@ -59,12 +69,22 @@ export const getMqttClient = (): mqtt.MqttClient => {
 	return mqttClient;
 };
 
+// Function to disconnect and clean up MQTT client
+export const disconnectMqtt = () => {
+	if (mqttClient) {
+		console.log("Disconnecting MQTT client");
+		mqttClient.end(true); // Force close the connection
+		mqttClient = null;
+		reconnectAttempts = 0;
+	}
+};
+
 // Helper function to publish events
 export const publishStropheChange = (payload: StropheChangePayload) => {
 	const client = getMqttClient();
 	client.publish(TOPICS.STROPHE_CHANGE, JSON.stringify(payload), {
 		qos: 0,
-		retain: false,
+		retain: true,
 	});
 };
 
@@ -72,7 +92,7 @@ export const publishLogoToggle = (payload: LogoTogglePayload) => {
 	const client = getMqttClient();
 	client.publish(TOPICS.LOGO_TOGGLE, JSON.stringify(payload), {
 		qos: 0,
-		retain: false,
+		retain: true,
 	});
 };
 
@@ -80,7 +100,7 @@ export const publishSongChange = (payload: SongChangePayload) => {
 	const client = getMqttClient();
 	client.publish(TOPICS.SONG_CHANGE, JSON.stringify(payload), {
 		qos: 0,
-		retain: false,
+		retain: true,
 	});
 };
 

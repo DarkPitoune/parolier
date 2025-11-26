@@ -1,16 +1,21 @@
-import { getMqttClient } from "@/utils/mqtt";
+import { disconnectMqtt, getMqttClient } from "@/utils/mqtt";
 import { useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 
 type UseMqttConnectionStatusOptions = {
 	showOnInitialConnect?: boolean;
 	position?: "top-center" | "bottom-right";
+	disconnectOnUnmount?: boolean;
 };
 
 export const useMqttConnectionStatus = (
 	options: UseMqttConnectionStatusOptions = {},
 ) => {
-	const { showOnInitialConnect = false, position = "top-center" } = options;
+	const {
+		showOnInitialConnect = false,
+		position = "top-center",
+		disconnectOnUnmount = true,
+	} = options;
 	const isInitialConnection = useRef(true);
 
 	useEffect(() => {
@@ -50,6 +55,11 @@ export const useMqttConnectionStatus = (
 			client.off("connect", handleConnect);
 			client.off("offline", handleOffline);
 			client.off("error", handleError);
+
+			// Disconnect MQTT client when component unmounts (if enabled)
+			if (disconnectOnUnmount) {
+				disconnectMqtt();
+			}
 		};
-	}, [showOnInitialConnect, position]);
+	}, [showOnInitialConnect, position, disconnectOnUnmount]);
 };

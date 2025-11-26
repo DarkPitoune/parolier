@@ -1,4 +1,5 @@
 import { BackButton, SongViewer, useLeader } from "@/components";
+import { useWakeLock } from "@/hooks/useWakeLock";
 import {
 	type TaggedSong,
 	analyticsSong,
@@ -12,6 +13,9 @@ function SongPage() {
 	const { songId } = useParams();
 	const [song, setSong] = useState<TaggedSong>();
 	const { setLeaderSong } = useLeader();
+
+	// Keep screen awake while viewing song
+	useWakeLock();
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: adding setLeader spams BE
 	useEffect(() => {

@@ -7,6 +7,7 @@ import {
 } from "@/components";
 import { useMqttConnectionStatus } from "@/hooks/useMqttConnectionStatus";
 import { useSlideController } from "@/hooks/useSlideController";
+import { useWakeLock } from "@/hooks/useWakeLock";
 import {
 	setlistLengthQuery,
 	taggedSongFromSetlistStepQuery,
@@ -42,6 +43,9 @@ const PresenterPage = () => {
 
 	// Monitor MQTT connection status
 	useMqttConnectionStatus({ position: "top-center" });
+
+	// Keep screen awake during presentation
+	useWakeLock();
 
 	// Load setlist length if in setlist context
 	useEffect(() => {
