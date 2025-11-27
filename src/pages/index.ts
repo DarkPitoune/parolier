@@ -7,3 +7,4 @@ export { SetlistEditor } from "./SetlistEditor";
 export { default as Analytics } from "./Analytics";
 export { Bible } from "./Bible";
 export { Messe } from "./Messe";
+export { default as TextEditor } from "./TextEditor";

@@ -9,6 +9,7 @@ import {
 	Setlists,
 	SlidePage,
 	SongPage,
+	TextEditor,
 } from "@/pages";
 import * as Sentry from "@sentry/react";
 import clsx from "clsx";
@@ -49,6 +50,10 @@ const router = createBrowserRouter([
 	{
 		path: "/texts/:textId",
 		element: <TextPage />,
+	},
+	{
+		path: "/texts/:textId/edit",
+		element: <TextEditor />,
 	},
 	{
 		path: "/bible",
