@@ -76,7 +76,7 @@ function Index() {
 
 	const scrollToSelectedSong = useCallback(() => {
 		if (selectedSongIndex !== null) {
-			const selectedSongId = filteredSongs[selectedSongIndex].id;
+			const selectedSongId = filteredSongs[selectedSongIndex]?.id;
 			const element = document.getElementById(getSongItemId(selectedSongId));
 			if (element)
 				element.scrollIntoView({ behavior: "smooth", block: "center" });

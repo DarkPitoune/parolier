@@ -232,3 +232,19 @@ export const newTextMutation = async (title: string, content: string) =>
     .select()
     .single();
 export type NewTextMutation = QueryData<ReturnType<typeof newTextMutation>>;
+
+/**
+ * Loads all songs and their tagged details
+ * This function fetches all songs and then fetches each song's full details
+ * Used for pre-populating the cache
+ */
+export const loadAllSongsData = async (): Promise<void> => {
+  const { data: allSongs, error } = await allSongsQuery();
+  if (error || !allSongs) {
+    throw new Error("Failed to load songs");
+  }
+
+  await Promise.all(
+    allSongs.map(async ({ id }) => taggedSongQuery(id)),
+  );
+};

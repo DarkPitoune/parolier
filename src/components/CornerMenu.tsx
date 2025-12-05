@@ -1,4 +1,4 @@
-import { allSongsQuery, taggedSongQuery } from "@/utils/supabase";
+import { loadAllSongsData } from "@/utils/supabase";
 import { ArrowPathIcon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useAtom } from "jotai";
@@ -11,13 +11,7 @@ export const CornerMenu = () => {
 	const [darkMode, setDarkMode] = useAtom(darkModeAtom);
 
 	const loadAllSongs = useCallback(async () => {
-		const allPromises = allSongsQuery().then(({ data: allSongs, error }) => {
-			if (error || !allSongs) throw "Connexion failure";
-			return Promise.all(
-				allSongs.map(async ({ id }) => taggedSongQuery(id) as Promise<unknown>),
-			);
-		});
-		toast.promise(allPromises, {
+		toast.promise(loadAllSongsData(), {
 			loading: "Chargement...",
 			success: "Liste mise à jour",
 			error: "Connexion à internet requise",
