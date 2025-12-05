@@ -116,9 +116,9 @@ export const subscribeToEvents = (callbacks: {
 	const topics = Object.values(TOPICS);
 	client.subscribe(topics, { qos: 0 }, (err) => {
 		if (err) {
-			console.error("Failed to subscribe to MQTT topics:", err);
+			console.error("[MQTT] Failed to subscribe to MQTT topics:", err);
 		} else {
-			console.log("Subscribed to MQTT topics:", topics);
+			console.log("[MQTT] Subscribed to MQTT topics:", topics);
 		}
 	});
 
@@ -126,20 +126,28 @@ export const subscribeToEvents = (callbacks: {
 	const messageHandler = (topic: string, message: Buffer) => {
 		try {
 			const payload = JSON.parse(message.toString());
+			console.log("[MQTT] 📨 Received message:", {
+				topic,
+				payload,
+				isRetained: message.length > 0 ? "possibly" : "no",
+			});
 
 			switch (topic) {
 				case TOPICS.STROPHE_CHANGE:
+					console.log("[MQTT] 🔄 Triggering onStropheChange callback");
 					callbacks.onStropheChange?.(payload);
 					break;
 				case TOPICS.LOGO_TOGGLE:
+					console.log("[MQTT] 🎨 Triggering onLogoToggle callback");
 					callbacks.onLogoToggle?.(payload);
 					break;
 				case TOPICS.SONG_CHANGE:
+					console.log("[MQTT] 🎵 Triggering onSongChange callback");
 					callbacks.onSongChange?.(payload);
 					break;
 			}
 		} catch (error) {
-			console.error("Failed to parse MQTT message:", error);
+			console.error("[MQTT] Failed to parse MQTT message:", error);
 		}
 	};
 

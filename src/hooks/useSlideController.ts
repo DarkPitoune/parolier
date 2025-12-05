@@ -42,6 +42,14 @@ export const useSlideController = (
 			broadcastToNetwork = false,
 			stropheContent?: Array<{ text: string; chords?: string }>,
 		) => {
+			console.log("[SlideController] 📝 updateSlideState called:", {
+				source,
+				updates,
+				broadcastToNetwork,
+				enableNetworkBroadcast,
+				willBroadcast: enableNetworkBroadcast && broadcastToNetwork,
+			});
+
 			const newState = {
 				...slideState,
 				...updates,
@@ -53,9 +61,11 @@ export const useSlideController = (
 
 			// Broadcast to network if enabled and requested
 			if (enableNetworkBroadcast && broadcastToNetwork) {
+				console.log("[SlideController] 📡 Broadcasting to MQTT network");
 				try {
 					// Send absolute strophe position for network sync
 					if (updates.currentStropheIndex !== undefined) {
+						console.log("[SlideController] 📡 Publishing strophe change");
 						publishStropheChange({
 							songId: updates.currentSongId ?? slideState.currentSongId ?? 0,
 							stropheIndex: updates.currentStropheIndex,
@@ -65,6 +75,7 @@ export const useSlideController = (
 
 					// Send logo toggle events
 					if (updates.isLogoSlide !== undefined) {
+						console.log("[SlideController] 📡 Publishing logo toggle");
 						publishLogoToggle({ isLogoSlide: updates.isLogoSlide });
 					}
 
@@ -73,6 +84,7 @@ export const useSlideController = (
 						updates.currentSongId !== undefined &&
 						updates.currentSongId !== null
 					) {
+						console.log("[SlideController] 📡 Publishing song change");
 						publishSongChange({
 							songId: updates.currentSongId,
 							stropheIndex: updates.currentStropheIndex || 0,
@@ -80,7 +92,7 @@ export const useSlideController = (
 						});
 					}
 				} catch (error) {
-					console.error("Failed to broadcast to network:", error);
+					console.error("[SlideController] Failed to broadcast to network:", error);
 				}
 			}
 		},
@@ -98,8 +110,15 @@ export const useSlideController = (
 		const handleStorageChange = (e: StorageEvent) => {
 			if (e.key === SLIDE_STATE_KEY && e.newValue) {
 				const newState = JSON.parse(e.newValue);
+				console.log("[SlideController] 💾 localStorage changed:", {
+					currentSource: source,
+					newStateSource: newState.source,
+					willUpdate: newState.source !== source,
+					newState,
+				});
 				// Only update if the change came from another source
 				if (newState.source !== source) {
+					console.log("[SlideController] ⚡ Updating state from localStorage");
 					setSlideState(newState);
 				}
 			}
@@ -117,6 +136,14 @@ export const useSlideController = (
 			preserveLogoSlide = false,
 			stropheContent?: Array<{ text: string; chords?: string }>,
 		) => {
+			console.log("[SlideController] 🎵 navigateToSong called:", {
+				songId,
+				setlistId,
+				stepNumber,
+				preserveLogoSlide,
+				currentSongId: slideState.currentSongId,
+			});
+
 			const updates: Partial<SlideState> = {
 				currentSongId: songId,
 				currentStropheIndex: 0,
@@ -131,7 +158,7 @@ export const useSlideController = (
 
 			updateSlideState(updates, true, stropheContent); // Broadcast to network
 		},
-		[updateSlideState],
+		[updateSlideState, slideState.currentSongId],
 	);
 
 	const navigateToStrophe = useCallback(

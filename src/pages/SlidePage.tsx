@@ -53,17 +53,33 @@ const SlidePage = () => {
 
 	// Load songs from URL params or slide controller state
 	useEffect(() => {
+		console.log("[SlidePage] 🔄 Song loading useEffect triggered:", {
+			songId,
+			setlistId,
+			stepNumber,
+			"slideState.currentSongId": slideState.currentSongId,
+		});
+
 		// Priority 1: If there's a songId in the URL, load that song and update slide state
 		if (songId) {
 			const songIdNum = Number(songId);
+			console.log("[SlidePage] 📖 Loading from URL songId:", songIdNum);
 			taggedSongQuery(songIdNum).then(({ data, error }) => {
 				if (data?.strophes) {
+					console.log("[SlidePage] ✅ Song loaded successfully:", {
+						songId: songIdNum,
+						strophesCount: data.strophes.length,
+					});
 					setStrophes(data.strophes);
 					// Update slide state to match URL
 					if (slideState.currentSongId !== songIdNum) {
+						console.log("[SlidePage] 🔀 Syncing slideState with URL (calling navigateToSong)");
 						navigateToSong(songIdNum);
+					} else {
+						console.log("[SlidePage] ✓ slideState already in sync with URL");
 					}
 				} else {
+					console.log("[SlidePage] ❌ Failed to load song:", error);
 					setStrophes([]);
 					const errorMessage =
 						error?.code === "PGRST116"
@@ -82,10 +98,16 @@ const SlidePage = () => {
 
 		// Priority 2: If no URL songId but we have slide state, use that (for MQTT remote control)
 		if (slideState.currentSongId) {
+			console.log("[SlidePage] 📖 Loading from slideState.currentSongId:", slideState.currentSongId);
 			taggedSongQuery(slideState.currentSongId).then(({ data, error }) => {
 				if (data?.strophes) {
+					console.log("[SlidePage] ✅ Song loaded from state:", {
+						songId: slideState.currentSongId,
+						strophesCount: data.strophes.length,
+					});
 					setStrophes(data.strophes);
 				} else {
+					console.log("[SlidePage] ❌ Failed to load song from state:", error);
 					setStrophes([]);
 					const errorMessage =
 						error?.code === "PGRST116"
@@ -204,40 +226,56 @@ const SlidePage = () => {
 	]);
 
 	useEffect(() => {
+		console.log("[SlidePage] 🔌 Setting up MQTT subscriptions");
 		// Subscribe to MQTT events
 		const unsubscribe = subscribeToEvents({
 			onStropheChange: (payload) => {
+				console.log("[SlidePage] 🔄 MQTT onStropheChange handler:", {
+					payload,
+					currentSongId: slideState.currentSongId,
+					currentStropheIndex,
+				});
 				// Navigate to absolute strophe position
 				if (
 					payload.songId === slideState.currentSongId &&
 					payload.stropheIndex !== currentStropheIndex
 				) {
+					console.log("[SlidePage] ✅ Navigating to strophe:", payload.stropheIndex);
 					navigateToStrophe(payload.stropheIndex);
+				} else {
+					console.log("[SlidePage] ⏭️ Ignoring strophe change (already at position or different song)");
 				}
 			},
 			onLogoToggle: (payload) => {
+				console.log("[SlidePage] 🎨 MQTT onLogoToggle handler:", {
+					payload,
+					currentLogoState: isLogoSlide,
+				});
 				// Update slide controller to match remote logo state
 				if (payload.isLogoSlide !== isLogoSlide) {
+					console.log("[SlidePage] ✅ Toggling logo slide");
 					toggleLogoSlide();
+				} else {
+					console.log("[SlidePage] ⏭️ Ignoring logo toggle (already in desired state)");
 				}
 			},
 			onSongChange: (payload) => {
+				console.log("[SlidePage] 🎵 MQTT onSongChange handler:", {
+					payload,
+					currentSongId: slideState.currentSongId,
+				});
 				// Navigate to the song sent from remote
+				console.log("[SlidePage] ➡️ Calling navigateToSong from MQTT");
 				navigateToSong(payload.songId);
 			},
 		});
 
 		return () => {
+			console.log("[SlidePage] 🔌 Unsubscribing from MQTT");
 			unsubscribe();
 		};
-	}, [
-		navigateToStrophe,
-		toggleLogoSlide,
-		navigateToSong,
-		isLogoSlide,
-		slideState.currentSongId,
-		currentStropheIndex,
-	]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {
