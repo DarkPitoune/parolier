@@ -27,3 +27,5 @@ export { SongItem } from "./SongItem";
 export { TextItem } from "./TextItem";
 export { TextPicker } from "./TextPicker";
 export { BackButton } from "./BackButton";
+export { PageHeader } from "./PageHeader";
+export { ErrorBoundary } from "./ErrorBoundary";

@@ -1,4 +1,4 @@
-import { BackButton, SongViewer, useLeader } from "@/components";
+import { PageHeader, SongViewer, useLeader } from "@/components";
 import { useTaggedSong } from "@/hooks/queries/useSongQueries";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { analyticsSong } from "@/utils/supabase";
@@ -32,24 +32,21 @@ function SongPage() {
 
 	return (
 		<div data-testid="song-page">
-			<div className="flex justify-between items-center py-2 md:py-4 px-2 md:px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky bg-white dark:bg-gray-900 top-0">
-				<BackButton />
-
-				<div className="flex gap-4 items-center font-flame text-xl lg:text-3xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
-					<h1>{song.id}.</h1>
-					<h1>{song.title}</h1>
-				</div>
-
-				<div className="flex items-center gap-4">
-					<Link
-						className="rounded-full hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-3"
-						onClick={() => document.body.requestFullscreen()}
-						to={`/slides/${song?.id}`}
-					>
-						<ComputerDesktopIcon className="size-6 fill-white" />
-					</Link>
-				</div>
-			</div>
+			<PageHeader
+				variant="detail"
+				title={`${song.id}. ${song.title}`}
+				right={
+					<div className="flex items-center gap-4">
+						<Link
+							className="rounded-full hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-3"
+							onClick={() => document.body.requestFullscreen()}
+							to={`/slides/${song?.id}`}
+						>
+							<ComputerDesktopIcon className="size-6 fill-white" />
+						</Link>
+					</div>
+				}
+			/>
 			<SongViewer song={song} />
 		</div>
 	);

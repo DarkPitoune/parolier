@@ -1,4 +1,4 @@
-import { BackButton } from "@/components";
+import { PageHeader } from "@/components";
 import { type Text, textQuery } from "@/utils/supabase";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -52,15 +52,10 @@ function TextPage() {
 
 	return (
 		<div>
-			<div className="flex justify-between items-center py-2 md:py-4 px-2 md:px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky bg-white dark:bg-gray-900 top-0">
-				<BackButton />
-
-				<div className="flex gap-4 items-center font-flame text-xl lg:text-3xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
-					<h1>{text.id}.</h1>
-					<h1>{text.title}</h1>
-				</div>
-				<span />
-			</div>
+			<PageHeader
+				variant="detail"
+				title={`${text.id}. ${text.title}`}
+			/>
 			<div onContextMenu={handleOnContextMenu} className="p-6">
 				<div className="max-w-4xl mx-auto">
 					<div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">

@@ -61,7 +61,7 @@ function SongViewer({
 									gridTemplateColumns: showChords ? "1fr 3fr" : "1fr",
 								}}
 								// biome-ignore lint/suspicious/noArrayIndexKey: in this case, it's not that bad
-								key={index + strophe.content[0].text} // very likely to be the number of the strophe ("1. Par toi Seigneur..")
+								key={index + (strophe.content[0]?.text ?? "")} // very likely to be the number of the strophe ("1. Par toi Seigneur..")
 							>
 								{strophe.content?.map((line, lineIndex) => (
 									// biome-ignore lint/suspicious/noArrayIndexKey: in this case, it's not that bad

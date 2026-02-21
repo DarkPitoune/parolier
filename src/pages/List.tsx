@@ -1,4 +1,4 @@
-import { SettingsSidePanel, SongItem, useLeader } from "@/components";
+import { PageHeader, SettingsSidePanel, SongItem, useLeader } from "@/components";
 import {
 	filtersAtom,
 	tagTabOpenAtom,
@@ -187,20 +187,25 @@ function Index() {
 					leader ? "top-6" : "top-0",
 				)}
 			>
-				<div className="bg-jubilateBlue-500 dark:bg-slate-900 px-6 py-4 gap-4 flex justify-between items-center">
-					<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
-						<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
-						<input
-							className="w-full h-9 rounded-full px-2 outline-none bg-white dark:bg-white text-black dark:text-black"
-							type="search"
-							onChange={search}
-							placeholder="Vite, une idée..."
-						/>
-					</div>
-					<button type="button" onClick={() => setIsNavigationPanelOpen(true)}>
-						<img className="h-12" src="/svg/logo.svg" alt="Logo" />
-					</button>
-				</div>
+				<PageHeader
+					variant="list"
+					left={
+						<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
+							<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
+							<input
+								className="w-full h-9 rounded-full px-2 outline-none bg-white dark:bg-white text-black dark:text-black"
+								type="search"
+								onChange={search}
+								placeholder="Vite, une idée..."
+							/>
+						</div>
+					}
+					right={
+						<button type="button" onClick={() => setIsNavigationPanelOpen(true)}>
+							<img className="h-12" src="/svg/logo.svg" alt="Logo" />
+						</button>
+					}
+				/>
 				<div className="px-6 py-2 flex flex-col items-stretch shadow font-flame">
 					<button
 						className="flex gap-2 text-jubilateBlue-500 dark:text-jubilateBlue-400 items-center"

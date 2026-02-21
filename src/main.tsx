@@ -1,4 +1,4 @@
-import { AuthContextProvider, CornerMenu, isDarkAtom } from "@/components";
+import { AuthContextProvider, CornerMenu, ErrorBoundary, isDarkAtom } from "@/components";
 import { systemPrefersDarkAtom } from "@/components/Contexts/SettingsContext";
 import {
 	Analytics,
@@ -169,7 +169,9 @@ const App = () => {
 					<main>
 						<OfflineBanner />
 						<LeaderListener router={router} />
-						<RouterProvider router={router} />
+						<ErrorBoundary>
+							<RouterProvider router={router} />
+						</ErrorBoundary>
 						<CornerMenu />
 					</main>
 				</div>

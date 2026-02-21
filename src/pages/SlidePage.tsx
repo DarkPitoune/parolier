@@ -174,6 +174,7 @@ const SlidePage = () => {
 			case "next_step":
 				navigate(
 					`/setlists/${setlistId}/steps/${Number(stepNumber) + 1}/slide`,
+					{ replace: true },
 				);
 				break;
 		}
@@ -194,6 +195,7 @@ const SlidePage = () => {
 			case "prev_step":
 				navigate(
 					`/setlists/${setlistId}/steps/${Number(stepNumber) - 1}/slide?from=end`,
+					{ replace: true },
 				);
 				break;
 		}
@@ -215,13 +217,13 @@ const SlidePage = () => {
 		const handleKey = (e: KeyboardEvent) => {
 			if (e.key === "h" || e.key === "H") setSlideHelp((v) => !v);
 			if (e.key === "t" || e.key === "T") dispatch({ type: "TOGGLE_LOGO" });
-			if (e.key === "Escape" && !document.fullscreenElement) navigate("/");
+			if (e.key === "Escape" && !document.fullscreenElement) navigate(-1);
 			if (e.key === "q" || e.key === "Q") document.exitFullscreen();
 		};
 		document.addEventListener("keydown", handleKey);
 
 		const handleQuit = () => {
-			if (!document.fullscreenElement) navigate("/");
+			if (!document.fullscreenElement) navigate(-1);
 		};
 		document.addEventListener("fullscreenchange", handleQuit);
 		return () => {
