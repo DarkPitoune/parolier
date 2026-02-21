@@ -1,4 +1,6 @@
+import { queryKeys } from "@/utils/queryKeys";
 import { newSongMutation } from "@/utils/supabase";
+import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +21,7 @@ export function NavigationSidePanel({
 	setOpen,
 }: { open: boolean; setOpen: (open: boolean) => void }) {
 	const navigate = useNavigate();
+	const queryClient = useQueryClient();
 	const createNewSong = async () => {
 		const title = prompt("Titre de la chanson");
 		if (!title) return;
@@ -26,6 +29,7 @@ export function NavigationSidePanel({
 		if (error) {
 			toast.error(`Erreur lors de la création de la chanson: ${error.message}`);
 		} else {
+			queryClient.invalidateQueries({ queryKey: queryKeys.songs.list() });
 			toast.success("Chanson créée avec succès");
 			navigate(`/songs/${data.id}`);
 		}

@@ -1,6 +1,0 @@
-- remove corner menu
-- sort setlists by date
-- re-design setlist action buttons and setlist "back" button
-- fix "escape" to "/" behavior (should navigate to latest non-slide page)
-- remove "Loading" wording in setlist page
-- the setlist list back button should go to home page

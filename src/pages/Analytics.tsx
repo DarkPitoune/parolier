@@ -1,8 +1,8 @@
+import { PageHeader } from "@/components";
 import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
 import { getPopularSongsQuery } from "@/utils/supabase";
 import * as Sentry from "@sentry/react";
 import { useEffect, useState } from "react";
-import { BackButton } from "@/components/BackButton";
 
 function Analytics() {
 	// Component purely vibe coded, no guarantee
@@ -80,15 +80,15 @@ function Analytics() {
 
 	return (
 		<div className="min-h-screen bg-white dark:bg-gray-800">
-			<div className="bg-jubilateBlue-500 dark:bg-slate-900 px-6 py-4 flex justify-between items-center">
-				<BackButton variant="header" />
-				<h1 className="font-flame text-xl lg:text-3xl text-white">
-					Statistiques
-				</h1>
-				<button type="button" onClick={() => setIsNavigationPanelOpen(true)}>
-					<img className="h-12" src="/svg/logo.svg" alt="Logo" />
-				</button>
-			</div>
+			<PageHeader
+				variant="list"
+				title="Statistiques"
+				right={
+					<button type="button" onClick={() => setIsNavigationPanelOpen(true)}>
+						<img className="h-12" src="/svg/logo.svg" alt="Logo" />
+					</button>
+				}
+			/>
 
 			<div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
 				<div className="flex flex-col gap-3 sm:gap-4">

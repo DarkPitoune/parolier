@@ -1,4 +1,4 @@
-import { TextInput } from "@/components";
+import { PageHeader, TextInput } from "@/components";
 import supabase, { type Text, textQuery } from "@/utils/supabase";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -45,20 +45,21 @@ const TextEditor = () => {
 
 	return (
 		<div className="bg-white dark:bg-gray-800 min-h-screen">
-			<div className="flex justify-between fixed left-0 top-0 w-full box-border p-4 bg-jubilateBlue-500 dark:bg-slate-900 z-10">
-				<h2 className="text-2xl text-white font-bold font-flame">
-					Modifier "{text?.title}"
-				</h2>
-				<button
-					type="button"
-					onClick={handleSave}
-					className="bg-jubilateBlue-500 dark:bg-slate-900 text-white font-bold border-2 border-white px-2 py-1 rounded-md shadow-sm hover:bg-white dark:hover:bg-white hover:text-jubilateBlue-500 dark:hover:text-slate-900"
-				>
-					Enregistrer
-				</button>
-			</div>
+			<PageHeader
+				variant="detail"
+				title={`Modifier "${text?.title}"`}
+				right={
+					<button
+						type="button"
+						onClick={handleSave}
+						className="bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white font-bold px-2 py-1 rounded-md shadow-sm hover:bg-jubilateBlue-700 dark:hover:bg-jubilateBlue-500"
+					>
+						Enregistrer
+					</button>
+				}
+			/>
 			{text && (
-				<main className="p-4 pt-20 text-black dark:text-white space-y-4">
+				<main className="p-4 text-black dark:text-white space-y-4">
 					<div className="border p-4 rounded-md border-jubilateBlue-100 dark:border-slate-500">
 						<TextInput
 							label="Titre"

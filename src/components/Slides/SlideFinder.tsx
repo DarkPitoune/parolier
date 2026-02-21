@@ -11,7 +11,7 @@ const SlideFinder = () => {
 	const handleInput = useCallback(
 		(e: React.KeyboardEvent<HTMLInputElement>) => {
 			if (e.key === "Enter") {
-				navigate(`/slides/${inputValue}`);
+				navigate(`/slides/${inputValue}`, { replace: true });
 				setInputVisible(false);
 				setInputValue("");
 			}

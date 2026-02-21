@@ -1,6 +1,7 @@
 import type { Strophe } from "@/assets/types";
 import {
-	BackButton,
+	PageHeader,
+	SettingsSidePanel,
 	SlideViewer,
 	SongPicker,
 	SongPickerInline,
@@ -265,6 +266,15 @@ const PresenterPage = () => {
 				return;
 			}
 
+			// Number keys focus song picker search
+			if (e.key >= "0" && e.key <= "9") {
+				const searchInput = document.getElementById("song-picker-search");
+				if (searchInput) {
+					searchInput.focus();
+					return;
+				}
+			}
+
 			if (e.key === "ArrowRight") {
 				e.preventDefault();
 				if (canGoNext) {
@@ -290,36 +300,39 @@ const PresenterPage = () => {
 	return (
 		<div className="bg-white dark:bg-gray-800 h-screen flex flex-col">
 			{/* Header */}
-			<div className="flex justify-between items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky top-0 bg-white dark:bg-gray-900 z-10">
-				<BackButton />
-				<h1 className="text-2xl font-flame text-jubilateBlue-500 dark:text-jubilateBlue-400">
-					Mode Présentateur
-				</h1>
+			<PageHeader
+				variant="detail"
+				title="Mode Présentateur"
+				right={
+					<>
+						{/* Desktop button */}
+						<button
+							type="button"
+							onClick={openSlideshow}
+							data-testid="launch-slideshow-btn"
+							className="hidden md:flex bg-jubilateBlue-500 hover:bg-jubilateBlue-700 text-white px-4 py-2 rounded-md items-center gap-2"
+						>
+							<PlayIcon className="w-5 h-5" />
+							{slideshowWindow && !slideshowWindow.closed
+								? "Afficher"
+								: "Lancer"}{" "}
+							Diaporama
+						</button>
 
-				{/* Desktop button */}
-				<button
-					type="button"
-					onClick={openSlideshow}
-					data-testid="launch-slideshow-btn"
-					className="hidden md:flex bg-jubilateBlue-500 hover:bg-jubilateBlue-700 text-white px-4 py-2 rounded-md items-center gap-2"
-				>
-					<PlayIcon className="w-5 h-5" />
-					{slideshowWindow && !slideshowWindow.closed ? "Afficher" : "Lancer"}{" "}
-					Diaporama
-				</button>
-
-				{/* Mobile button */}
-				<div className="md:hidden">
-					<button
-						type="button"
-						onClick={() => setShowMobileSongPicker(true)}
-						className="bg-gray-500 hover:bg-gray-700 text-white p-2 rounded-md"
-						title="Choisir un chant"
-					>
-						<MusicalNoteIcon className="w-5 h-5" />
-					</button>
-				</div>
-			</div>
+						{/* Mobile button */}
+						<div className="md:hidden">
+							<button
+								type="button"
+								onClick={() => setShowMobileSongPicker(true)}
+								className="bg-gray-500 hover:bg-gray-700 text-white p-2 rounded-md"
+								title="Choisir un chant"
+							>
+								<MusicalNoteIcon className="w-5 h-5" />
+							</button>
+						</div>
+					</>
+				}
+			/>
 
 			{/* Main Content */}
 			<div className="flex grow min-h-0">
@@ -452,6 +465,7 @@ const PresenterPage = () => {
 			{showMobileSongPicker && (
 				<SongPicker handleClose={handleMobileSongSelect} />
 			)}
+			<SettingsSidePanel />
 		</div>
 	);
 };

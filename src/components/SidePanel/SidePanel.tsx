@@ -1,4 +1,4 @@
-import { darkModeAtom } from "@/components";
+import { isDarkAtom } from "@/components";
 import {
 	Dialog,
 	DialogBackdrop,
@@ -17,7 +17,7 @@ type SidePanelProps = {
 };
 
 function SidePanel({ open, onClose, title, children }: SidePanelProps) {
-	const darkMode = useAtomValue(darkModeAtom);
+	const darkMode = useAtomValue(isDarkAtom);
 
 	return (
 		<Dialog
