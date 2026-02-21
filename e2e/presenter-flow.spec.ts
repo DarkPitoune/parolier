@@ -38,18 +38,16 @@ test.describe("Presenter flow", () => {
 	}) => {
 		await page.goto("/presenter");
 
-		// Set up a song in localStorage to enable navigation
+		// Set up a song in localStorage using new SyncPayload shape
 		await page.evaluate(() => {
 			localStorage.setItem(
 				"parolier_slide_state",
 				JSON.stringify({
-					currentSongId: 1,
-					currentStropheIndex: 0,
-					setlistId: null,
-					stepNumber: null,
-					isLogoSlide: false,
+					mode: "song",
+					songId: 1,
+					stropheIndex: 0,
 					timestamp: Date.now(),
-					source: "test",
+					source: "presenter",
 				}),
 			);
 		});

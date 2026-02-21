@@ -9,6 +9,13 @@ type Payload = {
 	new: Database["public"]["Tables"]["leader_position"]["Row"];
 };
 
+const isOnSlideOrPresenter = (
+	router: ReturnType<typeof createBrowserRouter>,
+) => {
+	const path = router.state.location.pathname;
+	return path.startsWith("/slides") || path.startsWith("/presenter");
+};
+
 const LeaderListener = ({
 	router,
 }: {
@@ -27,6 +34,7 @@ const LeaderListener = ({
 				event: "*",
 			},
 			(payload) => {
+				if (isOnSlideOrPresenter(router)) return;
 				const received = payload as unknown as Payload; // I know what I'm doing
 				router.navigate(`/songs/${received.new.song}`);
 			},
@@ -35,16 +43,17 @@ const LeaderListener = ({
 		return () => {
 			changes.unsubscribe();
 		};
-	}, [router.navigate, leader]);
+	}, [router, leader]);
 
 	useEffect(() => {
 		if (!leader || leader.leading) return;
+		if (isOnSlideOrPresenter(router)) return;
 		getLeaderPositionQuery(leader.id).then((res) => {
 			if (res.data) {
 				router.navigate(`/songs/${res.data.song}`);
 			}
 		});
-	}, [router.navigate, leader]);
+	}, [router, leader]);
 
 	if (!leader) return null;
 

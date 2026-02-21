@@ -1,3 +1,4 @@
+import type { SyncPayload } from "@/hooks/slideReducer";
 import mqtt from "mqtt";
 
 // MQTT Configuration
@@ -9,6 +10,7 @@ const TOPICS = {
 	STROPHE_CHANGE: `${MQTT_TOPIC_PREFIX}/strophe_change`,
 	LOGO_TOGGLE: `${MQTT_TOPIC_PREFIX}/logo_toggle`,
 	SONG_CHANGE: `${MQTT_TOPIC_PREFIX}/song_change`,
+	SLIDE_STATE: `${MQTT_TOPIC_PREFIX}/slide_state`,
 } as const;
 
 // Event payload types
@@ -97,63 +99,61 @@ export const publishSongChange = (payload: SongChangePayload) => {
 	});
 };
 
-// Helper function to subscribe to events
-export const subscribeToEvents = (callbacks: {
-	onStropheChange?: (payload: StropheChangePayload) => void;
-	onLogoToggle?: (payload: LogoTogglePayload) => void;
-	onSongChange?: (payload: SongChangePayload) => void;
-}) => {
+// Unified slide state publish — publishes to new topic + legacy topics for backward compat
+export const publishSlideState = (payload: SyncPayload) => {
+	const client = getMqttClient();
+	client.publish(TOPICS.SLIDE_STATE, JSON.stringify(payload), {
+		qos: 0,
+		retain: true,
+	});
+
+	// Backward compat: also publish to legacy topics so non-updated devices stay in sync
+	if (payload.mode === "song" && payload.songId !== undefined) {
+		publishSongChange({
+			songId: payload.songId,
+			stropheIndex: payload.stropheIndex ?? 0,
+			content: payload.stropheContent,
+		});
+		publishStropheChange({
+			songId: payload.songId,
+			stropheIndex: payload.stropheIndex ?? 0,
+			content: payload.stropheContent,
+		});
+	}
+	if (payload.mode === "logo" || payload.mode === "idle") {
+		publishLogoToggle({
+			isLogoSlide: payload.mode === "logo",
+		});
+	}
+};
+
+// Subscribe to the unified slide state topic
+export const subscribeToSlideState = (
+	callback: (payload: SyncPayload) => void,
+) => {
 	const client = getMqttClient();
 
-	// Subscribe to all topics
-	const topics = Object.values(TOPICS);
-	client.subscribe(topics, { qos: 0 }, (err) => {
+	client.subscribe(TOPICS.SLIDE_STATE, { qos: 0 }, (err) => {
 		if (err) {
-			console.error("[MQTT] Failed to subscribe to MQTT topics:", err);
-		} else {
-			console.log("[MQTT] Subscribed to MQTT topics:", topics);
+			console.error("[MQTT] Failed to subscribe to slide_state:", err);
 		}
 	});
 
-	// Handle incoming messages
 	const messageHandler = (topic: string, message: Buffer) => {
+		if (topic !== TOPICS.SLIDE_STATE) return;
 		try {
-			const payload = JSON.parse(message.toString());
-			console.log("[MQTT] 📨 Received message:", {
-				topic,
-				payload,
-				isRetained: message.length > 0 ? "possibly" : "no",
-			});
-
-			switch (topic) {
-				case TOPICS.STROPHE_CHANGE:
-					console.log("[MQTT] 🔄 Triggering onStropheChange callback");
-					callbacks.onStropheChange?.(payload);
-					break;
-				case TOPICS.LOGO_TOGGLE:
-					console.log("[MQTT] 🎨 Triggering onLogoToggle callback");
-					callbacks.onLogoToggle?.(payload);
-					break;
-				case TOPICS.SONG_CHANGE:
-					console.log("[MQTT] 🎵 Triggering onSongChange callback");
-					callbacks.onSongChange?.(payload);
-					break;
-			}
+			const payload = JSON.parse(message.toString()) as SyncPayload;
+			callback(payload);
 		} catch (error) {
-			console.error("[MQTT] Failed to parse MQTT message:", error);
+			console.error("[MQTT] Failed to parse slide_state message:", error);
 		}
 	};
 
 	client.on("message", messageHandler);
 
-	// Return unsubscribe function
 	return () => {
 		client.off("message", messageHandler);
-		client.unsubscribe(topics, (err) => {
-			if (err) {
-				console.error("Failed to unsubscribe from MQTT topics:", err);
-			}
-		});
+		client.unsubscribe(TOPICS.SLIDE_STATE);
 	};
 };
 

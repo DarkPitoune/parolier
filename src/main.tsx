@@ -22,11 +22,13 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { BackgroundFetchIndicator } from "./components/BackgroundFetchIndicator";
 import { LeaderListener } from "./components/LeaderListener";
 import { OfflineBanner } from "./components/OfflineBanner";
+import { CachePage } from "./pages/CachePage";
 import { TextPage } from "./pages/TextPage";
 import { Texts } from "./pages/Texts";
 import "./index.css";
 import { SetlistPage } from "./pages/SetlistPage";
 import SongEditor from "./pages/SongEditor";
+import { usePrefetchAllSetlistSteps } from "./hooks/queries/useSetlistQueries";
 import { usePrefetchAllSongs } from "./hooks/queries/useSongQueries";
 import { queryClient } from "./utils/queryClient";
 
@@ -120,6 +122,10 @@ const router = createBrowserRouter([
 		element: <PresenterPage />,
 	},
 	{
+		path: "/cache",
+		element: <CachePage />,
+	},
+	{
 		path: "*",
 		element: <img src="https://http.dog/404.jpg" alt="404" />,
 	},
@@ -127,8 +133,9 @@ const router = createBrowserRouter([
 
 if (navigator.storage) navigator.storage.persist(); // our way to tackle long term storage.. let's see how it goes
 
-const PrefetchSongs = () => {
+const PrefetchData = () => {
 	usePrefetchAllSongs();
+	usePrefetchAllSetlistSteps();
 	return null;
 };
 
@@ -137,7 +144,7 @@ const App = () => {
 
 	return (
 		<QueryClientProvider client={queryClient}>
-			<PrefetchSongs />
+			<PrefetchData />
 			<BackgroundFetchIndicator />
 			<Toaster position="bottom-right" />
 			<AuthContextProvider>
