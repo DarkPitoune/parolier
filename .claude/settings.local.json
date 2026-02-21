@@ -8,7 +8,9 @@
       "Bash(pnpm typecheck:*)",
       "Bash(pnpm format:*)",
       "Bash(pnpm test:run:*)",
-      "Bash(pnpm test:*)"
+      "Bash(pnpm test:*)",
+      "Bash(tail:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

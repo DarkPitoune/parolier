@@ -1,6 +1,7 @@
 import type { Strophe } from "@/assets/types";
 import {
 	BackButton,
+	SettingsSidePanel,
 	SlideViewer,
 	SongPicker,
 	SongPickerInline,
@@ -265,6 +266,15 @@ const PresenterPage = () => {
 				return;
 			}
 
+			// Number keys focus song picker search
+			if (e.key >= "0" && e.key <= "9") {
+				const searchInput = document.getElementById("song-picker-search");
+				if (searchInput) {
+					searchInput.focus();
+					return;
+				}
+			}
+
 			if (e.key === "ArrowRight") {
 				e.preventDefault();
 				if (canGoNext) {
@@ -452,6 +462,7 @@ const PresenterPage = () => {
 			{showMobileSongPicker && (
 				<SongPicker handleClose={handleMobileSongSelect} />
 			)}
+			<SettingsSidePanel />
 		</div>
 	);
 };

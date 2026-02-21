@@ -4,7 +4,9 @@ import {
 	fontSizeAtom,
 	settingsOpenAtom,
 	showChordsAtom,
+	themeModeAtom,
 } from "@/components";
+import type { ThemeMode } from "@/components/Contexts/SettingsContext";
 import { leaderAtom, useLeader } from "@/components/Contexts/LeaderContext";
 import {
 	type LeaderPositions,
@@ -12,7 +14,12 @@ import {
 	type TaggedSong,
 } from "@/utils/supabase";
 import { MinusIcon, PlusIcon } from "@heroicons/react/16/solid";
-import { PencilIcon } from "@heroicons/react/24/outline";
+import {
+	ComputerDesktopIcon,
+	MoonIcon,
+	PencilIcon,
+	SunIcon,
+} from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useAtom, useSetAtom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
@@ -41,6 +48,7 @@ function SettingsSidePanel({
 	song?: TaggedSong;
 }) {
 	const setFontSize = useSetAtom(fontSizeAtom);
+	const [themeMode, setThemeMode] = useAtom(themeModeAtom);
 	const [showChords, setShowChords] = useAtom(showChordsAtom);
 	const [isLeaderPanelOpen, setIsLeaderPanelOpenInternal] = useState(true);
 	const [addChorus, setAddChorus] = useAtom(addChorusAtom);
@@ -95,6 +103,36 @@ function SettingsSidePanel({
 					text="Amen de gloire"
 					className="dark:text-white text-center"
 				/>
+			</div>
+
+			<div className="flex flex-col gap-2" aria-label="theme choice">
+				<h1 className="font-flame text-2xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
+					Thème
+				</h1>
+				<div className="flex gap-2 p-1 rounded-full bg-slate-300 dark:bg-slate-700">
+					{(
+						[
+							{ value: "system", label: "Système", Icon: ComputerDesktopIcon },
+							{ value: "light", label: "Clair", Icon: SunIcon },
+							{ value: "dark", label: "Sombre", Icon: MoonIcon },
+						] as const
+					).map(({ value, label, Icon }) => (
+						<button
+							key={value}
+							type="button"
+							onClick={() => setThemeMode(value as ThemeMode)}
+							className={clsx(
+								"flex items-center gap-1 rounded-full px-3 py-1 transition-colors flex-1 justify-center",
+								themeMode === value
+									? "bg-white dark:bg-slate-800"
+									: "bg-transparent",
+							)}
+						>
+							<Icon className="size-4" />
+							<span className="text-sm">{label}</span>
+						</button>
+					))}
+				</div>
 			</div>
 
 			<div className="flex justify-between gap-4" aria-label="chords choice">

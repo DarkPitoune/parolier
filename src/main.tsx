@@ -1,4 +1,5 @@
-import { AuthContextProvider, CornerMenu, darkModeAtom } from "@/components";
+import { AuthContextProvider, CornerMenu, isDarkAtom } from "@/components";
+import { systemPrefersDarkAtom } from "@/components/Contexts/SettingsContext";
 import {
 	Analytics,
 	Bible,
@@ -14,7 +15,7 @@ import {
 import { QueryClientProvider } from "@tanstack/react-query";
 import * as Sentry from "@sentry/react";
 import clsx from "clsx";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import { Toaster } from "react-hot-toast";
@@ -139,8 +140,19 @@ const PrefetchData = () => {
 	return null;
 };
 
+const useSystemThemeSync = () => {
+	const setSystemPrefersDark = useSetAtom(systemPrefersDarkAtom);
+	React.useEffect(() => {
+		const mq = window.matchMedia("(prefers-color-scheme: dark)");
+		const handler = (e: MediaQueryListEvent) => setSystemPrefersDark(e.matches);
+		mq.addEventListener("change", handler);
+		return () => mq.removeEventListener("change", handler);
+	}, [setSystemPrefersDark]);
+};
+
 const App = () => {
-	const darkMode = useAtomValue(darkModeAtom);
+	const darkMode = useAtomValue(isDarkAtom);
+	useSystemThemeSync();
 
 	return (
 		<QueryClientProvider client={queryClient}>

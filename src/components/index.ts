@@ -1,7 +1,8 @@
 export { DynamicText } from "./DynamicText";
 export {
 	fontSizeAtom,
-	darkModeAtom,
+	themeModeAtom,
+	isDarkAtom,
 	addChorusAtom,
 	showChordsAtom,
 	slideHelpAtom,

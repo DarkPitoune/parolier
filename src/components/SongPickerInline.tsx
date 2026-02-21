@@ -81,6 +81,7 @@ const SongPickerInline = ({ onSongSelect }: SongPickerInlineProps) => {
 				</h2>
 				<div className="px-4 pb-3">
 					<input
+						id="song-picker-search"
 						placeholder="Rechercher un chant..."
 						className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 text-black dark:text-white outline-none rounded border border-gray-200 dark:border-gray-600 focus:border-jubilateBlue-500 dark:focus:border-jubilateBlue-400"
 						type="text"

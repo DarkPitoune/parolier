@@ -83,7 +83,8 @@ export const newSongMutation = async (title: string) =>
 		.single();
 export type NewSongMutation = QueryData<ReturnType<typeof newSongMutation>>;
 
-export const allSetlistsQuery = async () => supabase.from("setlists").select();
+export const allSetlistsQuery = async () =>
+	supabase.from("setlists").select().order("created_at", { ascending: false });
 export type AllSetlists = QueryData<ReturnType<typeof allSetlistsQuery>>;
 
 export const setlistNameMutation = async (setlistId: string, name: string) =>

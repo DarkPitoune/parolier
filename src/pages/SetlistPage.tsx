@@ -75,7 +75,7 @@ function SetlistPage() {
 			<div className="flex justify-between items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky bg-white dark:bg-gray-900">
 				<BackButton />
 				<h3 className="text-xl lg:text-3xl font-flame text-jubilateBlue-500 dark:text-jubilateBlue-400">
-					{setlist ? setlist[0]?.setlists?.name : "Loading..."}
+					{setlist ? setlist[0]?.setlists?.name : "Chargement..."}
 				</h3>
 				<div className="flex items-center gap-2">
 					<Link

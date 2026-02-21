@@ -1,4 +1,5 @@
-import { BackButton } from "@/components";
+import { SettingsSidePanel } from "@/components";
+import { ChevronLeftIcon } from "@heroicons/react/16/solid";
 import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel/NavigationSidePanel";
 import { useAllSetlists } from "@/hooks/queries/useSetlistQueries";
 import { queryKeys } from "@/utils/queryKeys";
@@ -42,7 +43,12 @@ const Setlists = () => {
   return (
     <div className="bg-white dark:bg-gray-800 text-black dark:text-white">
       <div className="bg-jubilateBlue-500 dark:bg-slate-900 px-6 py-4 flex justify-between items-center">
-        <BackButton />
+        <Link
+          to="/"
+          className="rounded-full hover:bg-jubilateBlue-100 dark:hover:bg-slate-800"
+        >
+          <ChevronLeftIcon className="w-10 fill-white" />
+        </Link>
         <h1 className="font-flame text-xl lg:text-3xl text-white">Setlists</h1>
         <button type="button" onClick={() => setIsNavigationPanelOpen(true)}>
           <img className="h-12" src="/svg/logo.svg" alt="Logo" />
@@ -84,6 +90,7 @@ const Setlists = () => {
             : "Créer une setlist"}
         </button>
       </div>
+      <SettingsSidePanel />
     </div>
   );
 };
