@@ -342,6 +342,7 @@ const PresenterPage = () => {
 				<button
 					type="button"
 					onClick={openSlideshow}
+					data-testid="launch-slideshow-btn"
 					className="hidden md:flex bg-jubilateBlue-500 hover:bg-jubilateBlue-700 text-white px-4 py-2 rounded-md items-center gap-2"
 				>
 					<PlayIcon className="w-5 h-5" />
@@ -462,6 +463,7 @@ const PresenterPage = () => {
 									prevStrophe(prevStropheContent);
 								}}
 								disabled={!canGoPrev}
+								data-testid="prev-strophe-btn"
 								className="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-4 rounded-full transition-colors"
 								title="Précédent (←)"
 							>
@@ -499,6 +501,7 @@ const PresenterPage = () => {
 									nextStrophe(nextStropheContent);
 								}}
 								disabled={!canGoNext}
+								data-testid="next-strophe-btn"
 								className="bg-jubilateBlue-500 hover:bg-jubilateBlue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-4 rounded-full transition-colors"
 								title="Suivant (→)"
 							>

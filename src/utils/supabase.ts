@@ -26,10 +26,7 @@ export const taggedSongQuery = async (songId: number) =>
 export type TaggedSong = QueryData<ReturnType<typeof taggedSongQuery>>;
 
 export const allTaggedSongsQuery = async () =>
-	supabase
-		.from("songs")
-		.select("*, tags(name, id, svg, color)")
-		.order("id");
+	supabase.from("songs").select("*, tags(name, id, svg, color)").order("id");
 export type AllTaggedSongs = QueryData<ReturnType<typeof allTaggedSongsQuery>>;
 
 export const allTagsQuery = async () => supabase.from("tags").select();

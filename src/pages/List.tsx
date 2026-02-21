@@ -235,11 +235,13 @@ function Index() {
 			<div
 				className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300 dark:bg-gray-800 print:block print:p-0"
 				style={{ columnCount: 2 }}
+				data-testid="song-list"
 			>
 				{filteredSongs.filter(isCorrectTag).map((song, index) => (
 					<Link
 						key={song.id}
 						to={`/songs/${song.id}`}
+						data-testid={`song-link-${song.id}`}
 						className={
 							index === selectedSongIndex ? "bg-gray-300 dark:bg-slate-700" : ""
 						}
