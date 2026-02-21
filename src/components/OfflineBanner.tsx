@@ -14,7 +14,10 @@ export const OfflineBanner = () => {
 	if (status !== "offline") return null;
 
 	return (
-		<div className="sticky top-0 bg-gray-700 text-white text-center text-sm py-1 z-50 h-6">
+		<div
+			data-testid="offline-banner"
+			className="sticky top-0 bg-gray-700 text-white text-center text-sm py-1 z-50 h-6"
+		>
 			Mode hors-ligne — données en cache
 		</div>
 	);

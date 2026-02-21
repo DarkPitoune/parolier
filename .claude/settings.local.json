@@ -6,7 +6,8 @@
       "WebFetch(domain:bible-api-lovat.vercel.app)",
       "Bash(pnpm lint:*)",
       "Bash(pnpm typecheck:*)",
-      "Bash(pnpm format:*)"
+      "Bash(pnpm format:*)",
+      "Bash(pnpm test:run:*)"
     ],
     "deny": [],
     "ask": []

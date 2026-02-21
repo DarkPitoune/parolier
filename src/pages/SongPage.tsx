@@ -31,7 +31,7 @@ function SongPage() {
 	if (!song) return null;
 
 	return (
-		<div>
+		<div data-testid="song-page">
 			<div className="flex justify-between items-center py-2 md:py-4 px-2 md:px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 sticky bg-white dark:bg-gray-900 top-0">
 				<BackButton />
 
