@@ -27,6 +27,7 @@ import { Texts } from "./pages/Texts";
 import "./index.css";
 import { SetlistPage } from "./pages/SetlistPage";
 import SongEditor from "./pages/SongEditor";
+import { usePrefetchAllSongs } from "./hooks/queries/useSongQueries";
 import { queryClient } from "./utils/queryClient";
 
 Sentry.init({
@@ -127,13 +128,18 @@ const router = createBrowserRouter([
 
 if (navigator.storage) navigator.storage.persist(); // our way to tackle long term storage.. let's see how it goes
 
+const PrefetchSongs = () => {
+	usePrefetchAllSongs();
+	return null;
+};
+
 const App = () => {
 	const darkMode = useAtomValue(darkModeAtom);
 
 	return (
 		<QueryClientProvider client={queryClient}>
+			<PrefetchSongs />
 			<BackgroundFetchIndicator />
-			<OfflineBanner />
 			<Toaster position="bottom-right" />
 			<AuthContextProvider>
 				<div
@@ -143,6 +149,7 @@ const App = () => {
 					)}
 				>
 					<main>
+						<OfflineBanner />
 						<LeaderListener router={router} />
 						<RouterProvider router={router} />
 						<CornerMenu />

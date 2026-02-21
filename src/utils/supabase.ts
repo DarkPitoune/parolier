@@ -25,6 +25,13 @@ export const taggedSongQuery = async (songId: number) =>
 		.single();
 export type TaggedSong = QueryData<ReturnType<typeof taggedSongQuery>>;
 
+export const allTaggedSongsQuery = async () =>
+	supabase
+		.from("songs")
+		.select("*, tags(name, id, svg, color)")
+		.order("id");
+export type AllTaggedSongs = QueryData<ReturnType<typeof allTaggedSongsQuery>>;
+
 export const allTagsQuery = async () => supabase.from("tags").select();
 export type Tags = QueryData<ReturnType<typeof allTagsQuery>>;
 
@@ -152,7 +159,9 @@ export type SetlistItemAppendMutation = QueryData<
 export const newSetlistMutation = async () =>
 	supabase
 		.from("setlists")
-		.insert({ name: `Soirée prière du ${new Date().toLocaleDateString()}` });
+		.insert({ name: `Soirée prière du ${new Date().toLocaleDateString()}` })
+		.select()
+		.single();
 export type NewSetlistMutation = QueryData<
 	ReturnType<typeof newSetlistMutation>
 >;

@@ -18,9 +18,12 @@ const notifyListeners = (status: ConnectivityStatus) => {
 	}
 };
 
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
 /**
  * Probes Supabase directly (not favicon which local router may serve)
  * with a 2-second timeout to detect "WiFi without internet".
+ * Uses a GET with apikey header since HEAD returns 401 on Supabase REST.
  */
 const probeConnectivity = async (): Promise<boolean> => {
 	if (!navigator.onLine) return false;
@@ -29,12 +32,17 @@ const probeConnectivity = async (): Promise<boolean> => {
 		const controller = new AbortController();
 		const timeoutId = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
 
-		// Use the Supabase health endpoint — lightweight and confirms real connectivity
-		const response = await fetch(`${supabaseUrl}/rest/v1/`, {
-			method: "HEAD",
-			cache: "no-store",
-			signal: controller.signal,
-		});
+		const response = await fetch(
+			`${supabaseUrl}/rest/v1/songs?select=id&limit=1`,
+			{
+				method: "GET",
+				cache: "no-store",
+				signal: controller.signal,
+				headers: {
+					apikey: supabaseKey,
+				},
+			},
+		);
 
 		clearTimeout(timeoutId);
 		return response.ok;

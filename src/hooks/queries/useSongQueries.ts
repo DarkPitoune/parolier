@@ -1,6 +1,12 @@
 import { queryKeys } from "@/utils/queryKeys";
-import { allSongsQuery, allTagsQuery, taggedSongQuery } from "@/utils/supabase";
-import { useQuery } from "@tanstack/react-query";
+import {
+	allSongsQuery,
+	allTaggedSongsQuery,
+	allTagsQuery,
+	taggedSongQuery,
+} from "@/utils/supabase";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 export const useAllSongs = () =>
 	useQuery({
@@ -38,3 +44,36 @@ export const useAllTags = () =>
 		staleTime: 5 * 60 * 1000,
 		gcTime: 24 * 60 * 60 * 1000,
 	});
+
+/**
+ * Prefetches all song details in a single batch query and seeds
+ * each individual song into the TanStack Query cache.
+ * Call once at app startup — runs silently in background.
+ */
+export const usePrefetchAllSongs = () => {
+	const queryClient = useQueryClient();
+
+	useEffect(() => {
+		const prefetch = async () => {
+			try {
+				const { data, error } = await allTaggedSongsQuery();
+				if (error || !data) return;
+
+				// Seed each song into the individual detail cache
+				for (const song of data) {
+					queryClient.setQueryData(queryKeys.songs.detail(song.id), song);
+				}
+
+				// Also seed the list cache (stripped to list fields)
+				queryClient.setQueryData(
+					queryKeys.songs.list(),
+					data.map(({ id, title, tags }) => ({ id, title, tags })),
+				);
+			} catch {
+				// Silent failure — offline or bad network, SW cache will serve
+			}
+		};
+
+		prefetch();
+	}, [queryClient]);
+};
