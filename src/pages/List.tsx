@@ -6,12 +6,8 @@ import {
 import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
 import { getSongItemId } from "@/components/SongItem";
 import { TagChip } from "@/components/TagChip";
-import supabase, {
-	type AllSongs,
-	allSongsQuery,
-	allTagsQuery,
-	type Tags,
-} from "@/utils/supabase";
+import { useAllSongs, useAllTags } from "@/hooks/queries/useSongQueries";
+import supabase, { type AllSongs } from "@/utils/supabase";
 import {
 	ChevronRightIcon,
 	MagnifyingGlassIcon,
@@ -30,9 +26,19 @@ import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 
 function Index() {
-	const [songs, setSongs] = useState<AllSongs>([]);
+	const { data: songsData } = useAllSongs();
+	const { data: tagsData } = useAllTags();
+
+	const songs = useMemo(
+		() => (songsData ? [...songsData].sort((a, b) => a.id - b.id) : []),
+		[songsData],
+	);
+	const tags = useMemo(
+		() => (tagsData ? [...tagsData].sort((a, b) => a.id - b.id) : []),
+		[tagsData],
+	);
+
 	const [filteredSongs, setFilteredSongs] = useState<AllSongs>([]);
-	const [tags, setTags] = useState<Tags>([]);
 	const [selectedTags, setSelectedTags] = useAtom<number[]>(filtersAtom);
 	const [tagTabOpen, setTagTabOpen] = useAtom(tagTabOpenAtom);
 	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
@@ -43,29 +49,20 @@ function Index() {
 	const fuse = useMemo(() => new Fuse(songs, { keys: ["title"] }), [songs]);
 	const { leader } = useLeader();
 
+	// Sync filteredSongs when songs data loads/changes
+	useEffect(() => {
+		if (songs.length > 0) {
+			setFilteredSongs(songs);
+			fuse.setCollection(songs);
+		}
+	}, [songs, fuse]);
+
 	const toggleTag = (id: number) => {
 		setSelectedTags((oldTags) => {
 			if (!oldTags.includes(id)) return oldTags.concat([id]);
 			return oldTags.filter((tagId) => tagId !== id);
 		});
 	};
-
-	useEffect(() => {
-		allSongsQuery().then(({ data }) => {
-			if (data && data.length > 0) {
-				data.sort((a, b) => a.id - b.id);
-				setSongs(data);
-				setFilteredSongs(data);
-				fuse.setCollection(data);
-			}
-		});
-		allTagsQuery().then(({ data }) => {
-			if (data && data.length > 0) {
-				data.sort((a, b) => a.id - b.id);
-				setTags(data);
-			}
-		});
-	}, [fuse.setCollection]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we want to scroll AFTER the songs are loaded in the DOM
 	useEffect(() => {

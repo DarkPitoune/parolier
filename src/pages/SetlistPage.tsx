@@ -1,32 +1,30 @@
 import { BackButton, DynamicText, SongViewer } from "@/components";
 import SwipeableTabs, { type Tab } from "@/components/SwipeableTabs";
-import { type Setlist, setlistQuery } from "@/utils/supabase";
+import { useSetlist } from "@/hooks/queries/useSetlistQueries";
 import {
 	ComputerDesktopIcon,
 	PresentationChartLineIcon,
 } from "@heroicons/react/24/solid";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 function SetlistPage() {
 	const { setlistId } = useParams();
 
-	const [setlist, setSetlist] = useState<Setlist | null>(null);
+	const { data: setlistData } = useSetlist(setlistId);
+	const setlist = useMemo(
+		() =>
+			setlistData
+				? [...setlistData].sort((a, b) => a.position - b.position)
+				: null,
+		[setlistData],
+	);
 
 	const [activeTab, setActiveTab] = useState(0);
 
 	const handleChangeTab = (index: number) => {
 		setActiveTab(index);
 	};
-
-	useEffect(() => {
-		if (setlistId)
-			setlistQuery(setlistId).then(({ data }) => {
-				if (data) data.sort((a, b) => a.position - b.position);
-				setSetlist(data);
-			});
-		// evenuellement remettre les analytics
-	}, [setlistId]);
 
 	const tabs: Tab[] = (setlist ?? [])
 		.map((item) => {

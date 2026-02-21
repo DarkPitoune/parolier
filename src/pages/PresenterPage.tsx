@@ -5,14 +5,15 @@ import {
 	SongPicker,
 	SongPickerInline,
 } from "@/components";
+import {
+	useSetlistLength,
+	useSetlistStep,
+} from "@/hooks/queries/useSetlistQueries";
+import { useTaggedSong } from "@/hooks/queries/useSongQueries";
 import { useMqttConnectionStatus } from "@/hooks/useMqttConnectionStatus";
 import { useSlideController } from "@/hooks/useSlideController";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import {
-	setlistLengthQuery,
-	taggedSongFromSetlistStepQuery,
-	taggedSongQuery,
-} from "@/utils/supabase";
+import { taggedSongQuery } from "@/utils/supabase";
 import {
 	ChevronLeftIcon,
 	ChevronRightIcon,
@@ -27,7 +28,6 @@ import { useParams } from "react-router-dom";
 const PresenterPage = () => {
 	const { setlistId, stepNumber } = useParams();
 	const [strophes, setStrophes] = useState<Strophe[]>([]);
-	const [setlistLength, setSetlistLength] = useState(0);
 	const [slideshowWindow, setSlideshowWindow] = useState<Window | null>(null);
 	const [showMobileSongPicker, setShowMobileSongPicker] = useState(false);
 
@@ -47,48 +47,39 @@ const PresenterPage = () => {
 	// Keep screen awake during presentation
 	useWakeLock();
 
-	// Load setlist length if in setlist context
-	useEffect(() => {
-		if (setlistId)
-			setlistLengthQuery(setlistId).then(({ data }) => {
-				if (data) setSetlistLength(data[0].position);
-			});
-	}, [setlistId]);
+	// Load setlist length via query
+	const { data: setlistLength = 0 } = useSetlistLength(setlistId);
 
-	// Load initial song from URL params
-	useEffect(() => {
-		if (setlistId && stepNumber) {
-			taggedSongFromSetlistStepQuery(setlistId, Number(stepNumber)).then(
-				({ data }) => {
-					if (data?.songs) {
-						setStrophes(data.songs.strophes);
-						navigateToSong(data.songs.id, setlistId, Number(stepNumber));
-						toast.success(`Loaded: ${data.songs.title}`, {
-							position: "top-center",
-						});
-					}
-				},
-			);
-		}
-	}, [setlistId, stepNumber, navigateToSong]);
+	// Load initial song from URL params via query
+	const { data: stepData } = useSetlistStep(
+		setlistId,
+		stepNumber ? Number(stepNumber) : undefined,
+	);
 
-	// Load strophes when current song changes
+	// Navigate to initial setlist step song when data loads
 	useEffect(() => {
-		if (currentSongId) {
-			taggedSongQuery(currentSongId).then(({ data, error }) => {
-				if (data?.strophes) {
-					setStrophes(data.strophes);
-				} else {
-					setStrophes([]);
-					const errorMessage =
-						error?.code === "PGRST116"
-							? "Song not found!"
-							: "Internet connection required";
-					toast.error(errorMessage);
-				}
+		if (stepData?.songs) {
+			setStrophes(stepData.songs.strophes);
+			navigateToSong(stepData.songs.id, setlistId, Number(stepNumber));
+			toast.success(`Loaded: ${stepData.songs.title}`, {
+				position: "top-center",
 			});
 		}
-	}, [currentSongId]);
+	}, [stepData, setlistId, stepNumber, navigateToSong]);
+
+	// Load strophes when current song changes (via song picker / MQTT)
+	const { data: currentSongData, error: currentSongError } = useTaggedSong(
+		currentSongId ?? undefined,
+	);
+
+	useEffect(() => {
+		if (currentSongData?.strophes) {
+			setStrophes(currentSongData.strophes);
+		} else if (currentSongId && currentSongError) {
+			setStrophes([]);
+			toast.error("Internet connection required");
+		}
+	}, [currentSongData, currentSongError, currentSongId]);
 
 	// Launch slideshow window
 	const openSlideshow = useCallback(async () => {
@@ -233,9 +224,31 @@ const PresenterPage = () => {
 
 	// Handle song selection from inline picker
 	const handleSongSelect = useCallback(
-		(songId: number) => {
+		async (songId: number) => {
+			console.log(
+				"[PresenterPage] 🎵 Song selected, fetching strophes for MQTT broadcast",
+			);
+
+			// Fetch the song to get first strophe content for MQTT broadcast
+			const { data } = await taggedSongQuery(songId);
+			const firstStrophe = data?.strophes?.[0];
+
+			// Extract content only if it's a verse/chorus/bridge (not a section)
+			const firstStropheContent =
+				firstStrophe &&
+				firstStrophe.type !== "section" &&
+				Array.isArray(firstStrophe.content)
+					? firstStrophe.content
+					: undefined;
+
 			// Preserve logo slide state when changing songs in presenter mode
-			navigateToSong(songId, undefined, undefined, isLogoSlide);
+			navigateToSong(
+				songId,
+				undefined,
+				undefined,
+				isLogoSlide,
+				firstStropheContent,
+			);
 		},
 		[navigateToSong, isLogoSlide],
 	);

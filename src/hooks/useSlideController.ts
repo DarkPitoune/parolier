@@ -27,6 +27,8 @@ const getInitialState = (): SlideState => ({
 	source: "initial",
 });
 
+type StropheContent = Array<{ text: string; chords?: string }>;
+
 export const useSlideController = (
 	source = "unknown",
 	enableNetworkBroadcast = false,
@@ -38,65 +40,62 @@ export const useSlideController = (
 
 	const updateSlideState = useCallback(
 		(
-			updates: Partial<SlideState>,
+			updatesOrFn:
+				| Partial<SlideState>
+				| ((prev: SlideState) => Partial<SlideState>),
 			broadcastToNetwork = false,
-			stropheContent?: Array<{ text: string; chords?: string }>,
+			stropheContent?: StropheContent,
 		) => {
-			console.log("[SlideController] 📝 updateSlideState called:", {
-				source,
-				updates,
-				broadcastToNetwork,
-				enableNetworkBroadcast,
-				willBroadcast: enableNetworkBroadcast && broadcastToNetwork,
-			});
+			setSlideState((prev) => {
+				const updates =
+					typeof updatesOrFn === "function" ? updatesOrFn(prev) : updatesOrFn;
 
-			const newState = {
-				...slideState,
-				...updates,
-				timestamp: Date.now(),
-				source,
-			};
-			setSlideState(newState);
-			localStorage.setItem(SLIDE_STATE_KEY, JSON.stringify(newState));
+				const newState = {
+					...prev,
+					...updates,
+					timestamp: Date.now(),
+					source,
+				};
+				localStorage.setItem(SLIDE_STATE_KEY, JSON.stringify(newState));
 
-			// Broadcast to network if enabled and requested
-			if (enableNetworkBroadcast && broadcastToNetwork) {
-				console.log("[SlideController] 📡 Broadcasting to MQTT network");
-				try {
-					// Send absolute strophe position for network sync
-					if (updates.currentStropheIndex !== undefined) {
-						console.log("[SlideController] 📡 Publishing strophe change");
-						publishStropheChange({
-							songId: updates.currentSongId ?? slideState.currentSongId ?? 0,
-							stropheIndex: updates.currentStropheIndex,
-							content: stropheContent,
-						});
-					}
-
-					// Send logo toggle events
-					if (updates.isLogoSlide !== undefined) {
-						console.log("[SlideController] 📡 Publishing logo toggle");
-						publishLogoToggle({ isLogoSlide: updates.isLogoSlide });
-					}
-
-					// Send song change events
-					if (
-						updates.currentSongId !== undefined &&
-						updates.currentSongId !== null
-					) {
-						console.log("[SlideController] 📡 Publishing song change");
-						publishSongChange({
-							songId: updates.currentSongId,
-							stropheIndex: updates.currentStropheIndex || 0,
-							content: stropheContent,
-						});
-					}
-				} catch (error) {
-					console.error("[SlideController] Failed to broadcast to network:", error);
+				if (enableNetworkBroadcast && broadcastToNetwork) {
+					queueMicrotask(() => {
+						try {
+							if (updates.currentStropheIndex !== undefined) {
+								publishStropheChange({
+									songId: updates.currentSongId ?? newState.currentSongId ?? 0,
+									stropheIndex: updates.currentStropheIndex,
+									content: stropheContent,
+								});
+							}
+							if (updates.isLogoSlide !== undefined) {
+								publishLogoToggle({
+									isLogoSlide: updates.isLogoSlide,
+								});
+							}
+							if (
+								updates.currentSongId !== undefined &&
+								updates.currentSongId !== null
+							) {
+								publishSongChange({
+									songId: updates.currentSongId,
+									stropheIndex: updates.currentStropheIndex || 0,
+									content: stropheContent,
+								});
+							}
+						} catch (error) {
+							console.error(
+								"[SlideController] Failed to broadcast to network:",
+								error,
+							);
+						}
+					});
 				}
-			}
+
+				return newState;
+			});
 		},
-		[slideState, source, enableNetworkBroadcast],
+		[source, enableNetworkBroadcast],
 	);
 
 	const clearSlideState = useCallback(() => {
@@ -110,15 +109,7 @@ export const useSlideController = (
 		const handleStorageChange = (e: StorageEvent) => {
 			if (e.key === SLIDE_STATE_KEY && e.newValue) {
 				const newState = JSON.parse(e.newValue);
-				console.log("[SlideController] 💾 localStorage changed:", {
-					currentSource: source,
-					newStateSource: newState.source,
-					willUpdate: newState.source !== source,
-					newState,
-				});
-				// Only update if the change came from another source
 				if (newState.source !== source) {
-					console.log("[SlideController] ⚡ Updating state from localStorage");
 					setSlideState(newState);
 				}
 			}
@@ -134,16 +125,8 @@ export const useSlideController = (
 			setlistId?: string,
 			stepNumber?: number,
 			preserveLogoSlide = false,
-			stropheContent?: Array<{ text: string; chords?: string }>,
+			stropheContent?: StropheContent,
 		) => {
-			console.log("[SlideController] 🎵 navigateToSong called:", {
-				songId,
-				setlistId,
-				stepNumber,
-				preserveLogoSlide,
-				currentSongId: slideState.currentSongId,
-			});
-
 			const updates: Partial<SlideState> = {
 				currentSongId: songId,
 				currentStropheIndex: 0,
@@ -151,14 +134,13 @@ export const useSlideController = (
 				stepNumber: stepNumber || null,
 			};
 
-			// Only reset logo slide if not preserving it
 			if (!preserveLogoSlide) {
 				updates.isLogoSlide = false;
 			}
 
-			updateSlideState(updates, true, stropheContent); // Broadcast to network
+			updateSlideState(updates, true, stropheContent);
 		},
-		[updateSlideState, slideState.currentSongId],
+		[updateSlideState],
 	);
 
 	const navigateToStrophe = useCallback(
@@ -172,39 +154,34 @@ export const useSlideController = (
 	);
 
 	const nextStrophe = useCallback(
-		(stropheContent?: Array<{ text: string; chords?: string }>) => {
+		(stropheContent?: StropheContent) => {
 			updateSlideState(
-				{
-					currentStropheIndex: slideState.currentStropheIndex + 1,
-				},
+				(prev) => ({
+					currentStropheIndex: prev.currentStropheIndex + 1,
+				}),
 				true,
 				stropheContent,
-			); // Broadcast to network
+			);
 		},
-		[updateSlideState, slideState.currentStropheIndex],
+		[updateSlideState],
 	);
 
 	const prevStrophe = useCallback(
-		(stropheContent?: Array<{ text: string; chords?: string }>) => {
+		(stropheContent?: StropheContent) => {
 			updateSlideState(
-				{
-					currentStropheIndex: Math.max(0, slideState.currentStropheIndex - 1),
-				},
+				(prev) => ({
+					currentStropheIndex: Math.max(0, prev.currentStropheIndex - 1),
+				}),
 				true,
 				stropheContent,
-			); // Broadcast to network
+			);
 		},
-		[updateSlideState, slideState.currentStropheIndex],
+		[updateSlideState],
 	);
 
 	const toggleLogoSlide = useCallback(() => {
-		updateSlideState(
-			{
-				isLogoSlide: !slideState.isLogoSlide,
-			},
-			true,
-		); // Broadcast to network
-	}, [updateSlideState, slideState.isLogoSlide]);
+		updateSlideState((prev) => ({ isLogoSlide: !prev.isLogoSlide }), true);
+	}, [updateSlideState]);
 
 	return {
 		slideState,

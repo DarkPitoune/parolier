@@ -1,22 +1,12 @@
-import { loadAllSongsData } from "@/utils/supabase";
-import { ArrowPathIcon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
+import { MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useAtom } from "jotai";
-import { useCallback, useEffect, useRef, useState } from "react";
-import toast from "react-hot-toast";
+import { useEffect, useRef, useState } from "react";
 import { darkModeAtom } from "./Contexts/SettingsContext";
 import { SettingsButton } from "./SettingsButton";
 
 export const CornerMenu = () => {
 	const [darkMode, setDarkMode] = useAtom(darkModeAtom);
-
-	const loadAllSongs = useCallback(async () => {
-		toast.promise(loadAllSongsData(), {
-			loading: "Chargement...",
-			success: "Liste mise à jour",
-			error: "Connexion à internet requise",
-		});
-	}, []);
 
 	const [isExpanded, setIsExpanded] = useState(false);
 	const wrapperRef = useRef<HTMLDivElement>(null);
@@ -60,16 +50,6 @@ export const CornerMenu = () => {
 			>
 				<img src="/svg/Jubilate_Croix.svg" alt="logo" className="size-10" />
 
-				<button
-					onClick={loadAllSongs}
-					type="button"
-					className={clsx(
-						"bg-jubilateGreen absolute top-2 z-1 size-12 rounded-full transition-all -z-10 flex items-center justify-center",
-						isExpanded ? "-left-20" : "left-2",
-					)}
-				>
-					<ArrowPathIcon color="white" className="size-8" />
-				</button>
 				<SettingsButton isExpanded={isExpanded} />
 				<button
 					onClick={() => setDarkMode(!darkMode)}

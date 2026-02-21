@@ -96,9 +96,7 @@ function Bible() {
 			} else if (query.length < 3) {
 				// For short queries, only search book names
 				setFilteredBooks(
-					books.filter((book) =>
-						book.toLowerCase().includes(query),
-					),
+					books.filter((book) => book.toLowerCase().includes(query)),
 				);
 				setSearchResults([]);
 			} else {
@@ -106,7 +104,9 @@ function Bible() {
 				const results: BibleVerse[] = [];
 				for (const book of books) {
 					for (const chapter of Object.keys(bible[book] || {})) {
-						for (const [verseNum, text] of Object.entries(bible[book][chapter] || {})) {
+						for (const [verseNum, text] of Object.entries(
+							bible[book][chapter] || {},
+						)) {
 							if (text.toLowerCase().includes(query)) {
 								results.push({
 									book,
@@ -120,9 +120,7 @@ function Bible() {
 				}
 				setSearchResults(results.slice(0, 50)); // Limit to 50 results
 				setFilteredBooks(
-					books.filter((book) =>
-						book.toLowerCase().includes(query),
-					),
+					books.filter((book) => book.toLowerCase().includes(query)),
 				);
 			}
 		},
@@ -261,7 +259,9 @@ function Bible() {
 							<div>
 								{Number(selectedChapter) > 1 && (
 									<button
-										onClick={() => selectChapter(String(Number(selectedChapter) - 1))}
+										onClick={() =>
+											selectChapter(String(Number(selectedChapter) - 1))
+										}
 										className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition"
 										type="button"
 									>
@@ -272,7 +272,9 @@ function Bible() {
 							<div>
 								{Number(selectedChapter) < chapters.length && (
 									<button
-										onClick={() => selectChapter(String(Number(selectedChapter) + 1))}
+										onClick={() =>
+											selectChapter(String(Number(selectedChapter) + 1))
+										}
 										className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition"
 										type="button"
 									>
@@ -301,19 +303,19 @@ function Bible() {
 										{verse.book} {verse.chapter}:{verse.verse}
 									</span>
 								</div>
-								<p className="text-gray-800 dark:text-gray-200">
-									{verse.text}
-								</p>
+								<p className="text-gray-800 dark:text-gray-200">{verse.text}</p>
 							</a>
 						))}
 					</div>
 				)}
 
-				{filteredBooks.length === 0 && searchValue && searchResults.length === 0 && (
-					<div className="px-2 py-8 text-center text-gray-500 dark:text-gray-400">
-						Aucun résultat trouvé pour "{searchValue}"
-					</div>
-				)}
+				{filteredBooks.length === 0 &&
+					searchValue &&
+					searchResults.length === 0 && (
+						<div className="px-2 py-8 text-center text-gray-500 dark:text-gray-400">
+							Aucun résultat trouvé pour "{searchValue}"
+						</div>
+					)}
 			</div>
 		</div>
 	);
