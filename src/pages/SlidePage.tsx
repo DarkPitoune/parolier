@@ -330,6 +330,9 @@ const SlidePage = () => {
 						key={`${songId || stepNumber}-${currentStropheIndex}`}
 						strophe={strophes[currentStropheIndex]}
 					/>
+					{currentStropheIndex === strophes.length - 1 && (
+						<div className="absolute bottom-4 right-4 size-3 rounded-full bg-white opacity-60" />
+					)}
 					<div className="absolute inset-0 flex items-stretch justify-stretch">
 						<div className="grow" onTouchStart={handlePrevStrophe} />
 						<div className="grow" onTouchStart={handleNextStrophe} />

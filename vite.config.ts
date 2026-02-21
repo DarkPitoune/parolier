@@ -486,7 +486,7 @@ const manifest: Partial<VitePWAOptions> = {
         urlPattern: ({ url }) =>
           url.href.includes("/rest/v1/") &&
           !url.href.includes("/rest/v1/analytics"), // Match Supabase REST API calls but exclude analytics
-        handler: "CacheFirst",
+        handler: "StaleWhileRevalidate",
         options: {
           cacheName: "supabase-api-cache",
           expiration: {

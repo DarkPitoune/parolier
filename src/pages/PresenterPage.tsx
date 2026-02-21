@@ -233,9 +233,21 @@ const PresenterPage = () => {
 
 	// Handle song selection from inline picker
 	const handleSongSelect = useCallback(
-		(songId: number) => {
+		async (songId: number) => {
+			console.log("[PresenterPage] 🎵 Song selected, fetching strophes for MQTT broadcast");
+
+			// Fetch the song to get first strophe content for MQTT broadcast
+			const { data } = await taggedSongQuery(songId);
+			const firstStrophe = data?.strophes?.[0];
+
+			// Extract content only if it's a verse/chorus/bridge (not a section)
+			const firstStropheContent =
+				firstStrophe && firstStrophe.type !== "section" && Array.isArray(firstStrophe.content)
+					? firstStrophe.content
+					: undefined;
+
 			// Preserve logo slide state when changing songs in presenter mode
-			navigateToSong(songId, undefined, undefined, isLogoSlide);
+			navigateToSong(songId, undefined, undefined, isLogoSlide, firstStropheContent);
 		},
 		[navigateToSong, isLogoSlide],
 	);

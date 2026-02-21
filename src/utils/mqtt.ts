@@ -48,21 +48,14 @@ export const getMqttClient = (): mqtt.MqttClient => {
 
 		mqttClient.on("error", (error) => {
 			console.error("MQTT connection error:", error);
-			reconnectAttempts++;
+		});
 
-			// Stop reconnecting after max attempts
+		mqttClient.on("reconnect", () => {
+			reconnectAttempts++;
 			if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
 				console.log("Max reconnect attempts reached, stopping reconnection");
 				disconnectMqtt();
 			}
-		});
-
-		mqttClient.on("offline", () => {
-			console.log("MQTT client offline");
-		});
-
-		mqttClient.on("reconnect", () => {
-			console.log("Reconnecting to MQTT broker...");
 		});
 	}
 

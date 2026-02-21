@@ -34,11 +34,13 @@ export const useMqttConnectionStatus = (
 		};
 
 		const handleOffline = () => {
-			// Show brief error toast when connection is lost
-			toast.error("Connection lost", {
-				duration: 3000,
-				position,
-			});
+			// Only show toast if we previously had a successful connection
+			if (!isInitialConnection.current) {
+				toast.error("Connection lost", {
+					duration: 3000,
+					position,
+				});
+			}
 		};
 
 		const handleError = (error: Error) => {
