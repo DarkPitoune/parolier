@@ -6,15 +6,15 @@ import {
 	TouchScreenListener,
 	slideHelpAtom,
 } from "@/components";
+import {
+	useSetlistLength,
+	useSetlistStep,
+} from "@/hooks/queries/useSetlistQueries";
+import { useTaggedSong } from "@/hooks/queries/useSongQueries";
 import { useMqttConnectionStatus } from "@/hooks/useMqttConnectionStatus";
 import { useSlideController } from "@/hooks/useSlideController";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { subscribeToEvents } from "@/utils/mqtt";
-import {
-	setlistLengthQuery,
-	taggedSongFromSetlistStepQuery,
-	taggedSongQuery,
-} from "@/utils/supabase";
 import { useAtom } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -23,7 +23,6 @@ import { useNavigate, useParams } from "react-router-dom";
 const SlidePage = () => {
 	const { songId, stepNumber, setlistId } = useParams();
 	const [strophes, setStrophes] = useState<Strophe[]>([]);
-	const [setlistLength, setSetlistLength] = useState(0);
 	const [isTextSlide, setIsTextSlide] = useState(false);
 	const navigate = useNavigate();
 	const [slideHelp, setSlideHelp] = useAtom(slideHelpAtom);
@@ -44,133 +43,69 @@ const SlidePage = () => {
 	// Keep screen awake during slideshow
 	useWakeLock();
 
+	// Setlist length query
+	const { data: setlistLength = 0 } = useSetlistLength(setlistId);
+
+	// Determine which song ID to load: URL songId > slideState > setlist step
+	const songIdFromUrl = songId ? Number(songId) : undefined;
+	const effectiveSongId =
+		songIdFromUrl ?? slideState.currentSongId ?? undefined;
+
+	// Load song data via query (covers URL songId and slideState songId)
+	const { data: songData, error: songError } = useTaggedSong(effectiveSongId);
+
+	// Load setlist step data (only when no direct songId)
+	const { data: stepData } = useSetlistStep(
+		!songId && !slideState.currentSongId ? setlistId : undefined,
+		!songId && !slideState.currentSongId && stepNumber
+			? Number(stepNumber)
+			: undefined,
+	);
+
+	// Sync strophes from song query
 	useEffect(() => {
-		if (setlistId)
-			setlistLengthQuery(setlistId).then(({ data }) => {
-				if (data) setSetlistLength(data[0].position);
+		if (songData?.strophes) {
+			setStrophes(songData.strophes);
+			// Sync slide state with URL if needed
+			if (songIdFromUrl && slideState.currentSongId !== songIdFromUrl) {
+				navigateToSong(songIdFromUrl);
+			}
+		} else if (effectiveSongId && songError) {
+			setStrophes([]);
+			toast.error("Connexion à internet requise", {
+				style: { backgroundColor: "black", color: "white" },
 			});
-	}, [setlistId]);
+		}
+	}, [
+		songData,
+		songError,
+		songIdFromUrl,
+		effectiveSongId,
+		slideState.currentSongId,
+		navigateToSong,
+	]);
 
-	// Load songs from URL params or slide controller state
+	// Sync strophes from setlist step query
 	useEffect(() => {
-		console.log("[SlidePage] 🔄 Song loading useEffect triggered:", {
-			songId,
-			setlistId,
-			stepNumber,
-			"slideState.currentSongId": slideState.currentSongId,
-		});
-
-		// Priority 1: If there's a songId in the URL, load that song and update slide state
-		if (songId) {
-			const songIdNum = Number(songId);
-			console.log("[SlidePage] 📖 Loading from URL songId:", songIdNum);
-			taggedSongQuery(songIdNum).then(({ data, error }) => {
-				if (data?.strophes) {
-					console.log("[SlidePage] ✅ Song loaded successfully:", {
-						songId: songIdNum,
-						strophesCount: data.strophes.length,
-					});
-					setStrophes(data.strophes);
-					// Update slide state to match URL
-					if (slideState.currentSongId !== songIdNum) {
-						console.log("[SlidePage] 🔀 Syncing slideState with URL (calling navigateToSong)");
-						navigateToSong(songIdNum);
-					} else {
-						console.log("[SlidePage] ✓ slideState already in sync with URL");
-					}
-				} else {
-					console.log("[SlidePage] ❌ Failed to load song:", error);
-					setStrophes([]);
-					const errorMessage =
-						error?.code === "PGRST116"
-							? "Morceau non trouvé !"
-							: "Connexion à internet requise";
-					toast.error(errorMessage, {
-						style: {
-							backgroundColor: "black",
-							color: "white",
-						},
-					});
-				}
+		if (!stepData) return;
+		if (stepData.songs) {
+			setStrophes(stepData.songs.strophes);
+			setIsTextSlide(false);
+			toast(stepData.songs.title, {
+				position: "top-center",
+				style: { backgroundColor: "black", color: "white" },
 			});
-			return;
-		}
-
-		// Priority 2: If no URL songId but we have slide state, use that (for MQTT remote control)
-		if (slideState.currentSongId) {
-			console.log("[SlidePage] 📖 Loading from slideState.currentSongId:", slideState.currentSongId);
-			taggedSongQuery(slideState.currentSongId).then(({ data, error }) => {
-				if (data?.strophes) {
-					console.log("[SlidePage] ✅ Song loaded from state:", {
-						songId: slideState.currentSongId,
-						strophesCount: data.strophes.length,
-					});
-					setStrophes(data.strophes);
-				} else {
-					console.log("[SlidePage] ❌ Failed to load song from state:", error);
-					setStrophes([]);
-					const errorMessage =
-						error?.code === "PGRST116"
-							? "Morceau non trouvé !"
-							: "Connexion à internet requise";
-					toast.error(errorMessage, {
-						style: {
-							backgroundColor: "black",
-							color: "white",
-						},
-					});
-				}
+		} else {
+			setStrophes([]);
+			setIsTextSlide(true);
+			const label =
+				stepData.texts?.title ?? (stepData.text ? "Texte libre" : "Texte");
+			toast(label, {
+				position: "top-center",
+				style: { backgroundColor: "black", color: "white" },
 			});
-			return;
 		}
-		if (setlistId && stepNumber) {
-			// showing the page in the context of a set
-			taggedSongFromSetlistStepQuery(setlistId, Number(stepNumber)).then(
-				({ data }) => {
-					if (data?.songs) {
-						setStrophes(data.songs.strophes);
-						setIsTextSlide(false);
-						toast(data.songs.title, {
-							position: "top-center",
-							style: {
-								backgroundColor: "black",
-								color: "white",
-							},
-						});
-					} else {
-						// This setlist item is either a text or inline text - show cross
-						setStrophes([]);
-						setIsTextSlide(true);
-						if (data?.texts) {
-							toast(data.texts.title, {
-								position: "top-center",
-								style: {
-									backgroundColor: "black",
-									color: "white",
-								},
-							});
-						} else if (data?.text) {
-							toast("Texte libre", {
-								position: "top-center",
-								style: {
-									backgroundColor: "black",
-									color: "white",
-								},
-							});
-						} else {
-							toast("Texte", {
-								position: "top-center",
-								style: {
-									backgroundColor: "black",
-									color: "white",
-								},
-							});
-						}
-					}
-				},
-			);
-		}
-	}, [songId, setlistId, stepNumber, slideState.currentSongId, navigateToSong]);
+	}, [stepData]);
 
 	const handleNextStrophe = useCallback(() => {
 		if (isTextSlide || strophes.length === 0) {
@@ -240,10 +175,15 @@ const SlidePage = () => {
 					payload.songId === slideState.currentSongId &&
 					payload.stropheIndex !== currentStropheIndex
 				) {
-					console.log("[SlidePage] ✅ Navigating to strophe:", payload.stropheIndex);
+					console.log(
+						"[SlidePage] ✅ Navigating to strophe:",
+						payload.stropheIndex,
+					);
 					navigateToStrophe(payload.stropheIndex);
 				} else {
-					console.log("[SlidePage] ⏭️ Ignoring strophe change (already at position or different song)");
+					console.log(
+						"[SlidePage] ⏭️ Ignoring strophe change (already at position or different song)",
+					);
 				}
 			},
 			onLogoToggle: (payload) => {
@@ -256,7 +196,9 @@ const SlidePage = () => {
 					console.log("[SlidePage] ✅ Toggling logo slide");
 					toggleLogoSlide();
 				} else {
-					console.log("[SlidePage] ⏭️ Ignoring logo toggle (already in desired state)");
+					console.log(
+						"[SlidePage] ⏭️ Ignoring logo toggle (already in desired state)",
+					);
 				}
 			},
 			onSongChange: (payload) => {

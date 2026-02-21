@@ -48,9 +48,7 @@ export const useSlideController = (
 		) => {
 			setSlideState((prev) => {
 				const updates =
-					typeof updatesOrFn === "function"
-						? updatesOrFn(prev)
-						: updatesOrFn;
+					typeof updatesOrFn === "function" ? updatesOrFn(prev) : updatesOrFn;
 
 				const newState = {
 					...prev,
@@ -65,10 +63,7 @@ export const useSlideController = (
 						try {
 							if (updates.currentStropheIndex !== undefined) {
 								publishStropheChange({
-									songId:
-										updates.currentSongId ??
-										newState.currentSongId ??
-										0,
+									songId: updates.currentSongId ?? newState.currentSongId ?? 0,
 									stropheIndex: updates.currentStropheIndex,
 									content: stropheContent,
 								});
@@ -84,8 +79,7 @@ export const useSlideController = (
 							) {
 								publishSongChange({
 									songId: updates.currentSongId,
-									stropheIndex:
-										updates.currentStropheIndex || 0,
+									stropheIndex: updates.currentStropheIndex || 0,
 									content: stropheContent,
 								});
 							}
@@ -176,10 +170,7 @@ export const useSlideController = (
 		(stropheContent?: StropheContent) => {
 			updateSlideState(
 				(prev) => ({
-					currentStropheIndex: Math.max(
-						0,
-						prev.currentStropheIndex - 1,
-					),
+					currentStropheIndex: Math.max(0, prev.currentStropheIndex - 1),
 				}),
 				true,
 				stropheContent,
@@ -189,10 +180,7 @@ export const useSlideController = (
 	);
 
 	const toggleLogoSlide = useCallback(() => {
-		updateSlideState(
-			(prev) => ({ isLogoSlide: !prev.isLogoSlide }),
-			true,
-		);
+		updateSlideState((prev) => ({ isLogoSlide: !prev.isLogoSlide }), true);
 	}, [updateSlideState]);
 
 	return {

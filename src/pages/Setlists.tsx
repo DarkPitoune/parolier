@@ -1,37 +1,32 @@
 import { BackButton } from "@/components";
 import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel/NavigationSidePanel";
-import {
-	type AllSetlists,
-	allSetlistsQuery,
-	deleteSetlistMutation,
-	newSetlistMutation,
-} from "@/utils/supabase";
+import { useAllSetlists } from "@/hooks/queries/useSetlistQueries";
+import { queryKeys } from "@/utils/queryKeys";
+import { deleteSetlistMutation, newSetlistMutation } from "@/utils/supabase";
+import { useQueryClient } from "@tanstack/react-query";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/16/solid";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 const Setlists = () => {
-	const [setslists, setSetlists] = useState<AllSetlists>([]);
-	const fetchSetlists = useCallback(async () => {
-		const { data } = await allSetlistsQuery();
-		setSetlists(data || []);
-	}, []);
+	const { data: setslists = [] } = useAllSetlists();
+	const queryClient = useQueryClient();
 
 	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
-	const handleCreateSetlist = () => {
-		newSetlistMutation().then(fetchSetlists);
+	const handleCreateSetlist = async () => {
+		await newSetlistMutation();
+		queryClient.invalidateQueries({ queryKey: queryKeys.setlists.list() });
 	};
 
 	const handleDeleteSetlist = async (id: number) => {
 		if (!confirm("Êtes-vous sûr de vouloir supprimer cette setlist ?")) return;
 		await deleteSetlistMutation(id);
-		fetchSetlists();
+		queryClient.invalidateQueries({ queryKey: queryKeys.setlists.list() });
 	};
 
 	useEffect(() => {
-		fetchSetlists();
 		document.title = "Setlists - Parolier";
-	}, [fetchSetlists]);
+	}, []);
 
 	return (
 		<div className="bg-white dark:bg-gray-800 text-black dark:text-white">

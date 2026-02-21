@@ -482,20 +482,19 @@ const manifest: Partial<VitePWAOptions> = {
     clientsClaim: true,
     skipWaiting: true,
     runtimeCaching: [
+      // Songs & tags: rarely change, StaleWhileRevalidate is fine
       {
         urlPattern: ({ url }) =>
-          url.href.includes("/rest/v1/") &&
-          !url.href.includes("/rest/v1/analytics"), // Match Supabase REST API calls but exclude analytics
+          url.href.includes("/rest/v1/songs") ||
+          url.href.includes("/rest/v1/tags"),
         handler: "StaleWhileRevalidate",
         options: {
-          cacheName: "supabase-api-cache",
+          cacheName: "supabase-songs-cache",
           expiration: {
-            maxEntries: 500,
-            maxAgeSeconds: 365 * 24 * 60 * 60, // 365 days
+            maxEntries: 300,
+            maxAgeSeconds: 365 * 24 * 60 * 60,
           },
-          cacheableResponse: {
-            statuses: [200],
-          },
+          cacheableResponse: { statuses: [200] },
           plugins: [
             {
               requestWillFetch: async ({ request }: { request: Request }) => {
@@ -510,6 +509,92 @@ const manifest: Partial<VitePWAOptions> = {
           ],
         },
       },
+      // Setlists: must be fresh, NetworkFirst with 3s timeout fallback
+      {
+        urlPattern: ({ url }) =>
+          url.href.includes("/rest/v1/setlist") ||
+          url.href.includes("/rest/v1/leader_position"),
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "supabase-setlists-cache",
+          networkTimeoutSeconds: 3,
+          expiration: {
+            maxEntries: 100,
+            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+          },
+          cacheableResponse: { statuses: [200] },
+          plugins: [
+            {
+              requestWillFetch: async ({ request }: { request: Request }) => {
+                const modifiedRequest = new Request(request);
+                modifiedRequest.headers.set(
+                  "Apikey",
+                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHBiY3RsZWpyempqdmttY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjIwMDU0ODksImV4cCI6MjAzNzU4MTQ4OX0.aOrgMlTl_1Odj5Z0ssCsa0879UaSDrtUTIpNbXbaaOg",
+                );
+                return modifiedRequest;
+              },
+            },
+          ],
+        },
+      },
+      // Texts: rarely change, StaleWhileRevalidate
+      {
+        urlPattern: ({ url }) => url.href.includes("/rest/v1/texts"),
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "supabase-texts-cache",
+          expiration: {
+            maxEntries: 100,
+            maxAgeSeconds: 365 * 24 * 60 * 60,
+          },
+          cacheableResponse: { statuses: [200] },
+          plugins: [
+            {
+              requestWillFetch: async ({ request }: { request: Request }) => {
+                const modifiedRequest = new Request(request);
+                modifiedRequest.headers.set(
+                  "Apikey",
+                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHBiY3RsZWpyempqdmttY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjIwMDU0ODksImV4cCI6MjAzNzU4MTQ4OX0.aOrgMlTl_1Odj5Z0ssCsa0879UaSDrtUTIpNbXbaaOg",
+                );
+                return modifiedRequest;
+              },
+            },
+          ],
+        },
+      },
+      // Catch-all for other Supabase API calls (excluding analytics)
+      {
+        urlPattern: ({ url }) =>
+          url.href.includes("/rest/v1/") &&
+          !url.href.includes("/rest/v1/analytics") &&
+          !url.href.includes("/rest/v1/songs") &&
+          !url.href.includes("/rest/v1/tags") &&
+          !url.href.includes("/rest/v1/setlist") &&
+          !url.href.includes("/rest/v1/leader_position") &&
+          !url.href.includes("/rest/v1/texts"),
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "supabase-api-cache",
+          expiration: {
+            maxEntries: 100,
+            maxAgeSeconds: 365 * 24 * 60 * 60,
+          },
+          cacheableResponse: { statuses: [200] },
+          plugins: [
+            {
+              requestWillFetch: async ({ request }: { request: Request }) => {
+                const modifiedRequest = new Request(request);
+                modifiedRequest.headers.set(
+                  "Apikey",
+                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHBiY3RsZWpyempqdmttY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjIwMDU0ODksImV4cCI6MjAzNzU4MTQ4OX0.aOrgMlTl_1Odj5Z0ssCsa0879UaSDrtUTIpNbXbaaOg",
+                );
+                return modifiedRequest;
+              },
+            },
+          ],
+        },
+      },
+      // Bible API: static content, CacheFirst
       {
         urlPattern: ({ url }) => url.hostname === "bible-api-lovat.vercel.app",
         handler: "CacheFirst",
@@ -517,11 +602,9 @@ const manifest: Partial<VitePWAOptions> = {
           cacheName: "bible-api-cache",
           expiration: {
             maxEntries: 100,
-            maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
+            maxAgeSeconds: 365 * 24 * 60 * 60,
           },
-          cacheableResponse: {
-            statuses: [200],
-          },
+          cacheableResponse: { statuses: [200] },
         },
       },
     ],

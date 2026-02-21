@@ -1,4 +1,5 @@
-import { loadAllSongsData } from "@/utils/supabase";
+import { queryKeys } from "@/utils/queryKeys";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowPathIcon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useAtom } from "jotai";
@@ -9,14 +10,18 @@ import { SettingsButton } from "./SettingsButton";
 
 export const CornerMenu = () => {
 	const [darkMode, setDarkMode] = useAtom(darkModeAtom);
+	const queryClient = useQueryClient();
 
 	const loadAllSongs = useCallback(async () => {
-		toast.promise(loadAllSongsData(), {
-			loading: "Chargement...",
-			success: "Liste mise à jour",
-			error: "Connexion à internet requise",
-		});
-	}, []);
+		toast.promise(
+			queryClient.invalidateQueries({ queryKey: queryKeys.songs.list() }),
+			{
+				loading: "Chargement...",
+				success: "Liste mise à jour",
+				error: "Connexion à internet requise",
+			},
+		);
+	}, [queryClient]);
 
 	const [isExpanded, setIsExpanded] = useState(false);
 	const wrapperRef = useRef<HTMLDivElement>(null);

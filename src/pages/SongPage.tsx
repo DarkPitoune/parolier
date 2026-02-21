@@ -1,17 +1,15 @@
 import { BackButton, SongViewer, useLeader } from "@/components";
+import { useTaggedSong } from "@/hooks/queries/useSongQueries";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import {
-	type TaggedSong,
-	analyticsSong,
-	taggedSongQuery,
-} from "@/utils/supabase";
+import { analyticsSong } from "@/utils/supabase";
 import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 
 function SongPage() {
 	const { songId } = useParams();
-	const [song, setSong] = useState<TaggedSong>();
+	const songIdNum = songId ? Number(songId) : undefined;
+	const { data: song } = useTaggedSong(songIdNum);
 	const { setLeaderSong } = useLeader();
 
 	// Keep screen awake while viewing song
@@ -20,9 +18,6 @@ function SongPage() {
 	// biome-ignore lint/correctness/useExhaustiveDependencies: adding setLeader spams BE
 	useEffect(() => {
 		if (songId) {
-			taggedSongQuery(Number(songId)).then(({ data }) => {
-				if (data) setSong(data);
-			});
 			setLeaderSong(Number(songId));
 		}
 		let timeout: NodeJS.Timeout;

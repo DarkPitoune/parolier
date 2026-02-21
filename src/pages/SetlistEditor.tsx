@@ -6,29 +6,39 @@ import {
 	TextItem,
 	TextPicker,
 } from "@/components";
+import { useSetlist } from "@/hooks/queries/useSetlistQueries";
+import { queryKeys } from "@/utils/queryKeys";
 import {
-	type Setlist,
 	setlistItemAppendMutation,
 	setlistItemDeleteMutation,
 	setlistItemPositionMutation,
 	setlistNameMutation,
 	setlistNameQuery,
-	setlistQuery,
 	setlistTextItemMutation,
 } from "@/utils/supabase";
+import { useQueryClient } from "@tanstack/react-query";
 import {
 	ArrowDownIcon,
 	ArrowUpIcon,
 	XMarkIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 const SetlistEditor = () => {
 	const { setlistId } = useParams();
+	const queryClient = useQueryClient();
 
-	const [setlist, setSetlist] = useState<Setlist | null>(null);
+	const { data: setlistData } = useSetlist(setlistId);
+	const setlist = useMemo(
+		() =>
+			setlistData
+				? [...setlistData].sort((a, b) => a.position - b.position)
+				: null,
+		[setlistData],
+	);
+
 	const [selectedItem, setSelectedItem] = useState<number>();
 	const [setlistName, setSetlistName] = useState<string>("");
 	const [isSongPickerOpen, setIsSongPickerOpen] = useState(false);
@@ -43,20 +53,20 @@ const SetlistEditor = () => {
 		else setTextNewValue(null);
 	};
 
-	const handleSetlistQuery = useCallback(() => {
+	const invalidateSetlist = useCallback(() => {
 		if (!setlistId) return;
-		setlistQuery(setlistId).then(({ data }) => {
-			if (data) data.sort((a, b) => a.position - b.position);
-			setSetlist(data);
+		queryClient.invalidateQueries({
+			queryKey: queryKeys.setlists.detail(setlistId),
 		});
+	}, [setlistId, queryClient]);
+
+	// Load setlist name on mount
+	useEffect(() => {
+		if (!setlistId) return;
 		setlistNameQuery(setlistId).then(({ data }) => {
 			if (data?.name) setSetlistName(data.name);
 		});
 	}, [setlistId]);
-
-	useEffect(() => {
-		handleSetlistQuery();
-	}, [handleSetlistQuery]);
 
 	const handleSaveSetlistName = () => {
 		if (!setlistId) return;
@@ -69,22 +79,17 @@ const SetlistEditor = () => {
 
 	const handleSwapItemsPosition = (id1: number, id2: number) => {
 		if (!setlist || !setlistId) return;
-		const newSetlist = [...setlist];
-		const index1 = newSetlist.findIndex((item) => item.id === id1);
-		const index2 = newSetlist.findIndex((item) => item.id === id2);
-		const temp = newSetlist[index1];
-		newSetlist[index1] = newSetlist[index2];
-		newSetlist[index2] = temp;
-		setlistItemPositionMutation(setlistId, id1, index2);
-		setlistItemPositionMutation(setlistId, id2, index1);
-		setSetlist(newSetlist);
+		const index1 = setlist.findIndex((item) => item.id === id1);
+		const index2 = setlist.findIndex((item) => item.id === id2);
+		Promise.all([
+			setlistItemPositionMutation(setlistId, id1, index2),
+			setlistItemPositionMutation(setlistId, id2, index1),
+		]).then(invalidateSetlist);
 	};
 
 	const handleDelete = (id: number) => {
 		if (!setlist || !setlistId) return;
-		const newSetlist = setlist.filter((item) => item.id !== id);
-		setlistItemDeleteMutation(setlistId, id);
-		setSetlist(newSetlist);
+		setlistItemDeleteMutation(setlistId, id).then(invalidateSetlist);
 	};
 
 	const handleClose = (songId?: number) => {
@@ -97,7 +102,7 @@ const SetlistEditor = () => {
 			null,
 			null,
 		).then(() => {
-			handleSetlistQuery();
+			invalidateSetlist();
 		});
 	};
 
@@ -111,7 +116,7 @@ const SetlistEditor = () => {
 			null,
 			textId,
 		).then(() => {
-			handleSetlistQuery();
+			invalidateSetlist();
 		});
 	};
 
@@ -119,10 +124,10 @@ const SetlistEditor = () => {
 		if (!setlistId || !selectedItem) return;
 		setlistTextItemMutation(setlistId, selectedItem, textNewValue ?? "").then(
 			() => {
-				handleSetlistQuery();
+				invalidateSetlist();
 			},
 		);
-	}, [setlistId, selectedItem, textNewValue, handleSetlistQuery]);
+	}, [setlistId, selectedItem, textNewValue, invalidateSetlist]);
 
 	const handleNewTextItem = () => {
 		if (!setlistId || setlist === null) return;
@@ -133,7 +138,7 @@ const SetlistEditor = () => {
 			"",
 			null,
 		).then(() => {
-			handleSetlistQuery();
+			invalidateSetlist();
 		});
 	};
 
@@ -147,11 +152,11 @@ const SetlistEditor = () => {
 				currentSelectedItem,
 				textNewValue ?? "",
 			).then(() => {
-				handleSetlistQuery();
+				invalidateSetlist();
 			});
 		}, 1000);
 		return () => clearTimeout(timeout);
-	}, [textNewValue, selectedItem, setlistId, handleSetlistQuery]);
+	}, [textNewValue, selectedItem, setlistId, invalidateSetlist]);
 
 	const selectedSong = setlist?.find((item) => item.id === selectedItem)?.songs;
 	const selectedText = setlist?.find((item) => item.id === selectedItem)?.texts;
