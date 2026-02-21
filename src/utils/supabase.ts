@@ -61,6 +61,17 @@ export type TaggedSongFromSetlistStep = QueryData<
 	ReturnType<typeof taggedSongFromSetlistStepQuery>
 >;
 
+export const allSetlistItemsQuery = async () =>
+	supabase
+		.from("setlist_items")
+		.select(
+			"id, setlist_id, songs (*, tags (id, name, svg, color)), texts (id, title, content, created_at), text, position",
+		)
+		.order("position");
+export type AllSetlistItems = QueryData<
+	ReturnType<typeof allSetlistItemsQuery>
+>;
+
 export const newSongMutation = async (title: string) =>
 	supabase
 		.from("songs")

@@ -7,11 +7,11 @@ import {
 } from "@/components";
 import {
 	useSetlistLength,
-	useSetlistStep,
+	useSetlistStepCached,
 } from "@/hooks/queries/useSetlistQueries";
 import { useTaggedSong } from "@/hooks/queries/useSongQueries";
 import { useMqttConnectionStatus } from "@/hooks/useMqttConnectionStatus";
-import { useSlideController } from "@/hooks/useSlideController";
+import { useSlideStateMachine } from "@/hooks/useSlideStateMachine";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { taggedSongQuery } from "@/utils/supabase";
 import {
@@ -27,19 +27,23 @@ import { useParams } from "react-router-dom";
 
 const PresenterPage = () => {
 	const { setlistId, stepNumber } = useParams();
-	const [strophes, setStrophes] = useState<Strophe[]>([]);
 	const [slideshowWindow, setSlideshowWindow] = useState<Window | null>(null);
 	const [showMobileSongPicker, setShowMobileSongPicker] = useState(false);
 
-	const {
-		slideState,
-		navigateToSong,
-		nextStrophe,
-		prevStrophe,
-		toggleLogoSlide,
-	} = useSlideController("presenter", true); // Enable network broadcast
+	const { state, dispatch } = useSlideStateMachine("presenter");
 
-	const { currentStropheIndex, isLogoSlide, currentSongId } = slideState;
+	// Derive strophes and indices from state
+	const strophes: Strophe[] =
+		state.mode === "song" || state.mode === "logo" ? state.strophes : [];
+	const currentStropheIndex =
+		state.mode === "song" || state.mode === "logo" ? state.stropheIndex : 0;
+	const isLogoSlide = state.mode === "logo";
+	const currentSongId =
+		state.mode === "song"
+			? state.songId
+			: state.mode === "logo"
+				? state.songId
+				: null;
 
 	// Monitor MQTT connection status
 	useMqttConnectionStatus({ position: "top-center" });
@@ -50,8 +54,8 @@ const PresenterPage = () => {
 	// Load setlist length via query
 	const { data: setlistLength = 0 } = useSetlistLength(setlistId);
 
-	// Load initial song from URL params via query
-	const { data: stepData } = useSetlistStep(
+	// Load initial song from URL params via query (cache-first, prefetched at app startup)
+	const { data: stepData } = useSetlistStepCached(
 		setlistId,
 		stepNumber ? Number(stepNumber) : undefined,
 	);
@@ -59,27 +63,43 @@ const PresenterPage = () => {
 	// Navigate to initial setlist step song when data loads
 	useEffect(() => {
 		if (stepData?.songs) {
-			setStrophes(stepData.songs.strophes);
-			navigateToSong(stepData.songs.id, setlistId, Number(stepNumber));
+			dispatch({
+				type: "LOAD_SONG",
+				songId: stepData.songs.id,
+				strophes: stepData.songs.strophes,
+				setlistContext: setlistId
+					? {
+							setlistId,
+							stepNumber: Number(stepNumber),
+							totalSteps: setlistLength,
+						}
+					: undefined,
+			});
 			toast.success(`Loaded: ${stepData.songs.title}`, {
 				position: "top-center",
 			});
 		}
-	}, [stepData, setlistId, stepNumber, navigateToSong]);
+	}, [stepData, setlistId, stepNumber, setlistLength, dispatch]);
 
-	// Load strophes when current song changes (via song picker / MQTT)
+	// Load strophes when current song changes (via sync from localStorage)
+	// Only fetch if state has the songId but no strophes (deserialized from sync)
+	const needsFetch =
+		currentSongId !== null && strophes.length === 0 && state.mode !== "idle";
 	const { data: currentSongData, error: currentSongError } = useTaggedSong(
-		currentSongId ?? undefined,
+		needsFetch ? currentSongId ?? undefined : undefined,
 	);
 
 	useEffect(() => {
-		if (currentSongData?.strophes) {
-			setStrophes(currentSongData.strophes);
+		if (currentSongData?.strophes && currentSongId) {
+			dispatch({
+				type: "LOAD_SONG",
+				songId: currentSongId,
+				strophes: currentSongData.strophes,
+			});
 		} else if (currentSongId && currentSongError) {
-			setStrophes([]);
 			toast.error("Internet connection required");
 		}
-	}, [currentSongData, currentSongError, currentSongId]);
+	}, [currentSongData, currentSongError, currentSongId, dispatch]);
 
 	// Launch slideshow window
 	const openSlideshow = useCallback(async () => {
@@ -88,64 +108,48 @@ const PresenterPage = () => {
 			return;
 		}
 
-		// Detect second display and position window accordingly
 		let windowFeatures =
 			"toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=yes";
 
 		try {
-			// Try to get screen details for multi-display setup
 			if ("getScreenDetails" in window) {
 				// @ts-ignore - New Screen API
 				const screenDetails = await window.getScreenDetails();
 				const screens = screenDetails.screens;
 
 				if (screens.length > 1) {
-					// Find external display (not the primary one)
 					const externalScreen =
 						screens.find(
 							(screen: { isPrimary: boolean }) => !screen.isPrimary,
 						) || screens[1];
 					if (externalScreen) {
 						windowFeatures += `,width=${externalScreen.availWidth},height=${externalScreen.availHeight},left=${externalScreen.left},top=${externalScreen.top}`;
-						console.log(
-							`Opening slideshow on external display: ${externalScreen.availWidth}x${externalScreen.availHeight}`,
-						);
 					}
 				} else {
-					// Fallback to main screen
 					windowFeatures += ",width=1920,height=1080,left=0,top=0";
 				}
 			} else {
-				// Fallback for browsers without Screen API - try to detect second monitor
 				const totalWidth = window.screen.availWidth;
 				const screenWidth = window.screen.width;
 
-				// Simple heuristic: if total available width > screen width, likely multi-monitor
 				if (totalWidth > screenWidth) {
 					windowFeatures += `,width=${screenWidth},height=${window.screen.availHeight},left=${screenWidth},top=0`;
-					console.log(
-						"Detected possible second monitor, positioning slideshow to the right",
-					);
 				} else {
 					windowFeatures += ",width=1920,height=1080,left=0,top=0";
 				}
 			}
-		} catch (error) {
-			console.log("Screen detection failed, using default positioning:", error);
+		} catch {
 			windowFeatures += ",width=1920,height=1080,left=0,top=0";
 		}
 
-		// Chrome-compatible window opening with display-aware positioning
 		const newWindow = window.open("/slides", "slideshow", windowFeatures);
 
-		// Chrome sometimes takes a moment to create the window object
 		setTimeout(() => {
 			if (
 				!newWindow ||
 				newWindow.closed ||
 				typeof newWindow.closed === "undefined"
 			) {
-				// Fallback: ask user to allow popups or use current tab
 				const useCurrentTab = confirm(
 					"Le navigateur bloque les fenêtres pop-up. Voulez-vous ouvrir le diaporama dans cet onglet ? (Sinon, autorisez les pop-ups et réessayez)",
 				);
@@ -157,17 +161,11 @@ const PresenterPage = () => {
 
 			setSlideshowWindow(newWindow);
 
-			// Setup fullscreen request after page loads
 			newWindow.addEventListener("load", () => {
-				// Add a click handler to the new window that will trigger fullscreen
-				// This ensures we have a user gesture required by modern browsers
 				const requestFullscreenOnInteraction = () => {
 					newWindow.document.documentElement
 						.requestFullscreen?.()
-						.catch((err) => {
-							console.log("Fullscreen request failed:", err);
-						});
-					// Remove the listener after first use
+						.catch(() => {});
 					newWindow.document.removeEventListener(
 						"click",
 						requestFullscreenOnInteraction,
@@ -178,9 +176,7 @@ const PresenterPage = () => {
 					);
 				};
 
-				// Try immediate fullscreen (may work in some browsers/contexts)
 				newWindow.document.documentElement.requestFullscreen?.().catch(() => {
-					// If immediate fullscreen fails, set up interaction listeners
 					newWindow.document.addEventListener(
 						"click",
 						requestFullscreenOnInteraction,
@@ -190,7 +186,6 @@ const PresenterPage = () => {
 						requestFullscreenOnInteraction,
 					);
 
-					// Show a brief instruction to the user
 					const instruction = newWindow.document.createElement("div");
 					instruction.style.cssText = `
             position: fixed;
@@ -211,7 +206,6 @@ const PresenterPage = () => {
 						"Cliquez ou appuyez sur une touche pour passer en plein écran";
 					newWindow.document.body.appendChild(instruction);
 
-					// Remove instruction after 3 seconds
 					setTimeout(() => {
 						if (instruction.parentNode) {
 							instruction.parentNode.removeChild(instruction);
@@ -225,32 +219,16 @@ const PresenterPage = () => {
 	// Handle song selection from inline picker
 	const handleSongSelect = useCallback(
 		async (songId: number) => {
-			console.log(
-				"[PresenterPage] 🎵 Song selected, fetching strophes for MQTT broadcast",
-			);
-
-			// Fetch the song to get first strophe content for MQTT broadcast
 			const { data } = await taggedSongQuery(songId);
-			const firstStrophe = data?.strophes?.[0];
-
-			// Extract content only if it's a verse/chorus/bridge (not a section)
-			const firstStropheContent =
-				firstStrophe &&
-				firstStrophe.type !== "section" &&
-				Array.isArray(firstStrophe.content)
-					? firstStrophe.content
-					: undefined;
-
-			// Preserve logo slide state when changing songs in presenter mode
-			navigateToSong(
-				songId,
-				undefined,
-				undefined,
-				isLogoSlide,
-				firstStropheContent,
-			);
+			if (data?.strophes) {
+				dispatch({
+					type: "LOAD_SONG",
+					songId,
+					strophes: data.strophes,
+				});
+			}
 		},
-		[navigateToSong, isLogoSlide],
+		[dispatch],
 	);
 
 	// Handle song selection from mobile modal
@@ -275,10 +253,9 @@ const PresenterPage = () => {
 	const totalSlides = strophes.length;
 	const currentSlideNumber = currentStropheIndex + 1;
 
-	// Add keyboard controls (same as slideshow mode)
+	// Keyboard controls
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {
-			// Don't handle keyboard shortcuts if user is typing in an input field
 			const target = e.target as HTMLElement;
 			if (
 				target.tagName === "INPUT" ||
@@ -288,46 +265,27 @@ const PresenterPage = () => {
 				return;
 			}
 
-			// Navigation controls
 			if (e.key === "ArrowRight") {
 				e.preventDefault();
 				if (canGoNext) {
-					const nextStropheData = strophes[currentStropheIndex + 1];
-					const nextStropheContent = Array.isArray(nextStropheData?.content)
-						? nextStropheData.content
-						: undefined;
-					nextStrophe(nextStropheContent);
+					dispatch({ type: "NEXT_STROPHE" });
 				}
 			}
 			if (e.key === "ArrowLeft") {
 				e.preventDefault();
 				if (canGoPrev) {
-					const prevStropheData =
-						strophes[Math.max(0, currentStropheIndex - 1)];
-					const prevStropheContent = Array.isArray(prevStropheData?.content)
-						? prevStropheData.content
-						: undefined;
-					prevStrophe(prevStropheContent);
+					dispatch({ type: "PREV_STROPHE" });
 				}
 			}
-			// Logo toggle
 			if (e.key === "t" || e.key === "T") {
 				e.preventDefault();
-				toggleLogoSlide();
+				dispatch({ type: "TOGGLE_LOGO" });
 			}
 		};
 
 		document.addEventListener("keydown", handleKey);
 		return () => document.removeEventListener("keydown", handleKey);
-	}, [
-		canGoNext,
-		canGoPrev,
-		nextStrophe,
-		prevStrophe,
-		toggleLogoSlide,
-		strophes,
-		currentStropheIndex,
-	]);
+	}, [canGoNext, canGoPrev, dispatch]);
 
 	return (
 		<div className="bg-white dark:bg-gray-800 h-screen flex flex-col">
@@ -386,13 +344,11 @@ const PresenterPage = () => {
 							<div className="bg-black rounded-lg flex items-center justify-center text-white relative overflow-hidden aspect-video h-full max-w-full">
 								{isLogoSlide ? (
 									<>
-										{/* Show hidden slide content in background */}
 										{currentStrophe && (
 											<div className="absolute inset-0 flex items-center justify-center opacity-30">
 												<SlideViewer strophe={currentStrophe} />
 											</div>
 										)}
-										{/* Logo on top */}
 										<img
 											src="/svg/Jubilate_Croix.svg"
 											alt="logo"
@@ -449,19 +405,9 @@ const PresenterPage = () => {
 					{/* Controls at Bottom */}
 					<div className="flex-shrink-0">
 						<div className="flex items-center justify-center gap-6">
-							{/* Previous Button */}
 							<button
 								type="button"
-								onClick={() => {
-									const prevStropheData =
-										strophes[Math.max(0, currentStropheIndex - 1)];
-									const prevStropheContent = Array.isArray(
-										prevStropheData?.content,
-									)
-										? prevStropheData.content
-										: undefined;
-									prevStrophe(prevStropheContent);
-								}}
+								onClick={() => dispatch({ type: "PREV_STROPHE" })}
 								disabled={!canGoPrev}
 								data-testid="prev-strophe-btn"
 								className="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-4 rounded-full transition-colors"
@@ -470,10 +416,9 @@ const PresenterPage = () => {
 								<ChevronLeftIcon className="w-6 h-6" />
 							</button>
 
-							{/* Logo Toggle */}
 							<button
 								type="button"
-								onClick={toggleLogoSlide}
+								onClick={() => dispatch({ type: "TOGGLE_LOGO" })}
 								className={`p-3 rounded-full transition-colors ${
 									isLogoSlide
 										? "bg-yellow-500 hover:bg-yellow-600 text-white"
@@ -488,18 +433,9 @@ const PresenterPage = () => {
 								/>
 							</button>
 
-							{/* Next Button */}
 							<button
 								type="button"
-								onClick={() => {
-									const nextStropheData = strophes[currentStropheIndex + 1];
-									const nextStropheContent = Array.isArray(
-										nextStropheData?.content,
-									)
-										? nextStropheData.content
-										: undefined;
-									nextStrophe(nextStropheContent);
-								}}
+								onClick={() => dispatch({ type: "NEXT_STROPHE" })}
 								disabled={!canGoNext}
 								data-testid="next-strophe-btn"
 								className="bg-jubilateBlue-500 hover:bg-jubilateBlue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-4 rounded-full transition-colors"

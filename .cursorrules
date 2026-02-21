@@ -1,5 +1,0 @@
-# Rules to folllow for any suggestion (code or chat)
-- use flex or padding instead of margin for layout
-- try to get a coherent visual style, colors should be re-used in a coherent fasion accross the entire app
-- any color needs to be adapted for dark mode and light mode
-- import hericons instead of creating custom svg

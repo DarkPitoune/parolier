@@ -8,34 +8,46 @@ import {
 } from "@/components";
 import {
 	useSetlistLength,
-	useSetlistStep,
+	useSetlistStepCached,
 } from "@/hooks/queries/useSetlistQueries";
 import { useTaggedSong } from "@/hooks/queries/useSongQueries";
+import { getSetlistNavAction } from "@/hooks/slideReducer";
 import { useMqttConnectionStatus } from "@/hooks/useMqttConnectionStatus";
-import { useSlideController } from "@/hooks/useSlideController";
+import { useSlideStateMachine } from "@/hooks/useSlideStateMachine";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import { subscribeToEvents } from "@/utils/mqtt";
 import { useAtom } from "jotai";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import toast from "react-hot-toast";
-import { useNavigate, useParams } from "react-router-dom";
+import {
+	useLocation,
+	useNavigate,
+	useParams,
+	useSearchParams,
+} from "react-router-dom";
 
 const SlidePage = () => {
 	const { songId, stepNumber, setlistId } = useParams();
-	const [strophes, setStrophes] = useState<Strophe[]>([]);
-	const [isTextSlide, setIsTextSlide] = useState(false);
 	const navigate = useNavigate();
+	const location = useLocation();
+	const [searchParams] = useSearchParams();
+	const startFromEnd = searchParams.get("from") === "end";
 	const [slideHelp, setSlideHelp] = useAtom(slideHelpAtom);
 
-	const {
-		slideState,
-		nextStrophe,
-		prevStrophe,
-		toggleLogoSlide,
-		navigateToSong,
-		navigateToStrophe,
-	} = useSlideController("slideshow");
-	const { currentStropheIndex, isLogoSlide } = slideState;
+	const { state, dispatch } = useSlideStateMachine("display");
+
+	// Derive from state
+	const strophes: Strophe[] =
+		state.mode === "song" || state.mode === "logo" ? state.strophes : [];
+	const currentStropheIndex =
+		state.mode === "song" || state.mode === "logo" ? state.stropheIndex : 0;
+	const isLogoSlide = state.mode === "logo";
+	const isTextSlide = state.mode === "text";
+	const currentSongId =
+		state.mode === "song"
+			? state.songId
+			: state.mode === "logo"
+				? state.songId
+				: null;
 
 	// Monitor MQTT connection status
 	useMqttConnectionStatus({ position: "top-center" });
@@ -46,32 +58,45 @@ const SlidePage = () => {
 	// Setlist length query
 	const { data: setlistLength = 0 } = useSetlistLength(setlistId);
 
-	// Determine which song ID to load: URL songId > slideState > setlist step
+	// Determine which song ID to load from URL
 	const songIdFromUrl = songId ? Number(songId) : undefined;
-	const effectiveSongId =
-		songIdFromUrl ?? slideState.currentSongId ?? undefined;
 
-	// Load song data via query (covers URL songId and slideState songId)
-	const { data: songData, error: songError } = useTaggedSong(effectiveSongId);
-
-	// Load setlist step data (only when no direct songId)
-	const { data: stepData } = useSetlistStep(
-		!songId && !slideState.currentSongId ? setlistId : undefined,
-		!songId && !slideState.currentSongId && stepNumber
-			? Number(stepNumber)
-			: undefined,
+	// Load song data from URL songId or from state (after sync/deserialization with empty strophes)
+	const needsFetch =
+		songIdFromUrl ??
+		(currentSongId && strophes.length === 0 ? currentSongId : undefined);
+	const { data: songData, error: songError } = useTaggedSong(
+		needsFetch ?? undefined,
 	);
 
-	// Sync strophes from song query
+	// Load setlist step data (cache-first, prefetched above)
+	const { data: stepData } = useSetlistStepCached(
+		!songIdFromUrl ? setlistId : undefined,
+		!songIdFromUrl && stepNumber ? Number(stepNumber) : undefined,
+	);
+
+	// Init from song query (URL or synced songId)
+	// location.key changes on every navigation (even to the same URL), so re-selecting
+	// the same song via SlideFinder re-dispatches LOAD_SONG (exits logo mode, resets strophe).
 	useEffect(() => {
 		if (songData?.strophes) {
-			setStrophes(songData.strophes);
-			// Sync slide state with URL if needed
-			if (songIdFromUrl && slideState.currentSongId !== songIdFromUrl) {
-				navigateToSong(songIdFromUrl);
+			const id = songIdFromUrl ?? currentSongId;
+			if (id) {
+				dispatch({
+					type: "LOAD_SONG",
+					songId: id,
+					strophes: songData.strophes,
+					setlistContext:
+						setlistId && stepNumber
+							? {
+									setlistId,
+									stepNumber: Number(stepNumber),
+									totalSteps: setlistLength,
+								}
+							: undefined,
+				});
 			}
-		} else if (effectiveSongId && songError) {
-			setStrophes([]);
+		} else if (needsFetch && songError) {
 			toast.error("Connexion à internet requise", {
 				style: { backgroundColor: "black", color: "white" },
 			});
@@ -80,170 +105,116 @@ const SlidePage = () => {
 		songData,
 		songError,
 		songIdFromUrl,
-		effectiveSongId,
-		slideState.currentSongId,
-		navigateToSong,
+		currentSongId,
+		needsFetch,
+		setlistId,
+		stepNumber,
+		setlistLength,
+		dispatch,
+		location.key,
 	]);
 
-	// Sync strophes from setlist step query
+	// Init from setlist step query
 	useEffect(() => {
 		if (!stepData) return;
 		if (stepData.songs) {
-			setStrophes(stepData.songs.strophes);
-			setIsTextSlide(false);
+			dispatch({
+				type: "LOAD_SONG",
+				songId: stepData.songs.id,
+				strophes: stepData.songs.strophes,
+				setlistContext: setlistId
+					? {
+							setlistId,
+							stepNumber: Number(stepNumber),
+							totalSteps: setlistLength,
+						}
+					: undefined,
+			});
+			if (startFromEnd && stepData.songs.strophes.length > 0) {
+				dispatch({
+					type: "GOTO_STROPHE",
+					stropheIndex: stepData.songs.strophes.length - 1,
+				});
+			}
 			toast(stepData.songs.title, {
 				position: "top-center",
 				style: { backgroundColor: "black", color: "white" },
 			});
 		} else {
-			setStrophes([]);
-			setIsTextSlide(true);
 			const label =
 				stepData.texts?.title ?? (stepData.text ? "Texte libre" : "Texte");
+			dispatch({
+				type: "LOAD_TEXT",
+				textTitle: label,
+				setlistContext: {
+					setlistId: setlistId ?? "",
+					stepNumber: Number(stepNumber),
+					totalSteps: setlistLength,
+				},
+			});
 			toast(label, {
 				position: "top-center",
 				style: { backgroundColor: "black", color: "white" },
 			});
 		}
-	}, [stepData]);
+	}, [stepData, setlistId, stepNumber, setlistLength, startFromEnd, dispatch]);
 
 	const handleNextStrophe = useCallback(() => {
-		if (isTextSlide || strophes.length === 0) {
-			// If this is a text slide, go to next setlist item
-			if (setlistId && stepNumber && Number(stepNumber) < setlistLength) {
+		const action = getSetlistNavAction(
+			"next",
+			state,
+			setlistId,
+			stepNumber,
+			setlistLength,
+		);
+		switch (action) {
+			case "dispatch":
+				dispatch({ type: "NEXT_STROPHE" });
+				break;
+			case "next_step":
 				navigate(
 					`/setlists/${setlistId}/steps/${Number(stepNumber) + 1}/slide`,
 				);
-			}
-			return;
+				break;
 		}
-
-		if (currentStropheIndex < strophes.length - 1) {
-			nextStrophe();
-		} else if (setlistId && stepNumber && Number(stepNumber) < setlistLength) {
-			navigate(`/setlists/${setlistId}/steps/${Number(stepNumber) + 1}/slide`);
-		}
-	}, [
-		currentStropheIndex,
-		navigate,
-		setlistId,
-		stepNumber,
-		strophes.length,
-		setlistLength,
-		nextStrophe,
-		isTextSlide,
-	]);
+	}, [state, setlistId, stepNumber, setlistLength, dispatch, navigate]);
 
 	const handlePrevStrophe = useCallback(() => {
-		if (isTextSlide || strophes.length === 0) {
-			// If this is a text slide, go to previous setlist item
-			if (setlistId && stepNumber && Number(stepNumber) > 0) {
+		const action = getSetlistNavAction(
+			"prev",
+			state,
+			setlistId,
+			stepNumber,
+			setlistLength,
+		);
+		switch (action) {
+			case "dispatch":
+				dispatch({ type: "PREV_STROPHE" });
+				break;
+			case "prev_step":
 				navigate(
-					`/setlists/${setlistId}/steps/${Number(stepNumber) - 1}/slide`,
+					`/setlists/${setlistId}/steps/${Number(stepNumber) - 1}/slide?from=end`,
 				);
-			}
-			return;
+				break;
 		}
+	}, [state, setlistId, stepNumber, setlistLength, dispatch, navigate]);
 
-		if (currentStropheIndex > 0) {
-			prevStrophe();
-		} else if (setlistId && stepNumber && Number(stepNumber) > 0) {
-			navigate(`/setlists/${setlistId}/steps/${Number(stepNumber) - 1}/slide`);
-		}
-	}, [
-		currentStropheIndex,
-		navigate,
-		setlistId,
-		stepNumber,
-		strophes.length,
-		prevStrophe,
-		isTextSlide,
-	]);
-
-	useEffect(() => {
-		console.log("[SlidePage] 🔌 Setting up MQTT subscriptions");
-		// Subscribe to MQTT events
-		const unsubscribe = subscribeToEvents({
-			onStropheChange: (payload) => {
-				console.log("[SlidePage] 🔄 MQTT onStropheChange handler:", {
-					payload,
-					currentSongId: slideState.currentSongId,
-					currentStropheIndex,
-				});
-				// Navigate to absolute strophe position
-				if (
-					payload.songId === slideState.currentSongId &&
-					payload.stropheIndex !== currentStropheIndex
-				) {
-					console.log(
-						"[SlidePage] ✅ Navigating to strophe:",
-						payload.stropheIndex,
-					);
-					navigateToStrophe(payload.stropheIndex);
-				} else {
-					console.log(
-						"[SlidePage] ⏭️ Ignoring strophe change (already at position or different song)",
-					);
-				}
-			},
-			onLogoToggle: (payload) => {
-				console.log("[SlidePage] 🎨 MQTT onLogoToggle handler:", {
-					payload,
-					currentLogoState: isLogoSlide,
-				});
-				// Update slide controller to match remote logo state
-				if (payload.isLogoSlide !== isLogoSlide) {
-					console.log("[SlidePage] ✅ Toggling logo slide");
-					toggleLogoSlide();
-				} else {
-					console.log(
-						"[SlidePage] ⏭️ Ignoring logo toggle (already in desired state)",
-					);
-				}
-			},
-			onSongChange: (payload) => {
-				console.log("[SlidePage] 🎵 MQTT onSongChange handler:", {
-					payload,
-					currentSongId: slideState.currentSongId,
-				});
-				// Navigate to the song sent from remote
-				console.log("[SlidePage] ➡️ Calling navigateToSong from MQTT");
-				navigateToSong(payload.songId);
-			},
-		});
-
-		return () => {
-			console.log("[SlidePage] 🔌 Unsubscribing from MQTT");
-			unsubscribe();
-		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
-
+	// Arrow + strophe navigation
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {
-			if (isTextSlide || strophes.length === 0) {
-				// If text slide or no song is open, handle setlist navigation
-				if (e.key === "ArrowLeft") handlePrevStrophe();
-				if (e.key === "ArrowRight") handleNextStrophe();
-				if (e.key === "f" || e.key === "F") document.body.requestFullscreen();
-				return;
-			}
-
-			// If a song is open, handle strophe navigation
 			if (e.key === "ArrowRight") handleNextStrophe();
 			if (e.key === "ArrowLeft") handlePrevStrophe();
 			if (e.key === "f" || e.key === "F") document.body.requestFullscreen();
 		};
 		document.addEventListener("keydown", handleKey);
-		return () => {
-			document.removeEventListener("keydown", handleKey);
-		};
-	}, [handleNextStrophe, handlePrevStrophe, isTextSlide, strophes.length]);
+		return () => document.removeEventListener("keydown", handleKey);
+	}, [handleNextStrophe, handlePrevStrophe]);
 
+	// Global keys: help, logo toggle, quit
 	useEffect(() => {
 		const handleKey = (e: KeyboardEvent) => {
 			if (e.key === "h" || e.key === "H") setSlideHelp((v) => !v);
-			if (e.key === "t" || e.key === "T") toggleLogoSlide();
+			if (e.key === "t" || e.key === "T") dispatch({ type: "TOGGLE_LOGO" });
 			if (e.key === "Escape" && !document.fullscreenElement) navigate("/");
 			if (e.key === "q" || e.key === "Q") document.exitFullscreen();
 		};
@@ -257,7 +228,7 @@ const SlidePage = () => {
 			document.removeEventListener("keydown", handleKey);
 			document.removeEventListener("fullscreenchange", handleQuit);
 		};
-	}, [navigate, setSlideHelp, toggleLogoSlide]);
+	}, [navigate, setSlideHelp, dispatch]);
 
 	return (
 		<div className="absolute z-20 inset-0 flex flex-col justify-center items-center text-white bg-black overflow-clip">
