@@ -11,7 +11,8 @@
       "Bash(pnpm test:*)",
       "Bash(tail:*)",
       "Bash(git add:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(head:*)"
     ],
     "deny": [],
     "ask": []

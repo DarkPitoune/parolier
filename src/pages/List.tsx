@@ -38,7 +38,8 @@ function Index() {
 		[tagsData],
 	);
 
-	const [filteredSongs, setFilteredSongs] = useState<AllSongs>([]);
+	const [searchResults, setSearchResults] = useState<AllSongs | null>(null);
+	const filteredSongs = searchResults ?? songs;
 	const [selectedTags, setSelectedTags] = useAtom<number[]>(filtersAtom);
 	const [tagTabOpen, setTagTabOpen] = useAtom(tagTabOpenAtom);
 	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
@@ -49,27 +50,12 @@ function Index() {
 	const fuse = useMemo(() => new Fuse(songs, { keys: ["title"] }), [songs]);
 	const { leader } = useLeader();
 
-	// Sync filteredSongs when songs data loads/changes
-	useEffect(() => {
-		if (songs.length > 0) {
-			setFilteredSongs(songs);
-			fuse.setCollection(songs);
-		}
-	}, [songs, fuse]);
-
 	const toggleTag = (id: number) => {
 		setSelectedTags((oldTags) => {
 			if (!oldTags.includes(id)) return oldTags.concat([id]);
 			return oldTags.filter((tagId) => tagId !== id);
 		});
 	};
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: we want to scroll AFTER the songs are loaded in the DOM
-	useEffect(() => {
-		window.scroll({
-			top: Number(sessionStorage.getItem("indexScroll") || "0"),
-		});
-	}, [songs]);
 
 	const scrollToSelectedSong = useCallback(() => {
 		if (selectedSongIndex !== null) {
@@ -84,10 +70,6 @@ function Index() {
 	useEffect(scrollToSelectedSong, [scrollToSelectedSong]);
 
 	useEffect(() => {
-		const setScrollY = () =>
-			sessionStorage.setItem("indexScroll", window.scrollY.toString());
-		window.addEventListener("scroll", setScrollY);
-
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (selectedSongIndex !== null && event.key === "ArrowUp") {
 				event.preventDefault();
@@ -123,7 +105,6 @@ function Index() {
 		};
 		window.addEventListener("keydown", handleKeyDown);
 		return () => {
-			window.removeEventListener("scroll", setScrollY);
 			window.removeEventListener("keydown", handleKeyDown);
 		};
 	}, [selectedSongIndex, filteredSongs, navigate]);
@@ -133,15 +114,15 @@ function Index() {
 	const search: ChangeEventHandler<HTMLInputElement> = useCallback(
 		(event) => {
 			setSearchValue(event.target.value);
-			if (event.target.value.length === 0) setFilteredSongs(songs);
+			if (event.target.value.length === 0) setSearchResults(null);
 			else {
 				window.scrollTo(0, 0);
 				if (!Number.isNaN(Number(event.target.value))) {
 					const song = songs.find((s) => s.id === Number(event.target.value));
-					setFilteredSongs(song ? [song] : []);
+					setSearchResults(song ? [song] : []);
 					setSelectedSongIndex(0);
 				} else {
-					setFilteredSongs(
+					setSearchResults(
 						fuse.search(event.target.value).map((hit) => hit.item),
 					);
 					setSelectedSongIndex(null);

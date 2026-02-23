@@ -21,7 +21,8 @@ import { Link, useNavigate } from "react-router-dom";
 
 function Texts() {
   const [texts, setTexts] = useState<AllTexts>([]);
-  const [filteredTexts, setFilteredTexts] = useState<AllTexts>([]);
+  const [searchResults, setSearchResults] = useState<AllTexts | null>(null);
+  const filteredTexts = searchResults ?? texts;
   const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
   const navigate = useNavigate();
   const [selectedTextIndex, setSelectedTextIndex] = useState<number | null>(
@@ -38,18 +39,10 @@ function Texts() {
       if (data && data.length > 0) {
         data.sort((a, b) => a.id - b.id);
         setTexts(data);
-        setFilteredTexts(data);
         fuse.setCollection(data);
       }
     });
   }, [fuse.setCollection]);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: we want to scroll AFTER the texts are loaded in the DOM
-  useEffect(() => {
-    window.scroll({
-      top: Number(sessionStorage.getItem("textsScroll") || "0"),
-    });
-  }, [texts]);
 
   const scrollToSelectedText = useCallback(() => {
     if (selectedTextIndex !== null) {
@@ -64,10 +57,6 @@ function Texts() {
   useEffect(scrollToSelectedText, [scrollToSelectedText]);
 
   useEffect(() => {
-    const setScrollY = () =>
-      sessionStorage.setItem("textsScroll", window.scrollY.toString());
-    window.addEventListener("scroll", setScrollY);
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (selectedTextIndex !== null && event.key === "ArrowUp") {
         event.preventDefault();
@@ -103,7 +92,6 @@ function Texts() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener("scroll", setScrollY);
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [selectedTextIndex, filteredTexts, navigate]);
@@ -113,15 +101,15 @@ function Texts() {
   const search: ChangeEventHandler<HTMLInputElement> = useCallback(
     (event) => {
       setSearchValue(event.target.value);
-      if (event.target.value.length === 0) setFilteredTexts(texts);
+      if (event.target.value.length === 0) setSearchResults(null);
       else {
         window.scrollTo(0, 0);
         if (!Number.isNaN(Number(event.target.value))) {
           const text = texts.find((t) => t.id === Number(event.target.value));
-          setFilteredTexts(text ? [text] : []);
+          setSearchResults(text ? [text] : []);
           setSelectedTextIndex(0);
         } else {
-          setFilteredTexts(
+          setSearchResults(
             fuse.search(event.target.value).map((hit) => hit.item),
           );
           setSelectedTextIndex(null);
