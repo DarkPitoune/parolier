@@ -1,47 +1,18 @@
 import { PageHeader } from "@/components";
 import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
-import { getPopularSongsQuery } from "@/utils/supabase";
-import * as Sentry from "@sentry/react";
-import { useEffect, useState } from "react";
+import { usePopularSongs } from "@/hooks/queries/useAnalyticsQueries";
+import { useState } from "react";
 
 function Analytics() {
 	// Component purely vibe coded, no guarantee
-	const [analytics, setAnalytics] = useState<
-		{ title: string; count: number }[]
-	>([]);
 	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
 	const [startDate, setStartDate] = useState<string>("");
 	const [endDate, setEndDate] = useState<string>("");
-	const [isLoading, setIsLoading] = useState(true);
 
-	useEffect(() => {
-		const fetchAnalytics = async () => {
-			setIsLoading(true);
-			try {
-				const { data, error } = await getPopularSongsQuery(
-					startDate || undefined,
-					endDate || undefined,
-				);
-
-				if (error) {
-					Sentry.captureException(error);
-					console.error("Erreur lors du chargement des analytics:", error);
-				} else if (data) {
-					setAnalytics(data);
-				}
-			} catch (error) {
-				Sentry.captureException(error);
-				console.error("Erreur lors du chargement des analytics:", error);
-			} finally {
-				setIsLoading(false);
-			}
-		};
-
-		fetchAnalytics();
-	}, [startDate, endDate]);
-
-	// Data is now pre-aggregated from the query
-	const songCounts = analytics;
+	const { data: songCounts = [], isLoading } = usePopularSongs(
+		startDate || undefined,
+		endDate || undefined,
+	);
 
 	const handleDateChange = (type: "start" | "end", value: string) => {
 		if (type === "start") {

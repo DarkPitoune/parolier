@@ -16,7 +16,7 @@ import { useMqttConnectionStatus } from "@/hooks/useMqttConnectionStatus";
 import { useSlideStateMachine } from "@/hooks/useSlideStateMachine";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { useAtom } from "jotai";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import {
 	useLocation,
@@ -33,7 +33,7 @@ const SlidePage = () => {
 	const startFromEnd = searchParams.get("from") === "end";
 	const [slideHelp, setSlideHelp] = useAtom(slideHelpAtom);
 
-	const { state, dispatch } = useSlideStateMachine("display");
+	const { state, dispatch, localDispatch } = useSlideStateMachine("display");
 
 	// Derive from state
 	const strophes: Strophe[] =
@@ -57,6 +57,8 @@ const SlidePage = () => {
 
 	// Setlist length query
 	const { data: setlistLength = 0 } = useSetlistLength(setlistId);
+	const setlistLengthRef = useRef(setlistLength);
+	setlistLengthRef.current = setlistLength;
 
 	// Determine which song ID to load from URL
 	const songIdFromUrl = songId ? Number(songId) : undefined;
@@ -78,23 +80,34 @@ const SlidePage = () => {
 	// Init from song query (URL or synced songId)
 	// location.key changes on every navigation (even to the same URL), so re-selecting
 	// the same song via SlideFinder re-dispatches LOAD_SONG (exits logo mode, resets strophe).
+	// biome-ignore lint/correctness/useExhaustiveDependencies: location.key intentionally triggers re-dispatch on same-URL navigation
 	useEffect(() => {
 		if (songData?.strophes) {
 			const id = songIdFromUrl ?? currentSongId;
 			if (id) {
-				dispatch({
-					type: "LOAD_SONG",
-					songId: id,
-					strophes: songData.strophes,
-					setlistContext:
-						setlistId && stepNumber
-							? {
-									setlistId,
-									stepNumber: Number(stepNumber),
-									totalSteps: setlistLength,
-								}
-							: undefined,
-				});
+				if (songIdFromUrl) {
+					// URL-driven load (SlideFinder, direct navigation): broadcast via dispatch
+					dispatch({
+						type: "LOAD_SONG",
+						songId: id,
+						strophes: songData.strophes,
+						setlistContext:
+							setlistId && stepNumber
+								? {
+										setlistId,
+										stepNumber: Number(stepNumber),
+										totalSteps: setlistLengthRef.current,
+									}
+								: undefined,
+					});
+				} else {
+					// Sync-driven hydration: only populate strophes without changing
+					// mode/stropheIndex, and don't write to localStorage.
+					localDispatch({
+						type: "HYDRATE_STROPHES",
+						strophes: songData.strophes,
+					});
+				}
 			}
 		} else if (needsFetch && songError) {
 			toast.error("Connexion à internet requise", {
@@ -109,8 +122,8 @@ const SlidePage = () => {
 		needsFetch,
 		setlistId,
 		stepNumber,
-		setlistLength,
 		dispatch,
+		localDispatch,
 		location.key,
 	]);
 
@@ -126,7 +139,7 @@ const SlidePage = () => {
 					? {
 							setlistId,
 							stepNumber: Number(stepNumber),
-							totalSteps: setlistLength,
+							totalSteps: setlistLengthRef.current,
 						}
 					: undefined,
 			});
@@ -149,7 +162,7 @@ const SlidePage = () => {
 				setlistContext: {
 					setlistId: setlistId ?? "",
 					stepNumber: Number(stepNumber),
-					totalSteps: setlistLength,
+					totalSteps: setlistLengthRef.current,
 				},
 			});
 			toast(label, {
@@ -157,7 +170,7 @@ const SlidePage = () => {
 				style: { backgroundColor: "black", color: "white" },
 			});
 		}
-	}, [stepData, setlistId, stepNumber, setlistLength, startFromEnd, dispatch]);
+	}, [stepData, setlistId, stepNumber, startFromEnd, dispatch]);
 
 	const handleNextStrophe = useCallback(() => {
 		const action = getSetlistNavAction(
@@ -241,12 +254,17 @@ const SlidePage = () => {
 				<img src="/svg/Jubilate_Croix.svg" alt="logo" className="size-36" />
 			) : (
 				<>
-					<SlideViewer
-						key={`${songId || stepNumber}-${currentStropheIndex}`}
-						strophe={strophes[currentStropheIndex]}
-					/>
+					<div data-testid="slide-content" className="h-full w-full">
+						<SlideViewer
+							key={`${songId || stepNumber}-${currentStropheIndex}`}
+							strophe={strophes[currentStropheIndex]}
+						/>
+					</div>
 					{currentStropheIndex === strophes.length - 1 && (
-						<div className="absolute bottom-4 right-4 size-3 rounded-full bg-white opacity-60" />
+						<div
+							data-testid="last-strophe-dot"
+							className="absolute bottom-4 right-4 size-3 rounded-full bg-white opacity-60"
+						/>
 					)}
 					<div className="absolute inset-0 flex items-stretch justify-stretch">
 						<div className="grow" onTouchStart={handlePrevStrophe} />

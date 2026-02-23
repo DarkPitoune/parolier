@@ -11,6 +11,7 @@ import {
 	useSetlistStepCached,
 } from "@/hooks/queries/useSetlistQueries";
 import { useTaggedSong } from "@/hooks/queries/useSongQueries";
+import { getSetlistNavAction } from "@/hooks/slideReducer";
 import { useMqttConnectionStatus } from "@/hooks/useMqttConnectionStatus";
 import { useSlideStateMachine } from "@/hooks/useSlideStateMachine";
 import { useWakeLock } from "@/hooks/useWakeLock";
@@ -22,12 +23,13 @@ import {
 	MusicalNoteIcon,
 	PlayIcon,
 } from "@heroicons/react/24/outline";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const PresenterPage = () => {
 	const { setlistId, stepNumber } = useParams();
+	const navigate = useNavigate();
 	const [slideshowWindow, setSlideshowWindow] = useState<Window | null>(null);
 	const [showMobileSongPicker, setShowMobileSongPicker] = useState(false);
 
@@ -54,6 +56,8 @@ const PresenterPage = () => {
 
 	// Load setlist length via query
 	const { data: setlistLength = 0 } = useSetlistLength(setlistId);
+	const setlistLengthRef = useRef(setlistLength);
+	setlistLengthRef.current = setlistLength;
 
 	// Load initial song from URL params via query (cache-first, prefetched at app startup)
 	const { data: stepData } = useSetlistStepCached(
@@ -72,7 +76,7 @@ const PresenterPage = () => {
 					? {
 							setlistId,
 							stepNumber: Number(stepNumber),
-							totalSteps: setlistLength,
+							totalSteps: setlistLengthRef.current,
 						}
 					: undefined,
 			});
@@ -80,7 +84,7 @@ const PresenterPage = () => {
 				position: "top-center",
 			});
 		}
-	}, [stepData, setlistId, stepNumber, setlistLength, dispatch]);
+	}, [stepData, setlistId, stepNumber, dispatch]);
 
 	// Load strophes when current song changes (via sync from localStorage)
 	// Only fetch if state has the songId but no strophes (deserialized from sync)
@@ -244,8 +248,52 @@ const PresenterPage = () => {
 	);
 
 	// Navigation helpers
-	const canGoNext = currentStropheIndex < strophes.length - 1;
-	const canGoPrev = currentStropheIndex > 0;
+	const handleNextStrophe = useCallback(() => {
+		const action = getSetlistNavAction(
+			"next",
+			state,
+			setlistId,
+			stepNumber,
+			setlistLength,
+		);
+		switch (action) {
+			case "dispatch":
+				dispatch({ type: "NEXT_STROPHE" });
+				break;
+			case "next_step":
+				navigate(
+					`/presenter/${setlistId}/${Number(stepNumber) + 1}`,
+					{ replace: true },
+				);
+				break;
+		}
+	}, [state, setlistId, stepNumber, setlistLength, dispatch, navigate]);
+
+	const handlePrevStrophe = useCallback(() => {
+		const action = getSetlistNavAction(
+			"prev",
+			state,
+			setlistId,
+			stepNumber,
+			setlistLength,
+		);
+		switch (action) {
+			case "dispatch":
+				dispatch({ type: "PREV_STROPHE" });
+				break;
+			case "prev_step":
+				navigate(
+					`/presenter/${setlistId}/${Number(stepNumber) - 1}`,
+					{ replace: true },
+				);
+				break;
+		}
+	}, [state, setlistId, stepNumber, setlistLength, dispatch, navigate]);
+
+	const canGoNext =
+		getSetlistNavAction("next", state, setlistId, stepNumber, setlistLength) !== "none";
+	const canGoPrev =
+		getSetlistNavAction("prev", state, setlistId, stepNumber, setlistLength) !== "none";
 
 	const currentStrophe = strophes[currentStropheIndex];
 	const nextStropheData = strophes[currentStropheIndex + 1];
@@ -277,15 +325,11 @@ const PresenterPage = () => {
 
 			if (e.key === "ArrowRight") {
 				e.preventDefault();
-				if (canGoNext) {
-					dispatch({ type: "NEXT_STROPHE" });
-				}
+				handleNextStrophe();
 			}
 			if (e.key === "ArrowLeft") {
 				e.preventDefault();
-				if (canGoPrev) {
-					dispatch({ type: "PREV_STROPHE" });
-				}
+				handlePrevStrophe();
 			}
 			if (e.key === "t" || e.key === "T") {
 				e.preventDefault();
@@ -295,7 +339,7 @@ const PresenterPage = () => {
 
 		document.addEventListener("keydown", handleKey);
 		return () => document.removeEventListener("keydown", handleKey);
-	}, [canGoNext, canGoPrev, dispatch]);
+	}, [handleNextStrophe, handlePrevStrophe, dispatch]);
 
 	return (
 		<div className="bg-white dark:bg-gray-800 h-screen flex flex-col">
@@ -420,7 +464,7 @@ const PresenterPage = () => {
 						<div className="flex items-center justify-center gap-6">
 							<button
 								type="button"
-								onClick={() => dispatch({ type: "PREV_STROPHE" })}
+								onClick={handlePrevStrophe}
 								disabled={!canGoPrev}
 								data-testid="prev-strophe-btn"
 								className="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-4 rounded-full transition-colors"
@@ -448,7 +492,7 @@ const PresenterPage = () => {
 
 							<button
 								type="button"
-								onClick={() => dispatch({ type: "NEXT_STROPHE" })}
+								onClick={handleNextStrophe}
 								disabled={!canGoNext}
 								data-testid="next-strophe-btn"
 								className="bg-jubilateBlue-500 hover:bg-jubilateBlue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-4 rounded-full transition-colors"

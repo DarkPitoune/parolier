@@ -1,5 +1,6 @@
 import { PageHeader, TextInput } from "@/components";
-import supabase, { type Text, textQuery } from "@/utils/supabase";
+import { useText } from "@/hooks/queries/useTextQueries";
+import supabase, { type Text } from "@/utils/supabase";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
@@ -7,21 +8,23 @@ import { useNavigate, useParams } from "react-router-dom";
 const TextEditor = () => {
 	const { textId } = useParams();
 	const navigate = useNavigate();
+	const { data: textData, isLoading } = useText(
+		textId ? Number(textId) : undefined,
+	);
 	const [text, setText] = useState<Text | null>(null);
-	const [loading, setLoading] = useState(true);
+
+	// Initialize local mutable copy from query data
+	useEffect(() => {
+		if (textData) {
+			setText(textData);
+		}
+	}, [textData]);
 
 	useEffect(() => {
-		if (textId) {
-			textQuery(Number(textId)).then(({ data, error }) => {
-				if (error) throw error;
-				if (data) {
-					setText(data);
-					document.title = `Modifier "${data.title}" - Parolier`;
-				}
-				setLoading(false);
-			});
+		if (text?.title) {
+			document.title = `Modifier "${text.title}" - Parolier`;
 		}
-	}, [textId]);
+	}, [text?.title]);
 
 	const handleSave = async () => {
 		if (!text) return;
@@ -41,7 +44,7 @@ const TextEditor = () => {
 		setText((prev) => (prev ? { ...prev, [field]: value } : null));
 	};
 
-	if (loading) return <div className="text-center">Loading...</div>;
+	if (isLoading) return <div className="text-center">Chargement...</div>;
 
 	return (
 		<div className="bg-white dark:bg-gray-800 min-h-screen">

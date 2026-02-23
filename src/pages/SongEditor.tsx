@@ -1,15 +1,11 @@
 import type { Line, Strophe } from "@/assets/types";
-import supabase, {
-	allTagsQuery,
-	type TaggedSong,
-	taggedSongQuery,
-	type Tags,
-} from "@/utils/supabase";
+import supabase, { type TaggedSong } from "@/utils/supabase";
 import type { Json } from "../../database.types";
 
 import { PageHeader, TextInput } from "@/components";
 import { songEditorHelpOpen } from "@/components/Contexts/SettingsContext";
 import { TagChip } from "@/components/TagChip";
+import { useAllTags, useTaggedSong } from "@/hooks/queries/useSongQueries";
 import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import {
 	ArrowDownIcon,
@@ -26,9 +22,11 @@ import { useParams } from "react-router-dom";
 
 const SongEditor = () => {
 	const { songId } = useParams();
+	const { data: songData, isLoading: songLoading } = useTaggedSong(
+		songId ? Number(songId) : undefined,
+	);
+	const { data: allTags = [] } = useAllTags();
 	const [song, setSong] = useState<TaggedSong | null>(null);
-	const [loading, setLoading] = useState(true);
-	const [allTags, setAllTags] = useState<Tags>([]);
 	const [selectedTags, setSelectedTags] = useState<number[]>([]);
 	const [isSongEditorHelpOpen, setIsSongEditorHelpOpen] =
 		useAtom(songEditorHelpOpen);
@@ -46,21 +44,19 @@ const SongEditor = () => {
 	const [isPdfUploading, setIsPdfUploading] = useState(false);
 	const pdfInputRef = useRef<HTMLInputElement>(null);
 
+	// Initialize local mutable copy from query data
 	useEffect(() => {
-		taggedSongQuery(Number(songId)).then(({ data, error }) => {
-			if (error) throw error;
-			setSong(data);
-			setSelectedTags(data.tags.map((tag) => tag.id));
-			setLoading(false);
-			document.title = `Modifier "${data.title}" - Parolier`;
-		});
+		if (songData) {
+			setSong(songData);
+			setSelectedTags(songData.tags.map((tag) => tag.id));
+		}
+	}, [songData]);
 
-		allTagsQuery().then(({ data, error }) => {
-			if (error) throw error;
-			data.sort((a, b) => a.id - b.id);
-			setAllTags(data);
-		});
-	}, [songId]);
+	useEffect(() => {
+		if (song?.title) {
+			document.title = `Modifier "${song.title}" - Parolier`;
+		}
+	}, [song?.title]);
 
 	const handleSave = async () => {
 		if (!song) return;
@@ -442,7 +438,7 @@ const SongEditor = () => {
 		return () => window.removeEventListener("beforeunload", handleBeforeUnload);
 	}, [isProcessing, suggestedLyrics, isPdfUploading]);
 
-	if (loading) return <div className="text-center">Loading...</div>;
+	if (songLoading) return <div className="text-center">Chargement...</div>;
 
 	return (
 		<div className="bg-white dark:bg-gray-800">
@@ -685,16 +681,18 @@ const SongEditor = () => {
 							</div>
 						</div>
 					)}
-					{allTags.map((tag) => (
-						<TagChip
-							tag={tag}
-							onClick={() => toggleTag(tag.id)}
-							key={tag.id}
-							inverted={selectedTags.includes(tag.id)}
-							iconOnly
-							outline
-						/>
-					))}
+					{[...allTags]
+						.sort((a, b) => a.id - b.id)
+						.map((tag) => (
+							<TagChip
+								tag={tag}
+								onClick={() => toggleTag(tag.id)}
+								key={tag.id}
+								inverted={selectedTags.includes(tag.id)}
+								iconOnly
+								outline
+							/>
+						))}
 					<div className="flex flex-col gap-4">
 						<h3 className="text-xl font-semibold mb-2">Strophes&nbsp;:</h3>
 						<button

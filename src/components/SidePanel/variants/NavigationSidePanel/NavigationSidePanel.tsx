@@ -1,20 +1,20 @@
 import { queryKeys } from "@/utils/queryKeys";
 import { newSongMutation } from "@/utils/supabase";
+import {
+	BookOpenIcon,
+	CalendarDaysIcon,
+	ChartBarIcon,
+	DocumentTextIcon,
+	MusicalNoteIcon,
+	PlusIcon,
+	PresentationChartLineIcon,
+	QueueListIcon,
+} from "@heroicons/react/16/solid";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { SidePanel } from "../../SidePanel";
-import {
-	MusicalNoteIcon,
-	DocumentTextIcon,
-	BookOpenIcon,
-	CalendarDaysIcon,
-	QueueListIcon,
-	ChartBarIcon,
-	PresentationChartLineIcon,
-	PlusIcon,
-} from "@heroicons/react/16/solid";
 
 export function NavigationSidePanel({
 	open,

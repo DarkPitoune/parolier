@@ -1,4 +1,9 @@
-import { AuthContextProvider, CornerMenu, ErrorBoundary, isDarkAtom } from "@/components";
+import {
+	AuthContextProvider,
+	CornerMenu,
+	ErrorBoundary,
+	isDarkAtom,
+} from "@/components";
 import { systemPrefersDarkAtom } from "@/components/Contexts/SettingsContext";
 import {
 	Analytics,
@@ -12,8 +17,8 @@ import {
 	SongPage,
 	TextEditor,
 } from "@/pages";
-import { QueryClientProvider } from "@tanstack/react-query";
 import * as Sentry from "@sentry/react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
@@ -27,10 +32,10 @@ import { CachePage } from "./pages/CachePage";
 import { TextPage } from "./pages/TextPage";
 import { Texts } from "./pages/Texts";
 import "./index.css";
-import { SetlistPage } from "./pages/SetlistPage";
-import SongEditor from "./pages/SongEditor";
 import { usePrefetchAllSetlistSteps } from "./hooks/queries/useSetlistQueries";
 import { usePrefetchAllSongs } from "./hooks/queries/useSongQueries";
+import { SetlistPage } from "./pages/SetlistPage";
+import SongEditor from "./pages/SongEditor";
 import { queryClient } from "./utils/queryClient";
 
 Sentry.init({

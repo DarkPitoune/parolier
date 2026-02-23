@@ -12,7 +12,11 @@
       "Bash(tail:*)",
       "Bash(git add:*)",
       "Bash(ls:*)",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "WebFetch(domain:gist.github.com)",
+      "Bash(pnpm exec:*)",
+      "Bash(VITE_E2E=true pnpm build:*)",
+      "Bash(grep scrollbar:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,5 +1,5 @@
-import { useIsMobile } from "@/hooks/useIsMobile";
 import { useAllSongs, useTaggedSong } from "@/hooks/queries/useSongQueries";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import type { AllSongs } from "@/utils/supabase";
 import clsx from "clsx";
 import Fuse from "fuse.js";
