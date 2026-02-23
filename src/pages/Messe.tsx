@@ -1,80 +1,28 @@
 import { PageHeader, SettingsSidePanel, useLeader } from "@/components";
 import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
+import { useMesseData } from "@/hooks/queries/useMesseQueries";
 import { CalendarIcon } from "@heroicons/react/16/solid";
 import clsx from "clsx";
-import { useCallback, useEffect, useState } from "react";
-
-interface LiturgicalInformation {
-	date: string;
-	zone_liturgique: string;
-	couleur: string;
-	temps_liturgique: string;
-	semaine: string;
-	jour: string;
-	fete?: string;
-	mémoire?: string;
-}
-
-interface Lecture {
-	type: string;
-	refrain_psalmique?: string;
-	titre: string;
-	contenu: string;
-	ref: string;
-	intro_lue?: string;
-	verset_evangile?: string;
-}
-
-interface Masse {
-	nom: string;
-	lectures: Lecture[];
-}
-
-interface MesseData {
-	informations: LiturgicalInformation;
-	messes: Masse[];
-}
+import { useState } from "react";
 
 function Messe() {
 	const [selectedDate, setSelectedDate] = useState(() => {
 		const today = new Date();
 		return today.toISOString().split("T")[0];
 	});
-	const [messeData, setMesseData] = useState<MesseData | null>(null);
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState<string | null>(null);
 	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
 	const { leader } = useLeader();
 
-	const fetchMesseData = useCallback(async (date: string) => {
-		setLoading(true);
-		setError(null);
-
-		try {
-			const response = await fetch(
-				`https://api.aelf.org/v1/messes/${date}/france`,
-			);
-
-			if (!response.ok) {
-				if (response.status === 404) {
-					throw new Error("Aucune donnée disponible pour cette date");
-				}
-				throw new Error("Erreur lors de la récupération des données");
-			}
-
-			const data = await response.json();
-			setMesseData(data);
-		} catch (err) {
-			setError(err instanceof Error ? err.message : "Une erreur est survenue");
-			setMesseData(null);
-		} finally {
-			setLoading(false);
-		}
-	}, []);
-
-	useEffect(() => {
-		fetchMesseData(selectedDate);
-	}, [selectedDate, fetchMesseData]);
+	const {
+		data: messeData,
+		isLoading: loading,
+		error: queryError,
+	} = useMesseData(selectedDate);
+	const error = queryError
+		? queryError instanceof Error
+			? queryError.message
+			: "Une erreur est survenue"
+		: null;
 
 	const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSelectedDate(event.target.value);
@@ -107,7 +55,10 @@ function Messe() {
 						</div>
 					}
 					right={
-						<button type="button" onClick={() => setIsNavigationPanelOpen(true)}>
+						<button
+							type="button"
+							onClick={() => setIsNavigationPanelOpen(true)}
+						>
 							<img className="h-12" src="/svg/logo.svg" alt="Logo" />
 						</button>
 					}

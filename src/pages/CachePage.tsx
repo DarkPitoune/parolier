@@ -81,7 +81,7 @@ const CachePage = () => {
 		return unsubscribe;
 	}, []);
 
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+	// biome-ignore lint/correctness/useExhaustiveDependencies: version triggers recalculation when cache changes
 	const groups = useMemo(() => getCacheEntries(), [version]);
 
 	const totalEntries = Array.from(groups.values()).reduce(
@@ -122,9 +122,7 @@ const CachePage = () => {
 										key={entry.key}
 										className="border-b border-gray-200 dark:border-gray-700 dark:text-gray-300"
 									>
-										<td className="py-1 pr-2 max-w-xs truncate">
-											{entry.key}
-										</td>
+										<td className="py-1 pr-2 max-w-xs truncate">{entry.key}</td>
 										<td className="py-1 pr-2">
 											<span
 												className={
@@ -141,9 +139,7 @@ const CachePage = () => {
 										<td className="py-1 pr-2">{entry.updatedAt}</td>
 										<td className="py-1 pr-2">{entry.age}</td>
 										<td className="py-1 pr-2">{entry.dataSize}</td>
-										<td className="py-1">
-											{entry.isStale ? "yes" : "no"}
-										</td>
+										<td className="py-1">{entry.isStale ? "yes" : "no"}</td>
 									</tr>
 								))}
 							</tbody>

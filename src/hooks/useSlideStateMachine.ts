@@ -100,7 +100,15 @@ export function useSlideStateMachine(role: SlideRole) {
 		return unsubscribe;
 	}, []);
 
-	return { state, dispatch } as const;
+	// Local-only dispatch: updates state without writing to localStorage or MQTT.
+	// Use this when the display hydrates strophes from network after a sync —
+	// those are local rendering concerns, not state changes to broadcast.
+	const localDispatch = useCallback((event: SlideEvent) => {
+		rawDispatch(event);
+		stateRef.current = slideReducer(stateRef.current, event);
+	}, []);
+
+	return { state, dispatch, localDispatch } as const;
 }
 
 export { SLIDE_STATE_KEY };

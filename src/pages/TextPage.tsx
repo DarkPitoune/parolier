@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components";
-import { type Text, textQuery } from "@/utils/supabase";
+import { useText } from "@/hooks/queries/useTextQueries";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
@@ -10,7 +10,7 @@ type RightClickMenuPosition = {
 
 function TextPage() {
 	const { textId } = useParams();
-	const [text, setText] = useState<Text>();
+	const { data: text } = useText(textId ? Number(textId) : undefined);
 	const rightClickMenuRef = useRef<HTMLDivElement>(null);
 	const [rightClickMenuPosition, setRightClickMenuPosition] =
 		useState<RightClickMenuPosition | null>(null);
@@ -40,22 +40,11 @@ function TextPage() {
 		};
 	}, []);
 
-	useEffect(() => {
-		if (textId) {
-			textQuery(Number(textId)).then(({ data }) => {
-				if (data) setText(data);
-			});
-		}
-	}, [textId]);
-
 	if (!text) return null;
 
 	return (
 		<div>
-			<PageHeader
-				variant="detail"
-				title={`${text.id}. ${text.title}`}
-			/>
+			<PageHeader variant="detail" title={`${text.id}. ${text.title}`} />
 			<div onContextMenu={handleOnContextMenu} className="p-6">
 				<div className="max-w-4xl mx-auto">
 					<div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">

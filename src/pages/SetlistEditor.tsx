@@ -6,22 +6,21 @@ import {
 	TextItem,
 	TextPicker,
 } from "@/components";
-import { useSetlist } from "@/hooks/queries/useSetlistQueries";
+import { useSetlist, useSetlistName } from "@/hooks/queries/useSetlistQueries";
 import { queryKeys } from "@/utils/queryKeys";
 import {
 	setlistItemAppendMutation,
 	setlistItemDeleteMutation,
 	setlistItemPositionMutation,
 	setlistNameMutation,
-	setlistNameQuery,
 	setlistTextItemMutation,
 } from "@/utils/supabase";
-import { useQueryClient } from "@tanstack/react-query";
 import {
 	ArrowDownIcon,
 	ArrowUpIcon,
 	XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -39,11 +38,20 @@ const SetlistEditor = () => {
 		[setlistData],
 	);
 
+	const { data: initialSetlistName } = useSetlistName(setlistId);
+
 	const [selectedItem, setSelectedItem] = useState<number>();
 	const [setlistName, setSetlistName] = useState<string>("");
 	const [isSongPickerOpen, setIsSongPickerOpen] = useState(false);
 	const [isTextPickerOpen, setIsTextPickerOpen] = useState(false);
 	const [textNewValue, setTextNewValue] = useState<string | null>(null);
+
+	// Initialize setlist name from query data
+	useEffect(() => {
+		if (initialSetlistName) {
+			setSetlistName(initialSetlistName);
+		}
+	}, [initialSetlistName]);
 
 	const handleSelectItem = (id: number) => {
 		setSelectedItem(id);
@@ -59,14 +67,6 @@ const SetlistEditor = () => {
 			queryKey: queryKeys.setlists.detail(setlistId),
 		});
 	}, [setlistId, queryClient]);
-
-	// Load setlist name on mount
-	useEffect(() => {
-		if (!setlistId) return;
-		setlistNameQuery(setlistId).then(({ data }) => {
-			if (data?.name) setSetlistName(data.name);
-		});
-	}, [setlistId]);
 
 	const handleSaveSetlistName = () => {
 		if (!setlistId) return;

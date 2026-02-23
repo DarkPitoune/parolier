@@ -1,10 +1,6 @@
+import { useAllTexts, useText } from "@/hooks/queries/useTextQueries";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import {
-	type AllTexts,
-	type Text,
-	allTextsQuery,
-	textQuery,
-} from "@/utils/supabase";
+import type { AllTexts } from "@/utils/supabase";
 import clsx from "clsx";
 import Fuse from "fuse.js";
 import {
@@ -22,27 +18,19 @@ type TextPickerProps = {
 
 const TextPicker = ({ handleClose }: TextPickerProps) => {
 	const isMobile = useIsMobile();
+	const { data: textsData = [] } = useAllTexts();
 	const [texts, setTexts] = useState<AllTexts>([]);
 	const [filteredTexts, setFilteredTexts] = useState<AllTexts>([]);
 	const [selectedTextId, setSelectedTextId] = useState<number | null>(null);
-	const [selectedText, setSelectedText] = useState<Text | null>(null);
+	const { data: selectedText } = useText(selectedTextId ?? undefined);
 
+	// Sync texts from query data
 	useEffect(() => {
-		allTextsQuery().then(({ data }) => {
-			if (data) {
-				setTexts(data);
-				setFilteredTexts(data);
-			}
-		});
-	}, []);
-
-	useEffect(() => {
-		if (selectedTextId !== null) {
-			textQuery(selectedTextId).then(({ data }) => {
-				if (data) setSelectedText(data);
-			});
+		if (textsData.length > 0) {
+			setTexts(textsData);
+			setFilteredTexts(textsData);
 		}
-	}, [selectedTextId]);
+	}, [textsData]);
 
 	const scrollToSelectedText = useCallback(() => {
 		if (selectedTextId !== null) {

@@ -1,4 +1,9 @@
-import { PageHeader, SettingsSidePanel, SongItem, useLeader } from "@/components";
+import {
+	PageHeader,
+	SettingsSidePanel,
+	SongItem,
+	useLeader,
+} from "@/components";
 import {
 	filtersAtom,
 	tagTabOpenAtom,
@@ -182,7 +187,10 @@ function Index() {
 						</div>
 					}
 					right={
-						<button type="button" onClick={() => setIsNavigationPanelOpen(true)}>
+						<button
+							type="button"
+							onClick={() => setIsNavigationPanelOpen(true)}
+						>
 							<img className="h-12" src="/svg/logo.svg" alt="Logo" />
 						</button>
 					}

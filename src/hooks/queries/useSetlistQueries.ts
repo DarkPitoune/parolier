@@ -3,6 +3,7 @@ import {
 	allSetlistItemsQuery,
 	allSetlistsQuery,
 	setlistLengthQuery,
+	setlistNameQuery,
 	setlistQuery,
 	taggedSongFromSetlistStepQuery,
 } from "@/utils/supabase";
@@ -66,6 +67,18 @@ export const useSetlistLength = (setlistId: string | undefined) =>
 			const { data, error } = await setlistLengthQuery(setlistId as string);
 			if (error) throw error;
 			return data?.[0]?.position ?? 0;
+		},
+		enabled: !!setlistId,
+		staleTime: 0,
+	});
+
+export const useSetlistName = (setlistId: string | undefined) =>
+	useQuery({
+		queryKey: queryKeys.setlists.name(setlistId as string),
+		queryFn: async () => {
+			const { data, error } = await setlistNameQuery(setlistId as string);
+			if (error) throw error;
+			return data?.name ?? "";
 		},
 		enabled: !!setlistId,
 		staleTime: 0,

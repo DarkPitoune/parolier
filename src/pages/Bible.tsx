@@ -1,5 +1,6 @@
 import { PageHeader, SettingsSidePanel, useLeader } from "@/components";
 import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
+import { useBible } from "@/hooks/queries/useBibleQueries";
 import { MagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import clsx from "clsx";
 import {
@@ -11,14 +12,6 @@ import {
 } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-interface BibleBook {
-	[key: string]: {
-		[key: string]: {
-			[key: string]: string;
-		};
-	};
-}
-
 interface BibleVerse {
 	book: string;
 	chapter: string;
@@ -27,8 +20,7 @@ interface BibleVerse {
 }
 
 function Bible() {
-	const [bible, setBible] = useState<BibleBook>({});
-	const [verses, setVerses] = useState<BibleVerse[]>([]);
+	const { data: bible = {} } = useBible();
 	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
 	const [searchValue, setSearchValue] = useState("");
 	const [filteredBooks, setFilteredBooks] = useState<string[]>([]);
@@ -43,24 +35,25 @@ function Bible() {
 		[bible, selectedBook],
 	);
 
+	// Initialize filteredBooks when bible data loads
 	useEffect(() => {
-		fetch("https://bible-api-lovat.vercel.app/book/all")
-			.then((res) => res.json())
-			.then((data) => {
-				setBible(data);
-				setFilteredBooks(Object.keys(data));
-			})
-			.catch(console.error);
-	}, []);
+		if (
+			Object.keys(bible).length > 0 &&
+			filteredBooks.length === 0 &&
+			!searchValue
+		) {
+			setFilteredBooks(Object.keys(bible));
+		}
+	}, [bible, filteredBooks.length, searchValue]);
 
-	useEffect(() => {
+	const verses = useMemo<BibleVerse[]>(() => {
 		if (
 			selectedBook &&
 			selectedChapter &&
 			bible[selectedBook]?.[selectedChapter]
 		) {
 			const chapterVerses = bible[selectedBook][selectedChapter];
-			const verseList: BibleVerse[] = Object.entries(chapterVerses)
+			return Object.entries(chapterVerses)
 				.map(([verseNum, text]) => ({
 					book: selectedBook,
 					chapter: selectedChapter,
@@ -68,17 +61,19 @@ function Bible() {
 					text,
 				}))
 				.sort((a, b) => Number(a.verse) - Number(b.verse));
-			setVerses(verseList);
-			document.title = `${selectedBook} ${selectedChapter} - Bible - Parolier`;
-		} else {
-			setVerses([]);
-			if (selectedBook) {
-				document.title = `${selectedBook} - Bible - Parolier`;
-			} else {
-				document.title = "Bible - Parolier";
-			}
 		}
+		return [];
 	}, [selectedBook, selectedChapter, bible]);
+
+	useEffect(() => {
+		if (selectedBook && selectedChapter && verses.length > 0) {
+			document.title = `${selectedBook} ${selectedChapter} - Bible - Parolier`;
+		} else if (selectedBook) {
+			document.title = `${selectedBook} - Bible - Parolier`;
+		} else {
+			document.title = "Bible - Parolier";
+		}
+	}, [selectedBook, selectedChapter, verses.length]);
 
 	const search: ChangeEventHandler<HTMLInputElement> = useCallback(
 		(event) => {
@@ -175,7 +170,10 @@ function Bible() {
 						</div>
 					}
 					right={
-						<button type="button" onClick={() => setIsNavigationPanelOpen(true)}>
+						<button
+							type="button"
+							onClick={() => setIsNavigationPanelOpen(true)}
+						>
 							<img className="h-12" src="/svg/logo.svg" alt="Logo" />
 						</button>
 					}

@@ -178,6 +178,61 @@ describe("slideReducer", () => {
 		});
 	});
 
+	describe("HYDRATE_STROPHES", () => {
+		it("populates strophes in song mode without changing stropheIndex", () => {
+			const state = songState({ strophes: [], stropheIndex: 2 });
+			const result = slideReducer(state, {
+				type: "HYDRATE_STROPHES",
+				strophes: strophes3,
+			});
+			expect(result).toMatchObject({
+				mode: "song",
+				stropheIndex: 2,
+				strophes: strophes3,
+			});
+		});
+
+		it("populates strophes in logo mode without changing mode", () => {
+			const state: SlideState = {
+				mode: "logo",
+				songId: 1,
+				stropheIndex: 1,
+				strophes: [],
+				setlistContext: null,
+			};
+			const result = slideReducer(state, {
+				type: "HYDRATE_STROPHES",
+				strophes: strophes3,
+			});
+			expect(result).toMatchObject({
+				mode: "logo",
+				stropheIndex: 1,
+				strophes: strophes3,
+			});
+		});
+
+		it("no-op in text mode", () => {
+			const state: SlideState = {
+				mode: "text",
+				textTitle: "T",
+				setlistContext: setlistCtx,
+			};
+			const result = slideReducer(state, {
+				type: "HYDRATE_STROPHES",
+				strophes: strophes3,
+			});
+			expect(result).toEqual(state);
+		});
+
+		it("no-op in idle mode", () => {
+			const result = slideReducer(INITIAL_STATE, {
+				type: "HYDRATE_STROPHES",
+				strophes: strophes3,
+			});
+			expect(result).toEqual(INITIAL_STATE);
+		});
+	});
+
 	describe("NEXT_STROPHE", () => {
 		it("increments stropheIndex in song mode", () => {
 			const state = songState();
@@ -560,29 +615,39 @@ describe("getSetlistNavAction", () => {
 		it("dispatches NEXT_STROPHE when not at last strophe", () => {
 			const state = songState({ stropheIndex: 0 });
 			expect(
-				getSetlistNavAction("next", state, setlist.id, setlist.step, setlist.length),
+				getSetlistNavAction(
+					"next",
+					state,
+					setlist.id,
+					setlist.step,
+					setlist.length,
+				),
 			).toBe("dispatch");
 		});
 
 		it("navigates to next step at last strophe in setlist", () => {
 			const state = songState({ stropheIndex: 2 }); // last of 3
 			expect(
-				getSetlistNavAction("next", state, setlist.id, setlist.step, setlist.length),
+				getSetlistNavAction(
+					"next",
+					state,
+					setlist.id,
+					setlist.step,
+					setlist.length,
+				),
 			).toBe("next_step");
 		});
 
 		it("does nothing at last strophe when not in setlist", () => {
 			const state = songState({ stropheIndex: 2 });
-			expect(
-				getSetlistNavAction("next", state, undefined, undefined, 0),
-			).toBe("none");
+			expect(getSetlistNavAction("next", state, undefined, undefined, 0)).toBe(
+				"none",
+			);
 		});
 
 		it("does nothing at last strophe of last setlist step", () => {
 			const state = songState({ stropheIndex: 2 });
-			expect(
-				getSetlistNavAction("next", state, "sl-1", "5", 5),
-			).toBe("none");
+			expect(getSetlistNavAction("next", state, "sl-1", "5", 5)).toBe("none");
 		});
 
 		it("navigates to next step on text slide", () => {
@@ -592,7 +657,13 @@ describe("getSetlistNavAction", () => {
 				setlistContext: setlistCtx,
 			};
 			expect(
-				getSetlistNavAction("next", state, setlist.id, setlist.step, setlist.length),
+				getSetlistNavAction(
+					"next",
+					state,
+					setlist.id,
+					setlist.step,
+					setlist.length,
+				),
 			).toBe("next_step");
 		});
 
@@ -602,14 +673,20 @@ describe("getSetlistNavAction", () => {
 				textTitle: "Lecture",
 				setlistContext: setlistCtx,
 			};
-			expect(
-				getSetlistNavAction("next", state, undefined, undefined, 0),
-			).toBe("none");
+			expect(getSetlistNavAction("next", state, undefined, undefined, 0)).toBe(
+				"none",
+			);
 		});
 
 		it("navigates to next step on idle (no song loaded) in setlist", () => {
 			expect(
-				getSetlistNavAction("next", INITIAL_STATE, setlist.id, setlist.step, setlist.length),
+				getSetlistNavAction(
+					"next",
+					INITIAL_STATE,
+					setlist.id,
+					setlist.step,
+					setlist.length,
+				),
 			).toBe("next_step");
 		});
 
@@ -628,7 +705,13 @@ describe("getSetlistNavAction", () => {
 				setlistContext: setlistCtx,
 			};
 			expect(
-				getSetlistNavAction("next", state, setlist.id, setlist.step, setlist.length),
+				getSetlistNavAction(
+					"next",
+					state,
+					setlist.id,
+					setlist.step,
+					setlist.length,
+				),
 			).toBe("dispatch");
 		});
 
@@ -641,7 +724,13 @@ describe("getSetlistNavAction", () => {
 				setlistContext: setlistCtx,
 			};
 			expect(
-				getSetlistNavAction("next", state, setlist.id, setlist.step, setlist.length),
+				getSetlistNavAction(
+					"next",
+					state,
+					setlist.id,
+					setlist.step,
+					setlist.length,
+				),
 			).toBe("dispatch");
 		});
 	});
@@ -650,29 +739,39 @@ describe("getSetlistNavAction", () => {
 		it("dispatches PREV_STROPHE when not at first strophe", () => {
 			const state = songState({ stropheIndex: 2 });
 			expect(
-				getSetlistNavAction("prev", state, setlist.id, setlist.step, setlist.length),
+				getSetlistNavAction(
+					"prev",
+					state,
+					setlist.id,
+					setlist.step,
+					setlist.length,
+				),
 			).toBe("dispatch");
 		});
 
 		it("navigates to prev step at first strophe in setlist", () => {
 			const state = songState({ stropheIndex: 0 });
 			expect(
-				getSetlistNavAction("prev", state, setlist.id, setlist.step, setlist.length),
+				getSetlistNavAction(
+					"prev",
+					state,
+					setlist.id,
+					setlist.step,
+					setlist.length,
+				),
 			).toBe("prev_step");
 		});
 
 		it("does nothing at first strophe when not in setlist", () => {
 			const state = songState({ stropheIndex: 0 });
-			expect(
-				getSetlistNavAction("prev", state, undefined, undefined, 0),
-			).toBe("none");
+			expect(getSetlistNavAction("prev", state, undefined, undefined, 0)).toBe(
+				"none",
+			);
 		});
 
 		it("does nothing at first strophe of first setlist step", () => {
 			const state = songState({ stropheIndex: 0 });
-			expect(
-				getSetlistNavAction("prev", state, "sl-1", "0", 5),
-			).toBe("none");
+			expect(getSetlistNavAction("prev", state, "sl-1", "0", 5)).toBe("none");
 		});
 
 		it("navigates to prev step on text slide", () => {
@@ -682,7 +781,13 @@ describe("getSetlistNavAction", () => {
 				setlistContext: setlistCtx,
 			};
 			expect(
-				getSetlistNavAction("prev", state, setlist.id, setlist.step, setlist.length),
+				getSetlistNavAction(
+					"prev",
+					state,
+					setlist.id,
+					setlist.step,
+					setlist.length,
+				),
 			).toBe("prev_step");
 		});
 
@@ -695,7 +800,13 @@ describe("getSetlistNavAction", () => {
 				setlistContext: setlistCtx,
 			};
 			expect(
-				getSetlistNavAction("prev", state, setlist.id, setlist.step, setlist.length),
+				getSetlistNavAction(
+					"prev",
+					state,
+					setlist.id,
+					setlist.step,
+					setlist.length,
+				),
 			).toBe("dispatch");
 		});
 	});

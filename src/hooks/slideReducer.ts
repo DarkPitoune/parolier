@@ -40,6 +40,7 @@ export type SlideEvent =
 			setlistContext?: SetlistContext;
 	  }
 	| { type: "LOAD_TEXT"; textTitle: string; setlistContext: SetlistContext }
+	| { type: "HYDRATE_STROPHES"; strophes: Strophe[] }
 	| { type: "NEXT_STROPHE" }
 	| { type: "PREV_STROPHE" }
 	| { type: "GOTO_STROPHE"; stropheIndex: number }
@@ -81,6 +82,16 @@ export function slideReducer(state: SlideState, event: SlideEvent): SlideState {
 				textTitle: event.textTitle,
 				setlistContext: event.setlistContext,
 			};
+
+		case "HYDRATE_STROPHES": {
+			// Populate strophes without changing mode or stropheIndex.
+			// Used by the display after syncing state (which strips strophes)
+			// and fetching full song data from the network.
+			if (state.mode === "song" || state.mode === "logo") {
+				return { ...state, strophes: event.strophes };
+			}
+			return state;
+		}
 
 		case "NEXT_STROPHE": {
 			if (state.mode === "logo" && state.songId !== null) {
