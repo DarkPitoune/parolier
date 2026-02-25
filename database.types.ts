@@ -12,6 +12,7 @@ export type Database = MergeDeep<
         songs: {
           Row: {
             strophes: Strophe[]
+            type: 'song' | 'refrain' | 'ordinaire'
           }
         }
       };

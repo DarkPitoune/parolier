@@ -12,7 +12,15 @@
       "Bash(tail:*)",
       "Bash(git add:*)",
       "Bash(ls:*)",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "WebSearch",
+      "WebFetch(domain:liturgie.catholique.fr)",
+      "WebFetch(domain:www.argedour.bzh)",
+      "WebFetch(domain:www.ilestvivant.com)",
+      "WebFetch(domain:annuaire.catholique-savoie.fr)",
+      "WebFetch(domain:fr.wikipedia.org)",
+      "Bash(git diff:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

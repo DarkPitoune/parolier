@@ -1,8 +1,29 @@
-import { PageHeader, SettingsSidePanel, useLeader } from "@/components";
+import {
+	PageHeader,
+	SettingsSidePanel,
+	SongPickerInline,
+	useLeader,
+} from "@/components";
 import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
-import { CalendarIcon } from "@heroicons/react/16/solid";
+import { useAllTaggedSongs } from "@/hooks/queries/useSongQueries";
+import {
+	type SongSuggestion,
+	useMasseSuggestions,
+} from "@/hooks/useMasseSuggestions";
+import { queryKeys } from "@/utils/queryKeys";
+import {
+	newNamedSetlistMutation,
+	setlistItemAppendMutation,
+} from "@/utils/supabase";
+import {
+	ArrowPathIcon,
+	CalendarIcon,
+	SparklesIcon,
+} from "@heroicons/react/16/solid";
+import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useCallback, useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 interface LiturgicalInformation {
 	date: string;
@@ -35,6 +56,79 @@ interface MesseData {
 	messes: Masse[];
 }
 
+const ROLE_LABELS: Record<SongSuggestion["role"], string> = {
+	entree: "Chant d'entrée",
+	offertoire: "Chant d'offertoire",
+	communion: "Chant de communion",
+	envoi: "Chant d'envoi",
+};
+
+function SuggestionCard({
+	suggestion,
+	onSwap,
+}: {
+	suggestion: SongSuggestion;
+	onSwap: (songId: number, songTitle: string) => void;
+}) {
+	const [showPicker, setShowPicker] = useState(false);
+
+	return (
+		<div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+			<h4 className="text-sm font-semibold text-jubilateBlue-600 dark:text-jubilateBlue-400 mb-2">
+				{ROLE_LABELS[suggestion.role]}
+			</h4>
+			<Link
+				to={`/songs/${suggestion.songId}`}
+				className="text-lg font-medium text-gray-900 dark:text-gray-100 hover:text-jubilateBlue-600 dark:hover:text-jubilateBlue-400"
+			>
+				{suggestion.songTitle}
+			</Link>
+			<p className="text-sm text-gray-500 dark:text-gray-400 italic mt-1">
+				{suggestion.reasoning}
+			</p>
+
+			{suggestion.alternatives.length > 0 && (
+				<div className="mt-3">
+					<p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+						Alternatives :
+					</p>
+					<div className="flex flex-wrap gap-2">
+						{suggestion.alternatives.map((alt) => (
+							<button
+								key={alt.songId}
+								type="button"
+								className="text-sm text-jubilateBlue-600 dark:text-jubilateBlue-400 hover:underline"
+								onClick={() => onSwap(alt.songId, alt.songTitle)}
+							>
+								{alt.songTitle}
+							</button>
+						))}
+					</div>
+				</div>
+			)}
+
+			<button
+				type="button"
+				className="mt-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+				onClick={() => setShowPicker(!showPicker)}
+			>
+				{showPicker ? "Fermer" : "Choisir un autre chant"}
+			</button>
+
+			{showPicker && (
+				<div className="mt-2 h-64 border border-gray-200 dark:border-gray-600 rounded overflow-hidden">
+					<SongPickerInline
+						onSongSelect={(songId) => {
+							onSwap(songId, "");
+							setShowPicker(false);
+						}}
+					/>
+				</div>
+			)}
+		</div>
+	);
+}
+
 function Messe() {
 	const [selectedDate, setSelectedDate] = useState(() => {
 		const today = new Date();
@@ -44,7 +138,21 @@ function Messe() {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
+	const [creatingSetlist, setCreatingSetlist] = useState(false);
 	const { leader } = useLeader();
+	const navigate = useNavigate();
+	const queryClient = useQueryClient();
+
+	const { data: allSongs } = useAllTaggedSongs();
+	const {
+		suggestions,
+		liturgicalSummary,
+		loading: suggestionsLoading,
+		error: suggestionsError,
+		suggest,
+		regenerate,
+		setSuggestions,
+	} = useMasseSuggestions();
 
 	const fetchMesseData = useCallback(async (date: string) => {
 		setLoading(true);
@@ -80,6 +188,84 @@ function Messe() {
 		setSelectedDate(event.target.value);
 	};
 
+	const handleSuggest = () => {
+		if (messeData && allSongs) {
+			suggest(messeData, allSongs);
+		}
+	};
+
+	const handleRegenerate = () => {
+		if (messeData && allSongs) {
+			regenerate(messeData, allSongs);
+		}
+	};
+
+	const handleSwapSong = (
+		role: SongSuggestion["role"],
+		songId: number,
+		songTitle: string,
+	) => {
+		if (!suggestions) return;
+		setSuggestions(
+			suggestions.map((s) => {
+				if (s.role !== role) return s;
+				// If swapping with an alternative, move the current song to alternatives
+				const currentAsAlt = {
+					songId: s.songId,
+					songTitle: s.songTitle,
+				};
+				const newAlternatives = [
+					...s.alternatives.filter((a) => a.songId !== songId),
+					currentAsAlt,
+				];
+				return {
+					...s,
+					songId,
+					songTitle: songTitle || `Chant #${songId}`,
+					alternatives: newAlternatives,
+				};
+			}),
+		);
+	};
+
+	const handleCreateSetlist = async () => {
+		if (!suggestions || !messeData) return;
+		setCreatingSetlist(true);
+
+		try {
+			const formattedDate = new Date(
+				messeData.informations.date,
+			).toLocaleDateString("fr-FR", {
+				day: "numeric",
+				month: "long",
+				year: "numeric",
+			});
+			const name = `Messe du ${formattedDate}`;
+
+			const { data: setlist, error: createError } =
+				await newNamedSetlistMutation(name);
+			if (createError || !setlist) throw new Error("Erreur creation");
+
+			for (let i = 0; i < suggestions.length; i++) {
+				await setlistItemAppendMutation(
+					i,
+					setlist.id,
+					suggestions[i].songId,
+					null,
+				);
+			}
+
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.setlists.list(),
+			});
+			navigate(`/setlists/${setlist.id}/edit`);
+		} catch {
+			setError("Erreur lors de la création de la setlist");
+		} finally {
+			setCreatingSetlist(false);
+		}
+	};
+
 	return (
 		<div className="bg-white dark:bg-gray-800 min-h-screen">
 			<SettingsSidePanel />
@@ -107,7 +293,10 @@ function Messe() {
 						</div>
 					}
 					right={
-						<button type="button" onClick={() => setIsNavigationPanelOpen(true)}>
+						<button
+							type="button"
+							onClick={() => setIsNavigationPanelOpen(true)}
+						>
 							<img className="h-12" src="/svg/logo.svg" alt="Logo" />
 						</button>
 					}
@@ -254,13 +443,88 @@ function Messe() {
 											<div
 												className="text-gray-800 dark:text-gray-200 leading-relaxed"
 												// biome-ignore lint/security/noDangerouslySetInnerHtml: Liturgical content from trusted AELF API contains necessary HTML formatting
-												dangerouslySetInnerHTML={{ __html: lecture.contenu }}
+												dangerouslySetInnerHTML={{
+													__html: lecture.contenu,
+												}}
 											/>
 										</div>
 									))}
 								</div>
 							</div>
 						))}
+
+						{/* Song Suggestions Section */}
+						<div className="border-t border-gray-200 dark:border-gray-600 pt-6">
+							<h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+								Suggestions de chants
+							</h2>
+
+							{!suggestions && !suggestionsLoading && (
+								<button
+									type="button"
+									onClick={handleSuggest}
+									disabled={!allSongs || suggestionsLoading}
+									className="flex items-center gap-2 px-4 py-2 bg-jubilateBlue-500 hover:bg-jubilateBlue-600 disabled:opacity-50 text-white rounded-lg font-medium"
+								>
+									<SparklesIcon className="w-5 h-5" />
+									Suggérer des chants pour cette messe
+								</button>
+							)}
+
+							{suggestionsLoading && (
+								<div className="text-center py-8">
+									<div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-jubilateBlue-500" />
+									<p className="mt-2 text-gray-600 dark:text-gray-400">
+										Analyse liturgique en cours...
+									</p>
+								</div>
+							)}
+
+							{suggestionsError && (
+								<div className="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-200 px-4 py-3 rounded mb-4">
+									{suggestionsError}
+								</div>
+							)}
+
+							{suggestions && (
+								<div className="space-y-4">
+									{liturgicalSummary && (
+										<p className="text-sm text-gray-600 dark:text-gray-400 italic bg-gray-50 dark:bg-gray-700 p-3 rounded">
+											{liturgicalSummary}
+										</p>
+									)}
+
+									<button
+										type="button"
+										onClick={handleRegenerate}
+										disabled={suggestionsLoading}
+										className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-jubilateBlue-500 dark:hover:text-jubilateBlue-400 disabled:opacity-50"
+									>
+										<ArrowPathIcon className="w-4 h-4" />
+										Regénérer les suggestions
+									</button>
+
+									{suggestions.map((suggestion) => (
+										<SuggestionCard
+											key={suggestion.role}
+											suggestion={suggestion}
+											onSwap={(songId, songTitle) =>
+												handleSwapSong(suggestion.role, songId, songTitle)
+											}
+										/>
+									))}
+
+									<button
+										type="button"
+										onClick={handleCreateSetlist}
+										disabled={creatingSetlist}
+										className="w-full py-3 bg-jubilateGreen-500 hover:bg-jubilateGreen-600 disabled:opacity-50 text-white rounded-lg font-medium"
+									>
+										{creatingSetlist ? "Création..." : "Créer la setlist"}
+									</button>
+								</div>
+							)}
+						</div>
 					</div>
 				)}
 			</div>

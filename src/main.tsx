@@ -1,4 +1,9 @@
-import { AuthContextProvider, CornerMenu, ErrorBoundary, isDarkAtom } from "@/components";
+import {
+	AuthContextProvider,
+	CornerMenu,
+	ErrorBoundary,
+	isDarkAtom,
+} from "@/components";
 import { systemPrefersDarkAtom } from "@/components/Contexts/SettingsContext";
 import {
 	Analytics,
@@ -25,6 +30,9 @@ import { LeaderListener } from "./components/LeaderListener";
 import { OfflineBanner } from "./components/OfflineBanner";
 import { CachePage } from "./pages/CachePage";
 import { TextPage } from "./pages/TextPage";
+import { OrdinairePage } from "./pages/OrdinairePage";
+import { Ordinaires } from "./pages/Ordinaires";
+import { Refrains } from "./pages/Refrains";
 import { Texts } from "./pages/Texts";
 import "./index.css";
 import { SetlistPage } from "./pages/SetlistPage";
@@ -49,6 +57,18 @@ const router = createBrowserRouter([
 	{
 		path: "/",
 		element: <Index />,
+	},
+	{
+		path: "/refrains",
+		element: <Refrains />,
+	},
+	{
+		path: "/ordinaires",
+		element: <Ordinaires />,
+	},
+	{
+		path: "/ordinaires/:ordinaireId",
+		element: <OrdinairePage />,
 	},
 	{
 		path: "/texts",

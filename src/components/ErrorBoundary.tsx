@@ -21,7 +21,9 @@ class ErrorBoundary extends Component<Props, State> {
 	}
 
 	componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-		Sentry.captureException(error, { extra: { componentStack: errorInfo.componentStack } });
+		Sentry.captureException(error, {
+			extra: { componentStack: errorInfo.componentStack },
+		});
 	}
 
 	render() {

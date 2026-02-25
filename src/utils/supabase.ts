@@ -1,4 +1,5 @@
 import { type QueryData, createClient } from "@supabase/supabase-js";
+import type { Json } from "../../database-generated.types";
 import type { Database } from "../../database.types";
 
 export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -13,9 +14,18 @@ export const analyticsSong = async (songId: number) =>
 export const allSongsQuery = async () =>
 	supabase
 		.from("songs")
-		.select("title, id, tags (id, name, svg, color)")
+		.select("title, id, type, tags (id, name, svg, color)")
+		.eq("type", "song")
 		.order("id");
 export type AllSongs = QueryData<ReturnType<typeof allSongsQuery>>;
+
+export const allRefrainsQuery = async () =>
+	supabase
+		.from("songs")
+		.select("title, id, type, tags (id, name, svg, color)")
+		.eq("type", "refrain")
+		.order("id");
+export type AllRefrains = QueryData<ReturnType<typeof allRefrainsQuery>>;
 
 export const taggedSongQuery = async (songId: number) =>
 	supabase
@@ -37,7 +47,7 @@ export const setlistQuery = async (setlistId: string) =>
 		.from("setlist_items")
 		.select(
 			`id,
-			songs (id, sheet_music_url, strophes, title, tags (id, name, svg, color)),
+			songs (id, sheet_music_url, strophes, title, type, ordinaire_id, ordinaire_role, tags (id, name, svg, color)),
 			text, position,
 			texts (id, title, content, created_at),
 			setlists (id, name)`,
@@ -82,6 +92,20 @@ export const newSongMutation = async (title: string) =>
 		.select()
 		.single();
 export type NewSongMutation = QueryData<ReturnType<typeof newSongMutation>>;
+
+export const newRefrainMutation = async (title: string) =>
+	supabase
+		.from("songs")
+		.insert({
+			title,
+			type: "refrain",
+			strophes: [{ content: [{ text: "", chords: "" }] }],
+		})
+		.select()
+		.single();
+export type NewRefrainMutation = QueryData<
+	ReturnType<typeof newRefrainMutation>
+>;
 
 export const allSetlistsQuery = async () =>
 	supabase.from("setlists").select().order("created_at", { ascending: false });
@@ -175,6 +199,12 @@ export type NewSetlistMutation = QueryData<
 	ReturnType<typeof newSetlistMutation>
 >;
 
+export const newNamedSetlistMutation = async (name: string) =>
+	supabase.from("setlists").insert({ name }).select().single();
+export type NewNamedSetlistMutation = QueryData<
+	ReturnType<typeof newNamedSetlistMutation>
+>;
+
 export const deleteSetlistMutation = async (setlistId: number) =>
 	supabase.from("setlists").delete().eq("id", setlistId);
 
@@ -240,6 +270,25 @@ export const textQuery = async (textId: number) =>
 	supabase.from("texts").select("*").eq("id", textId).single();
 export type Text = QueryData<ReturnType<typeof textQuery>>;
 
+// Mass suggestions cache
+export const massSuggestionsQuery = async (date: string) =>
+	supabase.from("mass_suggestions").select("*").eq("date", date).maybeSingle();
+
+export const upsertMassSuggestionsMutation = async (
+	date: string,
+	suggestions: unknown,
+	liturgicalSummary: string | null,
+) =>
+	supabase
+		.from("mass_suggestions")
+		.upsert({
+			date,
+			suggestions: suggestions as Json,
+			liturgical_summary: liturgicalSummary,
+		})
+		.select()
+		.single();
+
 export const newTextMutation = async (title: string, content: string) =>
 	supabase
 		.from("texts")
@@ -250,3 +299,59 @@ export const newTextMutation = async (title: string, content: string) =>
 		.select()
 		.single();
 export type NewTextMutation = QueryData<ReturnType<typeof newTextMutation>>;
+
+// Ordinaires queries
+export const allOrdinairesQuery = async () =>
+	supabase.from("ordinaires").select("id, name, sheet_music_url").order("name");
+export type AllOrdinaires = QueryData<ReturnType<typeof allOrdinairesQuery>>;
+
+export const ordinaireDetailQuery = async (id: number) =>
+	supabase
+		.from("ordinaires")
+		.select(
+			"id, name, sheet_music_url, songs (id, title, strophes, type, sheet_music_url, ordinaire_role, tags (id, name, svg, color))",
+		)
+		.eq("id", id)
+		.single();
+export type OrdinaireDetail = QueryData<
+	ReturnType<typeof ordinaireDetailQuery>
+>;
+
+export const allOrdinaireSongsQuery = async () =>
+	supabase
+		.from("songs")
+		.select(
+			"title, id, type, ordinaire_id, ordinaire_role, tags (id, name, svg, color)",
+		)
+		.eq("type", "ordinaire")
+		.order("ordinaire_id")
+		.order("id");
+export type AllOrdinaireSongs = QueryData<
+	ReturnType<typeof allOrdinaireSongsQuery>
+>;
+
+export const newOrdinaireMutation = async (name: string) =>
+	supabase.from("ordinaires").insert({ name }).select().single();
+export type NewOrdinaireMutation = QueryData<
+	ReturnType<typeof newOrdinaireMutation>
+>;
+
+export const newOrdinaireSongMutation = async (
+	title: string,
+	ordinaireId: number,
+	role: string,
+) =>
+	supabase
+		.from("songs")
+		.insert({
+			title,
+			type: "ordinaire",
+			ordinaire_id: ordinaireId,
+			ordinaire_role: role,
+			strophes: [{ content: [{ text: "", chords: "" }] }],
+		})
+		.select()
+		.single();
+export type NewOrdinaireSongMutation = QueryData<
+	ReturnType<typeof newOrdinaireSongMutation>
+>;

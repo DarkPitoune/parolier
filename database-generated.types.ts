@@ -79,6 +79,27 @@ export type Database = {
           },
         ]
       }
+      mass_suggestions: {
+        Row: {
+          created_at: string | null
+          date: string
+          liturgical_summary: string | null
+          suggestions: Json
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          liturgical_summary?: string | null
+          suggestions: Json
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          liturgical_summary?: string | null
+          suggestions?: Json
+        }
+        Relationships: []
+      }
       setlist_items: {
         Row: {
           id: number
@@ -130,14 +151,17 @@ export type Database = {
       }
       setlists: {
         Row: {
+          created_at: string | null
           id: number
           name: string | null
         }
         Insert: {
+          created_at?: string | null
           id?: number
           name?: string | null
         }
         Update: {
+          created_at?: string | null
           id?: number
           name?: string | null
         }
@@ -226,26 +250,64 @@ export type Database = {
           },
         ]
       }
-      songs: {
+      ordinaires: {
         Row: {
           id: number
+          name: string
           sheet_music_url: string | null
-          strophes: Json[] | null
-          title: string
+          created_at: string | null
         }
         Insert: {
           id?: number
+          name: string
           sheet_music_url?: string | null
-          strophes?: Json[] | null
-          title: string
+          created_at?: string | null
         }
         Update: {
           id?: number
+          name?: string
+          sheet_music_url?: string | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      songs: {
+        Row: {
+          id: number
+          ordinaire_id: number | null
+          ordinaire_role: string | null
+          sheet_music_url: string | null
+          strophes: Json[] | null
+          title: string
+          type: string
+        }
+        Insert: {
+          id?: number
+          ordinaire_id?: number | null
+          ordinaire_role?: string | null
+          sheet_music_url?: string | null
+          strophes?: Json[] | null
+          title: string
+          type?: string
+        }
+        Update: {
+          id?: number
+          ordinaire_id?: number | null
+          ordinaire_role?: string | null
           sheet_music_url?: string | null
           strophes?: Json[] | null
           title?: string
+          type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "songs_ordinaire_id_fkey"
+            columns: ["ordinaire_id"]
+            isOneToOne: false
+            referencedRelation: "ordinaires"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tags: {
         Row: {

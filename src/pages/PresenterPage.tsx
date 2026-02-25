@@ -16,6 +16,7 @@ import { useSlideStateMachine } from "@/hooks/useSlideStateMachine";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { taggedSongQuery } from "@/utils/supabase";
 import {
+	BeakerIcon,
 	ChevronLeftIcon,
 	ChevronRightIcon,
 	EyeSlashIcon,
@@ -333,6 +334,12 @@ const PresenterPage = () => {
 					</>
 				}
 			/>
+
+			{/* Beta Disclaimer */}
+			<div className="flex items-center justify-center gap-2 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-4 py-1.5 text-sm">
+				<BeakerIcon className="w-4 h-4 flex-shrink-0" />
+				<span>Fonctionnalité en bêta — des bugs peuvent survenir.</span>
+			</div>
 
 			{/* Main Content */}
 			<div className="flex grow min-h-0">

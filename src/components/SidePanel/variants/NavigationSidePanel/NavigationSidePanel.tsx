@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { SidePanel } from "../../SidePanel";
 import {
 	MusicalNoteIcon,
+	FireIcon,
+	RectangleGroupIcon,
 	DocumentTextIcon,
 	BookOpenIcon,
 	CalendarDaysIcon,
@@ -43,6 +45,20 @@ export function NavigationSidePanel({
 				>
 					<MusicalNoteIcon className="w-4 h-4" />
 					Liste des chants
+				</Link>
+				<Link
+					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					to="/refrains"
+				>
+					<FireIcon className="w-4 h-4" />
+					Refrains
+				</Link>
+				<Link
+					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					to="/ordinaires"
+				>
+					<RectangleGroupIcon className="w-4 h-4" />
+					Ordinaires de messe
 				</Link>
 				<Link
 					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"

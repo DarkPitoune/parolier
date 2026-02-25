@@ -84,7 +84,7 @@ serve(async (req) => {
           "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
+          model: "claude-sonnet-4-6-20250514",
           max_tokens: 4000,
           messages: [
             {
@@ -100,42 +100,33 @@ serve(async (req) => {
                 },
                 {
                   type: "text",
-                  text: `Extract the song lyrics and chords from this image. Return ONLY a JSON array with this exact structure, no explanation before or after:
-[
-  {
-    "type": "chorus",
-    "content": [
-      {"text": "Par amour ô Jésus", "chords": "Em B"},
-      {"text": "Tu Te donnes tout entier", "chords": ""}
-    ],
-    "repetition": false
-  },
-  {
-    "type": "verse",
-    "content": [
-      {"text": "Fais nous devenir Seigneur des Hommes", "chords": "Em B"}
-    ],
-    "repetition": false
-  },
-  {
-    "type": "chorus",
-    "content": [
-      {"text": "Par amour ô Jésus", "chords": "Em B"},
-      {"text": "Tu Te donnes tout entier", "chords": ""}
-    ],
-    "repetition": true
-  }
-]
-Important rules:
-1. LEFT COLUMN contains chords (Mim Si = Em B, Sol Ré = G D, Lam = Am, Do = C, Ré = D, Mi = E, Fa = F, Si = B)
-2. RIGHT COLUMN contains lyrics
-3. Convert French chord names to English: Mim→Em, Rem→Dm, Lam→Am, Solm→Gm, Do→C, Ré→D, Mi→E, Fa→F, Sol→G, La→A, Si→B
-4. Identify sections: "R." = chorus (refrain), numbers like "1." = verse
-5. Each line of lyrics is a separate object in the content array
-6. Match chords to their corresponding lyrics line by line
-7. CRITICAL: Every time you see "R." or the chorus repeated in the image, output the FULL chorus section again. The FIRST occurrence has repetition: false. EVERY subsequent occurrence has repetition: true.
-8. Do NOT just output the chorus once - repeat it in full every time it appears in the song structure
-9. IMPORTANT: Return ONLY the JSON array, nothing else. No markdown code blocks, no explanation.`,
+                  text: `You are a music transcription assistant. Extract song lyrics and chords from this image into structured JSON.
+
+## Output format
+
+Return ONLY a JSON array (no markdown, no explanation). Each element:
+{
+  "type": "chorus" | "verse" | "bridge",  // "R." or "Ref." = chorus, numbered = verse
+  "content": [
+    {"text": "lyric line", "chords": "Em B"},  // chords above this line; "" if none
+    {"text": "another line", "chords": ""}
+  ],
+  "repetition": false  // true for 2nd+ occurrence of a repeated section
+}
+
+## Chord conversion (French → English)
+
+Do → C, Ré → D, Mi → E, Fa → F, Sol → G, La → A, Si → B
+Add suffix as-is: m (minor), 7, maj7, sus4, dim, aug, b (flat), # (sharp)
+Examples: Mim → Em, Solm7 → Gm7, Fa#m → F#m, Sib → Bb, Lam → Am
+
+## Rules
+
+1. Chords above a lyric line belong to that line. Join multiple chords with spaces.
+2. If a line has no chords above it, set "chords": "".
+3. Each printed line of lyrics = one object in the content array.
+4. Every time the chorus appears (including "R." markers), output it in full. First occurrence: repetition: false. All subsequent: repetition: true.
+5. Return ONLY the JSON array.`,
                 },
               ],
             },
@@ -155,11 +146,13 @@ Important rules:
     // Parse the JSON response from Claude
     let strophes: Strophe[];
     try {
+      // Normalize \r\n before parsing
+      const cleanedText = responseText.replace(/\r\n/g, "\n");
       // Extract JSON from the response (Claude might wrap it in markdown)
       const jsonMatch =
-        responseText.match(/```json\n([\s\S]*?)\n```/) ||
-        responseText.match(/\[[\s\S]*\]/);
-      const jsonText = jsonMatch ? jsonMatch[1] || jsonMatch[0] : responseText;
+        cleanedText.match(/```json\n([\s\S]*?)\n```/) ||
+        cleanedText.match(/\[[\s\S]*\]/);
+      const jsonText = jsonMatch ? jsonMatch[1] || jsonMatch[0] : cleanedText;
       strophes = JSON.parse(jsonText.trim());
     } catch (parseError) {
       console.error("Failed to parse Claude response:", responseText);
@@ -169,6 +162,43 @@ Important rules:
     // Validate the response structure
     if (!Array.isArray(strophes)) {
       throw new Error("Invalid response structure from AI");
+    }
+
+    // Post-process: normalize French chords and clean up strings
+    const frenchChordMap: [RegExp, string][] = [
+      [/^Sol/, "G"],
+      [/^Ré/, "D"],
+      [/^La/, "A"],
+      [/^Si/, "B"],
+      [/^Do/, "C"],
+      [/^Mi/, "E"],
+      [/^Fa/, "F"],
+    ];
+
+    function normalizeFrenchChord(chord: string): string {
+      for (const [pattern, replacement] of frenchChordMap) {
+        if (pattern.test(chord)) {
+          return chord.replace(pattern, replacement);
+        }
+      }
+      return chord;
+    }
+
+    for (const strophe of strophes) {
+      if (!Array.isArray(strophe.content)) continue;
+      for (const line of strophe.content) {
+        line.text = line.text?.replace(/[\r\n]/g, "").trim() ?? "";
+        if (line.chords) {
+          line.chords = line.chords
+            .replace(/[\r\n]/g, "")
+            .trim()
+            .split(/\s+/)
+            .map(normalizeFrenchChord)
+            .join(" ");
+        } else {
+          line.chords = "";
+        }
+      }
     }
 
     const result: ProcessImageResponse = {
