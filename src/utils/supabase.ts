@@ -355,3 +355,12 @@ export const newOrdinaireSongMutation = async (
 export type NewOrdinaireSongMutation = QueryData<
 	ReturnType<typeof newOrdinaireSongMutation>
 >;
+
+export const updateOrdinaireSheetMusic = async (
+	id: number,
+	sheetMusicUrl: string | null,
+) =>
+	supabase
+		.from("ordinaires")
+		.update({ sheet_music_url: sheetMusicUrl })
+		.eq("id", id);

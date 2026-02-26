@@ -470,68 +470,70 @@ const SongEditor = () => {
 					</div>
 
 					{/* PDF Sheet Music Section */}
-					<div className="border p-4 rounded-md border-jubilateBlue-100 dark:border-slate-500">
-						<h3 className="text-lg font-semibold mb-3">Partition (PDF)</h3>
+					{song.type !== "ordinaire" && (
+						<div className="border p-4 rounded-md border-jubilateBlue-100 dark:border-slate-500">
+							<h3 className="text-lg font-semibold mb-3">Partition (PDF)</h3>
 
-						{song.sheet_music_url ? (
-							<div className="flex items-center justify-between bg-green-50 dark:bg-green-900 dark:bg-opacity-20 border border-green-200 dark:border-green-600 rounded-md p-3">
-								<div className="flex items-center gap-2">
-									<DocumentTextIcon className="h-5 w-5 text-green-600 dark:text-green-400" />
-									<span className="text-sm text-green-800 dark:text-green-200">
-										Partition PDF disponible
-									</span>
-								</div>
-								<button
-									type="button"
-									onClick={handleDeletePdf}
-									className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition-colors"
-								>
-									<TrashIcon className="h-4 w-4" />
-									Supprimer
-								</button>
-							</div>
-						) : (
-							<>
-								{!isPdfUploading ? (
-									<div
-										className="border-2 border-dashed border-jubilateBlue-300 dark:border-slate-400 rounded-lg p-4 text-center cursor-pointer hover:bg-jubilateBlue-50 dark:hover:bg-slate-700 transition-colors"
-										onClick={() => pdfInputRef.current?.click()}
-										onKeyDown={(e) => {
-											if (e.key === "Enter" || e.key === " ") {
-												e.preventDefault();
-												pdfInputRef.current?.click();
-											}
-										}}
-										tabIndex={0}
-										role="button"
-										aria-label="Upload PDF"
+							{song.sheet_music_url ? (
+								<div className="flex items-center justify-between bg-green-50 dark:bg-green-900 dark:bg-opacity-20 border border-green-200 dark:border-green-600 rounded-md p-3">
+									<div className="flex items-center gap-2">
+										<DocumentTextIcon className="h-5 w-5 text-green-600 dark:text-green-400" />
+										<span className="text-sm text-green-800 dark:text-green-200">
+											Partition PDF disponible
+										</span>
+									</div>
+									<button
+										type="button"
+										onClick={handleDeletePdf}
+										className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition-colors"
 									>
-										<DocumentTextIcon className="mx-auto h-8 w-8 text-jubilateBlue-400 dark:text-slate-400 mb-2" />
-										<p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-											Cliquez pour ajouter une partition PDF
-										</p>
-										<p className="text-xs text-gray-500 dark:text-gray-400">
-											Le fichier sera renommé avec le titre du chant
-										</p>
-										<input
-											ref={pdfInputRef}
-											type="file"
-											accept=".pdf,application/pdf"
-											onChange={handlePdfFileSelect}
-											className="hidden"
-										/>
-									</div>
-								) : (
-									<div className="text-center py-4">
-										<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-jubilateBlue-500 mx-auto mb-2" />
-										<p className="text-sm font-medium text-jubilateBlue-600 dark:text-jubilateBlue-400">
-											Téléchargement de la partition...
-										</p>
-									</div>
-								)}
-							</>
-						)}
-					</div>
+										<TrashIcon className="h-4 w-4" />
+										Supprimer
+									</button>
+								</div>
+							) : (
+								<>
+									{!isPdfUploading ? (
+										<div
+											className="border-2 border-dashed border-jubilateBlue-300 dark:border-slate-400 rounded-lg p-4 text-center cursor-pointer hover:bg-jubilateBlue-50 dark:hover:bg-slate-700 transition-colors"
+											onClick={() => pdfInputRef.current?.click()}
+											onKeyDown={(e) => {
+												if (e.key === "Enter" || e.key === " ") {
+													e.preventDefault();
+													pdfInputRef.current?.click();
+												}
+											}}
+											tabIndex={0}
+											role="button"
+											aria-label="Upload PDF"
+										>
+											<DocumentTextIcon className="mx-auto h-8 w-8 text-jubilateBlue-400 dark:text-slate-400 mb-2" />
+											<p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
+												Cliquez pour ajouter une partition PDF
+											</p>
+											<p className="text-xs text-gray-500 dark:text-gray-400">
+												Le fichier sera renommé avec le titre du chant
+											</p>
+											<input
+												ref={pdfInputRef}
+												type="file"
+												accept=".pdf,application/pdf"
+												onChange={handlePdfFileSelect}
+												className="hidden"
+											/>
+										</div>
+									) : (
+										<div className="text-center py-4">
+											<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-jubilateBlue-500 mx-auto mb-2" />
+											<p className="text-sm font-medium text-jubilateBlue-600 dark:text-jubilateBlue-400">
+												Téléchargement de la partition...
+											</p>
+										</div>
+									)}
+								</>
+							)}
+						</div>
+					)}
 
 					{/* Image Upload Section */}
 					<div className="border p-4 rounded-md border-jubilateBlue-100 dark:border-slate-500">
