@@ -176,6 +176,7 @@ export function OrdinairePage() {
 
 	const handleDeletePdf = async () => {
 		if (!ordinaire.sheet_music_url) return;
+		if (!confirm("Supprimer la partition ?")) return;
 		try {
 			const fileName = ordinaire.sheet_music_url.replace("/sheet-music/", "");
 			const { error: storageError } = await supabase.storage
