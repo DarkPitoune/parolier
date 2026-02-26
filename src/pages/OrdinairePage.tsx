@@ -5,13 +5,16 @@ import {
 } from "@/components/Contexts/SettingsContext";
 import { DynamicText } from "@/components/DynamicText";
 import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
-import { useOrdinaireDetail } from "@/hooks/queries/useSongQueries";
+import {
+	useDeleteOrdinaireSheetMusic,
+	useOrdinaireDetail,
+	useUploadOrdinaireSheetMusic,
+} from "@/hooks/queries/useSongQueries";
 import { queryKeys } from "@/utils/queryKeys";
-import supabase, {
+import {
 	type OrdinaireDetail,
 	newOrdinaireSongMutation,
 	supabaseUrl,
-	updateOrdinaireSheetMusic,
 } from "@/utils/supabase";
 import { transposeLine } from "@/utils/tonalManipulation";
 import { PlusIcon } from "@heroicons/react/16/solid";
@@ -121,89 +124,13 @@ export function OrdinairePage() {
 	const { leader } = useLeader();
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
-	const [isPdfUploading, setIsPdfUploading] = useState(false);
 	const pdfInputRef = useRef<HTMLInputElement>(null);
+	const uploadPdfMutation = useUploadOrdinaireSheetMusic(id);
+	const deletePdfMutation = useDeleteOrdinaireSheetMusic(id);
 
 	if (!ordinaire) return null;
 
 	const songs = sortByRole(ordinaire.songs);
-
-	const handlePdfUpload = async (file: File) => {
-		if (!file.type.includes("pdf")) {
-			toast.error("Veuillez sélectionner un fichier PDF");
-			return;
-		}
-
-		setIsPdfUploading(true);
-		try {
-			const sanitizedName = ordinaire.name
-				.replace(/\s+/g, "_")
-				.replace(/[^\w.-]/g, "");
-			const fileName = `ordinaire_${sanitizedName}.pdf`;
-
-			const { error: uploadError } = await supabase.storage
-				.from("sheet-music")
-				.upload(fileName, file, { upsert: true });
-
-			if (uploadError) {
-				throw new Error(`Erreur de téléversement: ${uploadError.message}`);
-			}
-
-			const sheetMusicUrl = `/sheet-music/${fileName}`;
-			const { error } = await updateOrdinaireSheetMusic(
-				ordinaire.id,
-				sheetMusicUrl,
-			);
-			if (error) throw error;
-
-			queryClient.invalidateQueries({
-				queryKey: queryKeys.ordinaires.detail(ordinaire.id),
-			});
-			queryClient.invalidateQueries({
-				queryKey: queryKeys.ordinaires.list(),
-			});
-
-			toast.success("Partition PDF ajoutée");
-		} catch (error) {
-			console.error("Error uploading PDF:", error);
-			toast.error(
-				error instanceof Error ? error.message : "Erreur lors du téléversement",
-			);
-		} finally {
-			setIsPdfUploading(false);
-		}
-	};
-
-	const handleDeletePdf = async () => {
-		if (!ordinaire.sheet_music_url) return;
-		if (!confirm("Supprimer la partition ?")) return;
-		try {
-			const fileName = ordinaire.sheet_music_url.replace("/sheet-music/", "");
-			const { error: storageError } = await supabase.storage
-				.from("sheet-music")
-				.remove([fileName]);
-			if (storageError) throw storageError;
-
-			const { error } = await updateOrdinaireSheetMusic(ordinaire.id, null);
-			if (error) throw error;
-
-			queryClient.invalidateQueries({
-				queryKey: queryKeys.ordinaires.detail(ordinaire.id),
-			});
-			queryClient.invalidateQueries({
-				queryKey: queryKeys.ordinaires.list(),
-			});
-
-			toast.success("Partition supprimée");
-		} catch (error) {
-			console.error("Error deleting PDF:", error);
-			toast.error(
-				error instanceof Error
-					? error.message
-					: "Erreur lors de la suppression",
-			);
-		}
-	};
 
 	const addPiece = async () => {
 		const availableRoles = ROLE_ORDER.filter(
@@ -302,15 +229,18 @@ export function OrdinairePage() {
 							</Link>
 							<button
 								type="button"
-								onClick={handleDeletePdf}
+								onClick={() => {
+									if (!ordinaire.sheet_music_url) return;
+									if (!confirm("Supprimer la partition ?")) return;
+									deletePdfMutation.mutate(ordinaire.sheet_music_url);
+								}}
 								className="flex items-center gap-1 text-sm text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 transition-colors duration-200"
 								title="Supprimer la partition"
 							>
 								<TrashIcon className="size-4" />
-								Supprimer
 							</button>
 						</>
-					) : !isPdfUploading ? (
+					) : !uploadPdfMutation.isPending ? (
 						<button
 							type="button"
 							onClick={() => pdfInputRef.current?.click()}
@@ -334,7 +264,11 @@ export function OrdinairePage() {
 						accept=".pdf,application/pdf"
 						onChange={(e) => {
 							const file = e.target.files?.[0];
-							if (file) handlePdfUpload(file);
+							if (file)
+								uploadPdfMutation.mutate({
+									file,
+									ordinaireName: ordinaire.name,
+								});
 						}}
 						className="hidden"
 					/>
