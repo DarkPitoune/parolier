@@ -302,10 +302,10 @@ export function OrdinairePage() {
 							<button
 								type="button"
 								onClick={handleDeletePdf}
-								className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors duration-200 flex items-center gap-2"
+								className="p-1.5 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 transition-colors duration-200"
 								title="Supprimer la partition"
 							>
-								<TrashIcon className="size-5" />
+								<TrashIcon className="size-4" />
 							</button>
 						</>
 					) : !isPdfUploading ? (
