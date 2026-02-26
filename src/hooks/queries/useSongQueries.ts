@@ -1,5 +1,5 @@
 import { queryKeys } from "@/utils/queryKeys";
-import {
+import supabase, {
 	allOrdinaireSongsQuery,
 	allOrdinairesQuery,
 	allRefrainsQuery,
@@ -8,9 +8,11 @@ import {
 	allTagsQuery,
 	ordinaireDetailQuery,
 	taggedSongQuery,
+	updateOrdinaireSheetMusic,
 } from "@/utils/supabase";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import toast from "react-hot-toast";
 
 export const useAllSongs = () =>
 	useQuery({
@@ -97,6 +99,88 @@ export const useOrdinaireDetail = (id: number | undefined) =>
 		staleTime: 5 * 60 * 1000,
 		gcTime: 24 * 60 * 60 * 1000,
 	});
+
+export const useUploadOrdinaireSheetMusic = (
+	ordinaireId: number | undefined,
+) => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async ({
+			file,
+			ordinaireName,
+		}: { file: File; ordinaireName: string }) => {
+			const sanitizedName = ordinaireName
+				.replace(/\s+/g, "_")
+				.replace(/[^\w.-]/g, "");
+			const fileName = `ordinaire_${sanitizedName}.pdf`;
+
+			const { error: uploadError } = await supabase.storage
+				.from("sheet-music")
+				.upload(fileName, file, { upsert: true });
+			if (uploadError) {
+				throw new Error(`Erreur de téléversement: ${uploadError.message}`);
+			}
+
+			const sheetMusicUrl = `/sheet-music/${fileName}`;
+			const { error } = await updateOrdinaireSheetMusic(
+				ordinaireId as number,
+				sheetMusicUrl,
+			);
+			if (error) throw error;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.ordinaires.detail(ordinaireId as number),
+			});
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.ordinaires.list(),
+			});
+			toast.success("Partition PDF ajoutée");
+		},
+		onError: (error) => {
+			toast.error(
+				error instanceof Error ? error.message : "Erreur lors du téléversement",
+			);
+		},
+	});
+};
+
+export const useDeleteOrdinaireSheetMusic = (
+	ordinaireId: number | undefined,
+) => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (sheetMusicUrl: string) => {
+			const fileName = sheetMusicUrl.replace("/sheet-music/", "");
+			const { error: storageError } = await supabase.storage
+				.from("sheet-music")
+				.remove([fileName]);
+			if (storageError) throw storageError;
+
+			const { error } = await updateOrdinaireSheetMusic(
+				ordinaireId as number,
+				null,
+			);
+			if (error) throw error;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.ordinaires.detail(ordinaireId as number),
+			});
+			queryClient.invalidateQueries({
+				queryKey: queryKeys.ordinaires.list(),
+			});
+			toast.success("Partition supprimée");
+		},
+		onError: (error) => {
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Erreur lors de la suppression",
+			);
+		},
+	});
+};
 
 export const useAllOrdinaireSongs = () =>
 	useQuery({

@@ -1,7 +1,15 @@
 import { PageHeader, SettingsSidePanel, useLeader } from "@/components";
-import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
+import {
+	addChorusAtom,
+	showChordsAtom,
+} from "@/components/Contexts/SettingsContext";
 import { DynamicText } from "@/components/DynamicText";
-import { useOrdinaireDetail } from "@/hooks/queries/useSongQueries";
+import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
+import {
+	useDeleteOrdinaireSheetMusic,
+	useOrdinaireDetail,
+	useUploadOrdinaireSheetMusic,
+} from "@/hooks/queries/useSongQueries";
 import { queryKeys } from "@/utils/queryKeys";
 import {
 	type OrdinaireDetail,
@@ -9,18 +17,14 @@ import {
 	supabaseUrl,
 } from "@/utils/supabase";
 import { transposeLine } from "@/utils/tonalManipulation";
-import {
-	addChorusAtom,
-	showChordsAtom,
-} from "@/components/Contexts/SettingsContext";
-import { DocumentTextIcon } from "@heroicons/react/24/outline";
 import { PlusIcon } from "@heroicons/react/16/solid";
-import { useAtomValue } from "jotai";
-import { Fragment, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { DocumentTextIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
+import { useAtomValue } from "jotai";
+import { Fragment, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 const ROLE_ORDER = [
 	"kyrie",
@@ -120,6 +124,9 @@ export function OrdinairePage() {
 	const { leader } = useLeader();
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
+	const pdfInputRef = useRef<HTMLInputElement>(null);
+	const uploadPdfMutation = useUploadOrdinaireSheetMusic(id);
+	const deletePdfMutation = useDeleteOrdinaireSheetMusic(id);
 
 	if (!ordinaire) return null;
 
@@ -210,15 +217,62 @@ export function OrdinairePage() {
 				/>
 			</div>
 			<div className="flex flex-col gap-2 lg:gap-4 p-4">
-				{ordinaire.sheet_music_url && (
-					<Link
-						to={`${supabaseUrl}/storage/v1/object/public${ordinaire.sheet_music_url}`}
-						className="ml-auto px-4 py-2 bg-jubilateBlue-500 dark:bg-jubilateBlue-400 hover:bg-jubilateBlue-600 dark:hover:bg-jubilateBlue-300 text-white rounded-full transition-colors duration-200 flex items-center gap-2"
-						title="Voir la partition"
-					>
-						<DocumentTextIcon className="size-6" />
-					</Link>
-				)}
+				<div className="flex items-center justify-end gap-2">
+					{ordinaire.sheet_music_url ? (
+						<>
+							<Link
+								to={`${supabaseUrl}/storage/v1/object/public${ordinaire.sheet_music_url}`}
+								className="px-4 py-2 bg-jubilateBlue-500 dark:bg-jubilateBlue-400 hover:bg-jubilateBlue-600 dark:hover:bg-jubilateBlue-300 text-white rounded-full transition-colors duration-200 flex items-center gap-2"
+								title="Voir la partition"
+							>
+								<DocumentTextIcon className="size-6" />
+							</Link>
+							<button
+								type="button"
+								onClick={() => {
+									if (!ordinaire.sheet_music_url) return;
+									if (!confirm("Supprimer la partition ?")) return;
+									deletePdfMutation.mutate(ordinaire.sheet_music_url);
+								}}
+								className="flex items-center gap-1 text-sm text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 transition-colors duration-200"
+								title="Supprimer la partition"
+							>
+								<TrashIcon className="size-4" />
+							</button>
+						</>
+					) : !uploadPdfMutation.isPending ? (
+						<button
+							type="button"
+							onClick={() => pdfInputRef.current?.click()}
+							className="px-4 py-2 bg-jubilateBlue-500 dark:bg-jubilateBlue-400 hover:bg-jubilateBlue-600 dark:hover:bg-jubilateBlue-300 text-white rounded-full transition-colors duration-200 flex items-center gap-2"
+							title="Ajouter une partition PDF"
+						>
+							<DocumentTextIcon className="size-6" />
+							<span className="text-sm">Ajouter partition</span>
+						</button>
+					) : (
+						<div className="flex items-center gap-2 px-4 py-2">
+							<div className="animate-spin rounded-full h-5 w-5 border-b-2 border-jubilateBlue-500" />
+							<span className="text-sm text-jubilateBlue-600 dark:text-jubilateBlue-400">
+								Téléversement...
+							</span>
+						</div>
+					)}
+					<input
+						ref={pdfInputRef}
+						type="file"
+						accept=".pdf,application/pdf"
+						onChange={(e) => {
+							const file = e.target.files?.[0];
+							if (file)
+								uploadPdfMutation.mutate({
+									file,
+									ordinaireName: ordinaire.name,
+								});
+						}}
+						className="hidden"
+					/>
+				</div>
 				{songs.map((song) => (
 					<div key={song.id} className="flex flex-col gap-2">
 						<Link
