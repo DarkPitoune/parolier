@@ -161,7 +161,7 @@ function Index() {
 	};
 
 	return (
-		<div className="bg-white dark:bg-gray-800">
+		<div className="bg-white dark:bg-gray-800 pb-12">
 			<SettingsSidePanel />
 			<NavigationSidePanel
 				open={isNavigationPanelOpen}
@@ -179,7 +179,7 @@ function Index() {
 						<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
 							<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
 							<input
-								className="w-full h-9 rounded-full px-2 outline-none bg-white dark:bg-white text-black dark:text-black"
+								className="w-full h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
 								type="search"
 								onChange={search}
 								placeholder="Vite, une idée..."
@@ -195,7 +195,7 @@ function Index() {
 						</button>
 					}
 				/>
-				<div className="px-6 py-2 flex flex-col items-stretch shadow font-flame">
+				<div className="px-6 py-2 flex flex-col items-stretch shadow-sm font-flame">
 					<button
 						className="flex gap-2 text-jubilateBlue-500 dark:text-jubilateBlue-400 items-center"
 						onClick={() => setTagTabOpen((v) => !v)}

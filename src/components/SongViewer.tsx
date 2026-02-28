@@ -1,9 +1,7 @@
-import { type TaggedSong, supabaseUrl } from "@/utils/supabase";
+import { type TaggedSong } from "@/utils/supabase";
 import { transposeLine } from "@/utils/tonalManipulation";
-import { DocumentTextIcon } from "@heroicons/react/24/outline";
 import { useAtomValue } from "jotai";
 import { Fragment, useState } from "react";
-import { Link } from "react-router-dom";
 import { addChorusAtom, showChordsAtom } from "./Contexts/SettingsContext";
 import { DynamicText } from "./DynamicText";
 import { SettingsSidePanel } from "./SidePanel/variants/SettingsSidePanel";
@@ -20,8 +18,8 @@ function SongViewer({
 	const strophes = addChorusSetting
 		? song?.strophes
 		: song?.strophes?.filter(
-				(strophe) => strophe.type === "section" || !strophe.repetition,
-			);
+			(strophe) => strophe.type === "section" || !strophe.repetition,
+		);
 
 	return (
 		<div className="bg-white dark:bg-gray-800">
@@ -37,21 +35,12 @@ function SongViewer({
 						<h1 className="text-center">{song.title}</h1>
 					</div>
 				)}
-				{song.sheet_music_url && (
-					<Link
-						to={`${supabaseUrl}/storage/v1/object/public${song.sheet_music_url}`}
-						className="ml-auto px-4 py-2 bg-jubilateBlue-500 dark:bg-jubilateBlue-400 hover:bg-jubilateBlue-600 dark:hover:bg-jubilateBlue-300 text-white rounded-full transition-colors duration-200 flex items-center gap-2"
-						title="Voir la partition"
-					>
-						<DocumentTextIcon className="size-6" />
-					</Link>
-				)}
 				<div className="flex gap-2 lg:gap-4 px-4 font-flame">
 					{song.tags?.map((tag) => (
 						<TagChip tag={tag} key={tag.id} />
 					))}
 				</div>
-				<div className="flex flex-col gap-4">
+				<div className="flex flex-col gap-4 pb-10">
 					{strophes?.map((strophe, index) =>
 						strophe.type !== "section" ? (
 							<div
@@ -68,7 +57,7 @@ function SongViewer({
 									<Fragment key={lineIndex}>
 										{showChords && (
 											<DynamicText
-												className="bg-jubilateBlue-100 dark:bg-slate-600 outline-8 border-jubilateBlue-100 dark:border-slate-600 border-4 px-2 text-black dark:text-white first:rounded-t-md [&:nth-last-child(2)]:rounded-b-md"
+												className="bg-jubilateBlue-100 dark:bg-slate-600 border-jubilateBlue-100 dark:border-slate-600 border-4 px-2 text-black dark:text-white first:rounded-t-md nth-last-2:rounded-b-md"
 												text={transposeLine(line.chords, tonality)}
 											/>
 										)}

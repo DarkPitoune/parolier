@@ -68,10 +68,10 @@ const Setlists = () => {
 							onClick={() => handleDeleteSetlist(setlist.id)}
 							disabled={deleteMutation.isPending}
 						>
-							<TrashIcon className="size-8 rounded-full bg-jubilateRed p-1" />
+							<TrashIcon className="size-9 rounded-full bg-jubilateRed p-2 fill-stone-800" />
 						</button>
 						<Link to={`/setlists/${setlist.id}/edit`}>
-							<PencilSquareIcon className="size-8 p-1 bg-jubilateGreen rounded-full" />
+							<PencilSquareIcon className="size-9 p-2 bg-jubilateGreen rounded-full fill-stone-800" />
 						</Link>
 					</div>
 				))}
@@ -79,7 +79,7 @@ const Setlists = () => {
 					type="button"
 					onClick={() => createMutation.mutate()}
 					disabled={createMutation.isPending}
-					className="px-2 py-2 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 dark:text-slate-400 italic text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+					className="flex items-center place-self-center gap-2 px-4 py-2 bg-jubilateBlue-500 hover:bg-jubilateBlue-600 disabled:opacity-50 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
 				>
 					{createMutation.isPending
 						? "Création en cours..."

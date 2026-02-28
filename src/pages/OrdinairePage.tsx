@@ -88,7 +88,7 @@ function SongSection({
 								<Fragment key={lineIndex}>
 									{showChords && (
 										<DynamicText
-											className="bg-jubilateBlue-100 dark:bg-slate-600 outline-8 border-jubilateBlue-100 dark:border-slate-600 border-4 px-2 text-black dark:text-white first:rounded-t-md [&:nth-last-child(2)]:rounded-b-md"
+											className="bg-jubilateBlue-100 dark:bg-slate-600 outline-8 border-jubilateBlue-100 dark:border-slate-600 border-4 px-2 text-black dark:text-white first:rounded-t-md nth-last-2:rounded-b-md"
 											text={transposeLine(line.chords, tonality)}
 										/>
 									)}
@@ -225,7 +225,7 @@ export function OrdinairePage() {
 							to={`/songs/${song.id}`}
 							className="flex items-center gap-2 font-flame text-lg text-jubilateBlue-500 dark:text-jubilateBlue-400 hover:underline"
 						>
-							<span className="text-sm font-medium bg-jubilateBlue-100 dark:bg-gray-600 px-2 py-0.5 rounded">
+							<span className="text-sm font-medium bg-jubilateBlue-100 dark:bg-gray-600 px-2 py-0.5 rounded-sm">
 								{ROLE_LABELS[song.ordinaire_role ?? ""] ?? song.ordinaire_role}
 							</span>
 							{song.title}

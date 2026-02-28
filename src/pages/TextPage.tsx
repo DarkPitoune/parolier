@@ -55,7 +55,7 @@ function TextPage() {
 			<PageHeader variant="detail" title={`${text.id}. ${text.title}`} />
 			<div onContextMenu={handleOnContextMenu} className="p-6">
 				<div className="max-w-4xl mx-auto">
-					<div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+					<div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
 						<h2 className="text-2xl font-bold mb-4 text-black dark:text-white">
 							{text.title}
 						</h2>

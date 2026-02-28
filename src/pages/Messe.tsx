@@ -46,14 +46,14 @@ interface Lecture {
 	verset_evangile?: string;
 }
 
-interface Masse {
+interface Messe {
 	nom: string;
 	lectures: Lecture[];
 }
 
 interface MesseData {
 	informations: LiturgicalInformation;
-	messes: Masse[];
+	messes: Messe[];
 }
 
 const ROLE_LABELS: Record<SongSuggestion["role"], string> = {
@@ -116,7 +116,7 @@ function SuggestionCard({
 			</button>
 
 			{showPicker && (
-				<div className="mt-2 h-64 border border-gray-200 dark:border-gray-600 rounded overflow-hidden">
+				<div className="mt-2 h-64 border border-gray-200 dark:border-gray-600 rounded-sm overflow-hidden">
 					<SongPickerInline
 						onSongSelect={(songId) => {
 							onSwap(songId, "");
@@ -288,7 +288,7 @@ function Messe() {
 								type="date"
 								value={selectedDate}
 								onChange={handleDateChange}
-								className="h-9 rounded-full px-2 outline-none bg-white dark:bg-white text-black dark:text-black"
+								className="h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
 							/>
 						</div>
 					}
@@ -318,7 +318,7 @@ function Messe() {
 				)}
 
 				{error && (
-					<div className="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-200 px-4 py-3 rounded mb-6">
+					<div className="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-200 px-4 py-3 rounded-sm mb-6">
 						{error}
 					</div>
 				)}
@@ -393,25 +393,25 @@ function Messe() {
 									{messe.nom}
 								</h2>
 
-								<div className="space-y-6">
+								<div className="space-y-12">
 									{messe.lectures.map((lecture, lectureIndex) => (
 										<div
 											key={`lecture-${lecture.titre}-${lectureIndex}`}
-											className="border-l-4 border-jubilateBlue-500 pl-4"
+											className={`border-l-[.3em] rounded-l-sm ${lecture.verset_evangile ? "border-green-600" : "border-jubilateBlue-500"} pl-4`}
 										>
 											<div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
 												<h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
 													{lecture.titre}
 												</h3>
-												<span className="text-sm font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900 px-2 py-1 rounded">
+												<span className={`text-sm font-medium ${lecture.verset_evangile ? "text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900" : "text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900"} px-2 py-1 rounded-sm`}>
 													{lecture.ref}
 												</span>
 											</div>
 
 											{lecture.verset_evangile && (
-												<div className="mb-3 p-3 bg-green-50 dark:bg-green-900 rounded">
+												<div className="mb-3 p-3 bg-green-50 dark:bg-green-900 rounded-sm">
 													<div
-														className="text-sm font-medium text-green-800 dark:text-green-200"
+														className="text-sm italic font-medium text-green-800 dark:text-green-200"
 														// biome-ignore lint/security/noDangerouslySetInnerHtml: Gospel verse from trusted AELF API may contain HTML formatting
 														dangerouslySetInnerHTML={{
 															__html: `Verset de l'Évangile : ${lecture.verset_evangile}`,
@@ -421,7 +421,7 @@ function Messe() {
 											)}
 
 											{lecture.refrain_psalmique && (
-												<div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900 rounded">
+												<div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900 rounded-sm">
 													<div
 														className="text-sm font-medium text-blue-800 dark:text-blue-200"
 														// biome-ignore lint/security/noDangerouslySetInnerHtml: Psalm refrain from trusted AELF API may contain HTML formatting
@@ -433,7 +433,7 @@ function Messe() {
 											)}
 
 											{lecture.intro_lue && (
-												<div className="mb-3 p-3 bg-gray-50 dark:bg-gray-700 rounded">
+												<div className="mb-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-sm">
 													<p className="text-sm text-gray-700 dark:text-gray-300 italic">
 														{lecture.intro_lue}
 													</p>
@@ -454,7 +454,7 @@ function Messe() {
 						))}
 
 						{/* Song Suggestions Section */}
-						<div className="border-t border-gray-200 dark:border-gray-600 pt-6">
+						<div className="border-t border-gray-200 dark:border-gray-600 pt-6 pb-20">
 							<h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
 								Suggestions de chants
 							</h2>
@@ -464,7 +464,7 @@ function Messe() {
 									type="button"
 									onClick={handleSuggest}
 									disabled={!allSongs || suggestionsLoading}
-									className="flex items-center gap-2 px-4 py-2 bg-jubilateBlue-500 hover:bg-jubilateBlue-600 disabled:opacity-50 text-white rounded-lg font-medium"
+									className="flex items-center place-self-center gap-2 px-4 py-2 bg-jubilateBlue-500 hover:bg-jubilateBlue-600 disabled:opacity-50 text-white rounded-lg font-medium"
 								>
 									<SparklesIcon className="w-5 h-5" />
 									Suggérer des chants pour cette messe
@@ -481,7 +481,7 @@ function Messe() {
 							)}
 
 							{suggestionsError && (
-								<div className="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-200 px-4 py-3 rounded mb-4">
+								<div className="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-200 px-4 py-3 rounded-sm mb-4">
 									{suggestionsError}
 								</div>
 							)}
@@ -489,7 +489,7 @@ function Messe() {
 							{suggestions && (
 								<div className="space-y-4">
 									{liturgicalSummary && (
-										<p className="text-sm text-gray-600 dark:text-gray-400 italic bg-gray-50 dark:bg-gray-700 p-3 rounded">
+										<p className="text-sm text-gray-600 dark:text-gray-400 italic bg-gray-50 dark:bg-gray-700 p-3 rounded-sm">
 											{liturgicalSummary}
 										</p>
 									)}

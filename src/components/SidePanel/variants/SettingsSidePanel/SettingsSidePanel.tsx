@@ -267,7 +267,7 @@ function SettingsSidePanel({
                       setUsername(e.target.value);
                     }}
                     value={username}
-                    className="rounded-2xl px-4 py-1 mr-4 text-black dark:text-white outline outline-jubilateBlue-300 focus:outline-jubilateBlue-500 dark:accent-jubilateBlue-400 w-full dark:bg-slate-700 bg-jubilateBlue-100"
+                    className="rounded-2xl px-4 py-1 mr-4 text-black dark:text-white outline-solid outline-jubilateBlue-300 focus:outline-jubilateBlue-500 dark:accent-jubilateBlue-400 w-full dark:bg-slate-700 bg-jubilateBlue-100"
                   />
                 </div>
                 <button

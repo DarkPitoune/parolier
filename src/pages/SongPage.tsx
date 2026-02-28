@@ -3,6 +3,8 @@ import { useTaggedSong } from "@/hooks/queries/useSongQueries";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { analyticsSong } from "@/utils/supabase";
 import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
+import { DocumentTextIcon } from "@heroicons/react/24/outline";
+import { supabaseUrl } from "@/utils/supabase";
 import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 
@@ -37,6 +39,16 @@ function SongPage() {
 				title={`${song.id}. ${song.title}`}
 				right={
 					<div className="flex items-center gap-4">
+						{song.sheet_music_url && (
+							<Link
+								to={`${supabaseUrl}/storage/v1/object/public${song.sheet_music_url}`}
+								className="ml-auto p-3 bg-jubilateBlue-500 dark:bg-jubilateBlue-400 hover:bg-jubilateBlue-600 dark:hover:bg-jubilateBlue-300 text-white rounded-full transition-colors duration-200 flex items-center gap-2"
+								title="Voir la partition"
+								target="_blank"
+							>
+								<DocumentTextIcon className="size-6" />
+							</Link>
+						)}
 						<Link
 							className="rounded-full hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-3"
 							onClick={() => document.body.requestFullscreen()}
@@ -44,6 +56,7 @@ function SongPage() {
 						>
 							<ComputerDesktopIcon className="size-6 fill-white" />
 						</Link>
+
 					</div>
 				}
 			/>
