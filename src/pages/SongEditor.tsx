@@ -453,7 +453,7 @@ const SongEditor = () => {
 					<button
 						type="button"
 						onClick={handleSave}
-						className="bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white font-bold px-2 py-1 rounded-md shadow-sm hover:bg-jubilateBlue-700 dark:hover:bg-jubilateBlue-500"
+						className="bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white font-bold px-2 py-1 rounded-md shadow-xs hover:bg-jubilateBlue-700 dark:hover:bg-jubilateBlue-500"
 					>
 						Enregistrer
 					</button>
@@ -484,7 +484,7 @@ const SongEditor = () => {
 								<button
 									type="button"
 									onClick={handleDeletePdf}
-									className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition-colors"
+									className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-sm text-sm transition-colors"
 								>
 									<TrashIcon className="h-4 w-4" />
 									Supprimer
@@ -598,12 +598,12 @@ const SongEditor = () => {
 								<h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
 									Paroles suggérées
 								</h3>
-								<div className="text-xs text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900 dark:bg-opacity-30 px-2 py-1 rounded">
+								<div className="text-xs text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900 dark:bg-opacity-30 px-2 py-1 rounded-sm">
 									⚠️ Ne fermez pas la page
 								</div>
 							</div>
 
-							<div className="bg-white dark:bg-gray-800 p-3 rounded border mb-4 max-h-40 overflow-y-auto">
+							<div className="bg-white dark:bg-gray-800 p-3 rounded-sm border mb-4 max-h-40 overflow-y-auto">
 								{suggestedLyrics.map((strophe, index) => (
 									<div key={`${strophe.type}-${index}`} className="mb-2">
 										<div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
@@ -766,14 +766,14 @@ const SongEditor = () => {
 											<button
 												type="button"
 												onClick={() => removeStrophe(index)}
-												className="bg-jubilateRed bg-opacity-85 text-white px-2 py-1 rounded-md shadow-sm hover:bg-opacity-100 text-sm"
+												className="bg-jubilateRed bg-opacity-85 text-white px-2 py-1 rounded-md shadow-xs hover:bg-opacity-100 text-sm"
 											>
 												Supprimer section
 											</button>
 											<button
 												type="button"
 												onClick={() => addSection(index)}
-												className="bg-purple-500 bg-opacity-85 text-white px-2 py-1 rounded-md shadow-sm hover:bg-opacity-100 text-sm"
+												className="bg-purple-500 bg-opacity-85 text-white px-2 py-1 rounded-md shadow-xs hover:bg-opacity-100 text-sm"
 											>
 												Insérer section
 											</button>
@@ -823,7 +823,7 @@ const SongEditor = () => {
 														handleStropheChange(index, "type", e.target.value)
 													}
 													className={clsx(
-														"w-full border rounded-md shadow-sm p-1 sm:text-sm bg-transparent",
+														"w-full border rounded-md shadow-xs p-1 sm:text-sm bg-transparent",
 														strophe.type === "verse" &&
 															"border-jubilateBlue-500 dark:focus:outline-slate-500 dark:bg-inherit dark:border-slate-700",
 														strophe.type === "chorus" &&
@@ -887,26 +887,26 @@ const SongEditor = () => {
 											<button
 												type="button"
 												onClick={() => removeStrophe(index)}
-												className="bg-jubilateRed bg-opacity-85 text-white px-2 py-1 rounded-md shadow-sm hover:bg-opacity-100 text-sm"
+												className="bg-jubilateRed bg-opacity-85 text-white px-2 py-1 rounded-md shadow-xs hover:bg-opacity-100 text-sm"
 											>
 												Supprimer strophe
 											</button>
 											<button
 												type="button"
 												onClick={() => addStrophe(index)}
-												className="bg-jubilateGreen bg-opacity-85 text-white px-2 py-1 rounded-md shadow-sm hover:bg-opacity-100 text-sm"
+												className="bg-jubilateGreen bg-opacity-85 text-white px-2 py-1 rounded-md shadow-xs hover:bg-opacity-100 text-sm"
 											>
 												Insérer strophe
 											</button>
 											<button
 												type="button"
 												onClick={() => addSection(index)}
-												className="bg-purple-500 bg-opacity-85 text-white px-2 py-1 rounded-md shadow-sm hover:bg-opacity-100 text-sm"
+												className="bg-purple-500 bg-opacity-85 text-white px-2 py-1 rounded-md shadow-xs hover:bg-opacity-100 text-sm"
 											>
 												Insérer section
 											</button>
 											<button
-												className="bg-jubilateBlue-500 bg-opacity-85 text-white px-2 py-1 rounded-md shadow-sm hover:bg-opacity-100 text-sm"
+												className="bg-jubilateBlue-500 bg-opacity-85 text-white px-2 py-1 rounded-md shadow-xs hover:bg-opacity-100 text-sm"
 												type="button"
 												onClick={() => {
 													const newStrophes = [...song.strophes];
@@ -991,7 +991,7 @@ const SongEditor = () => {
 									];
 									handleChange("strophes", newStrophes);
 								}}
-								className="bg-jubilateGreen bg-opacity-85 text-white px-4 py-2 rounded-md shadow-sm hover:bg-opacity-100 text-sm"
+								className="bg-jubilateGreen bg-opacity-85 text-white px-4 py-2 rounded-md shadow-xs hover:bg-opacity-100 text-sm"
 							>
 								Ajouter strophe à la fin
 							</button>
@@ -1008,7 +1008,7 @@ const SongEditor = () => {
 									];
 									handleChange("strophes", newStrophes);
 								}}
-								className="bg-purple-500 bg-opacity-85 text-white px-4 py-2 rounded-md shadow-sm hover:bg-opacity-100 text-sm"
+								className="bg-purple-500 bg-opacity-85 text-white px-4 py-2 rounded-md shadow-xs hover:bg-opacity-100 text-sm"
 							>
 								Ajouter section à la fin
 							</button>

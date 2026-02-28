@@ -128,7 +128,7 @@ function Analytics() {
 								id="startDate"
 								value={startDate}
 								onChange={(e) => handleDateChange("start", e.target.value)}
-								className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-jubilateBlue-500 focus:border-jubilateBlue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+								className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:outline-hidden focus:ring-2 focus:ring-jubilateBlue-500 focus:border-jubilateBlue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
 							/>
 						</div>
 						<div>
@@ -143,7 +143,7 @@ function Analytics() {
 								id="endDate"
 								value={endDate}
 								onChange={(e) => handleDateChange("end", e.target.value)}
-								className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-jubilateBlue-500 focus:border-jubilateBlue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+								className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:outline-hidden focus:ring-2 focus:ring-jubilateBlue-500 focus:border-jubilateBlue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
 							/>
 						</div>
 					</div>
@@ -175,11 +175,11 @@ function Analytics() {
 							{songCounts.map((song, index) => (
 								<div
 									key={song.title}
-									className="bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 p-3 sm:p-4"
+									className="bg-white dark:bg-gray-700 rounded-lg shadow-xs border border-gray-200 dark:border-gray-600 p-3 sm:p-4"
 								>
 									<div className="flex items-center justify-between gap-3">
 										<div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-											<div className="w-6 h-6 sm:w-8 sm:h-8 bg-jubilateBlue-500 text-white rounded-full flex items-center justify-center font-bold text-xs sm:text-sm flex-shrink-0">
+											<div className="w-6 h-6 sm:w-8 sm:h-8 bg-jubilateBlue-500 text-white rounded-full flex items-center justify-center font-bold text-xs sm:text-sm shrink-0">
 												{index + 1}
 											</div>
 											<div className="min-w-0 flex-1">
@@ -191,7 +191,7 @@ function Analytics() {
 												</p>
 											</div>
 										</div>
-										<div className="flex items-center gap-2 flex-shrink-0">
+										<div className="flex items-center gap-2 shrink-0">
 											<div className="w-16 sm:w-24 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
 												<div
 													className="bg-jubilateBlue-500 h-2 rounded-full transition-all duration-300"
@@ -204,7 +204,7 @@ function Analytics() {
 													}}
 												/>
 											</div>
-											<span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[2rem] sm:min-w-[3rem] text-right">
+											<span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 min-w-8 sm:min-w-12 text-right">
 												{song.count}
 											</span>
 										</div>

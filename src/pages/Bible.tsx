@@ -166,7 +166,7 @@ function Bible() {
 						<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
 							<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
 							<input
-								className="w-full h-9 rounded-full px-2 outline-none bg-white dark:bg-white text-black dark:text-black"
+								className="w-full h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
 								type="search"
 								onChange={search}
 								value={searchValue}
@@ -191,7 +191,7 @@ function Bible() {
 						{(selectedBook || selectedChapter) && (
 							<button
 								onClick={goBack}
-								className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
+								className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
 								type="button"
 							>
 								← Retour
@@ -251,7 +251,7 @@ function Bible() {
 								<span
 									key={`${verse.verse}`}
 									id={`verse-${verse.verse}`}
-									className="hover:bg-gray-100 dark:hover:bg-gray-700 hover:bg-opacity-50 transition-colors duration-200 rounded px-1 py-0.5 -mx-1 -my-0.5 scroll-mt-24"
+									className="hover:bg-gray-100 dark:hover:bg-gray-700 hover:bg-opacity-50 transition-colors duration-200 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 scroll-mt-24"
 								>
 									<span className="text-sm font-medium text-red-700 dark:text-jubilateBlue-400 mr-1">
 										{Number(verse.verse)}
@@ -270,7 +270,7 @@ function Bible() {
 										onClick={() =>
 											selectChapter(String(Number(selectedChapter) - 1))
 										}
-										className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+										className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition"
 										type="button"
 									>
 										← Chapitre {Number(selectedChapter) - 1}
@@ -283,7 +283,7 @@ function Bible() {
 										onClick={() =>
 											selectChapter(String(Number(selectedChapter) + 1))
 										}
-										className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+										className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition"
 										type="button"
 									>
 										Chapitre {Number(selectedChapter) + 1} →

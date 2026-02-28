@@ -23,8 +23,8 @@ export const TagChip = ({
 				outline ? "border-2" : "border-0",
 				iconOnly ? "p-2" : "px-3 py-0.5",
 				inverted
-					? "text-white bg-[var(--tag-color)] border-[var(--tag-color)]"
-					: "text-[var(--tag-color)] bg-transparent border-[var(--tag-color)] border-2",
+					? "text-white bg-(--tag-color) border-(--tag-color)"
+					: "text-(--tag-color) bg-transparent border-(--tag-color) border-2",
 			)}
 			style={{ "--tag-color": tag.color } as React.CSSProperties}
 			{...(props.onClick && { role: "button" })}

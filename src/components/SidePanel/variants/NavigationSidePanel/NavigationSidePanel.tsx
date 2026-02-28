@@ -40,70 +40,70 @@ export function NavigationSidePanel({
 		<SidePanel open={open} onClose={() => setOpen(false)} title="Navigation">
 			<div className="flex flex-col gap-1">
 				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
 					to="/"
 				>
 					<MusicalNoteIcon className="w-4 h-4" />
 					Liste des chants
 				</Link>
 				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
 					to="/refrains"
 				>
 					<FireIcon className="w-4 h-4" />
 					Refrains
 				</Link>
 				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
 					to="/ordinaires"
 				>
 					<RectangleGroupIcon className="w-4 h-4" />
 					Ordinaires de messe
 				</Link>
 				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
 					to="/texts"
 				>
 					<DocumentTextIcon className="w-4 h-4" />
 					Textes
 				</Link>
 				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
 					to="/bible"
 				>
 					<BookOpenIcon className="w-4 h-4" />
 					Bible
 				</Link>
 				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
 					to="/messe"
 				>
 					<CalendarDaysIcon className="w-4 h-4" />
 					Messe
 				</Link>
 				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
 					to="/setlists"
 				>
 					<QueueListIcon className="w-4 h-4" />
 					Setlists
 				</Link>
 				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
 					to="/analytics"
 				>
 					<ChartBarIcon className="w-4 h-4" />
 					Statistiques
 				</Link>
 				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
 					to="/presenter"
 				>
 					<PresentationChartLineIcon className="w-4 h-4" />
 					Mode Présentateur
 				</Link>
 				<button
-					className="flex items-center gap-2 px-3 py-2 rounded hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
 					type="button"
 					onClick={createNewSong}
 				>

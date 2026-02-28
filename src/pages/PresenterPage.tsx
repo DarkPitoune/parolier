@@ -337,7 +337,7 @@ const PresenterPage = () => {
 
 			{/* Beta Disclaimer */}
 			<div className="flex items-center justify-center gap-2 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-4 py-1.5 text-sm">
-				<BeakerIcon className="w-4 h-4 flex-shrink-0" />
+				<BeakerIcon className="w-4 h-4 shrink-0" />
 				<span>Fonctionnalité en bêta — des bugs peuvent survenir.</span>
 			</div>
 
@@ -402,7 +402,7 @@ const PresenterPage = () => {
 					</div>
 
 					{/* Progress Bar */}
-					<div className="py-4 flex-shrink-0">
+					<div className="py-4 shrink-0">
 						<div className="flex items-center justify-center gap-4">
 							<span className="text-sm text-gray-600 dark:text-gray-400">
 								{totalSlides > 0
@@ -423,7 +423,7 @@ const PresenterPage = () => {
 					</div>
 
 					{/* Controls at Bottom */}
-					<div className="flex-shrink-0">
+					<div className="shrink-0">
 						<div className="flex items-center justify-center gap-6">
 							<button
 								type="button"

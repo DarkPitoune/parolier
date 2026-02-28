@@ -272,7 +272,7 @@ const SetlistEditor = () => {
 					)}
 					{selectedText && (
 						<div className="col-span-2 max-h-screen overflow-y-auto hidden md:block p-6">
-							<div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+							<div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
 								<h2 className="text-2xl font-bold mb-4 text-black dark:text-white">
 									{selectedText.title}
 								</h2>
@@ -286,7 +286,7 @@ const SetlistEditor = () => {
 						<div className="p-4 col-span-2 hidden md:block">
 							<textarea
 								onChange={(value) => setTextNewValue(value.currentTarget.value)}
-								className="h-full w-full outline-none bg-transparent text-black dark:text-white"
+								className="h-full w-full outline-hidden bg-transparent text-black dark:text-white"
 								onBlur={() => handleSaveNewText()}
 								placeholder="Probablement parler de Jésus..."
 								value={textNewValue}

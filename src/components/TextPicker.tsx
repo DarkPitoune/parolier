@@ -128,13 +128,13 @@ const TextPicker = ({ handleClose }: TextPickerProps) => {
 				onClick={(e) => e.stopPropagation()}
 			>
 				<div className="flex flex-col col-span-3 md:col-span-1 min-h-0">
-					<h2 className="text-xl font-bold px-4 py-2 shadow dark:text-white text-black">
+					<h2 className="text-xl font-bold px-4 py-2 shadow-sm dark:text-white text-black">
 						Sélectionner un texte
 					</h2>
 					<div>
 						<input
 							placeholder="Tapez un texte ici"
-							className="px-2 py-1 w-full bg-transparent text-black dark:text-white outline-none"
+							className="px-2 py-1 w-full bg-transparent text-black dark:text-white outline-hidden"
 							type="text"
 							value={searchValue}
 							onChange={search}
@@ -163,9 +163,9 @@ const TextPicker = ({ handleClose }: TextPickerProps) => {
 						))}
 					</div>
 					{selectedTextId !== null && !isMobile && (
-						<div className="p-2 flex shadow">
+						<div className="p-2 flex shadow-sm">
 							<button
-								className="bg-jubilateBlue-500 text-white hover:bg-jubilateBlue-300 py-1 px-4 rounded grow transition-colors"
+								className="bg-jubilateBlue-500 text-white hover:bg-jubilateBlue-300 py-1 px-4 rounded-sm grow transition-colors"
 								type="submit"
 								onClick={() => handleClose(selectedTextId)}
 							>
@@ -177,7 +177,7 @@ const TextPicker = ({ handleClose }: TextPickerProps) => {
 				<div className="col-span-2 min-h-0 overflow-y-auto hidden md:block">
 					{selectedText && (
 						<div className="p-6">
-							<div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+							<div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
 								<h2 className="text-2xl font-bold mb-4 text-black dark:text-white">
 									{selectedText.title}
 								</h2>

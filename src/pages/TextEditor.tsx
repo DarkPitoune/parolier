@@ -52,7 +52,7 @@ const TextEditor = () => {
 					<button
 						type="button"
 						onClick={handleSave}
-						className="bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white font-bold px-2 py-1 rounded-md shadow-sm hover:bg-jubilateBlue-700 dark:hover:bg-jubilateBlue-500"
+						className="bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white font-bold px-2 py-1 rounded-md shadow-xs hover:bg-jubilateBlue-700 dark:hover:bg-jubilateBlue-500"
 					>
 						Enregistrer
 					</button>

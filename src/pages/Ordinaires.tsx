@@ -122,7 +122,7 @@ export function Ordinaires() {
 						<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
 							<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
 							<input
-								className="w-full h-9 rounded-full px-2 outline-none bg-white dark:bg-white text-black dark:text-black"
+								className="w-full h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
 								type="search"
 								onChange={search}
 								placeholder="Chercher un ordinaire..."

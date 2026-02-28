@@ -188,7 +188,7 @@ export default function SwipeableTabs({
 					{tabs.map((tab, index) => (
 						<div
 							key={tab.id || index}
-							className="flex-shrink-0 w-full"
+							className="shrink-0 w-full"
 							style={{ width: `${100 / tabs.length}%` }}
 						>
 							{tab.content}

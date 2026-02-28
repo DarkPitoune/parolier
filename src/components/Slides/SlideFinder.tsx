@@ -55,7 +55,7 @@ const SlideFinder = () => {
 				value={inputValue}
 				onChange={handleNewValue}
 				onKeyDown={handleInput}
-				className="rounded-full bg-gray-700 px-2 text-white outline-none"
+				className="rounded-full bg-gray-700 px-2 text-white outline-hidden"
 				style={{ width: `${Math.max(1, inputValue.length) + 2}ch` }}
 				onFocus={() => setInputVisible(true)}
 				onBlur={() => {
