@@ -42,15 +42,11 @@ import { usePrefetchAllSongs } from "./hooks/queries/useSongQueries";
 import { queryClient } from "./utils/queryClient";
 
 Sentry.init({
-	dsn: "https://e3d0fd2959dec5c42a29102e0a89423c@o4509542487425024.ingest.de.sentry.io/4509542545162320",
+	dsn: "https://93a732f3dc5d4316bbf2fba04ba9dbc3@pitoune.bugsink.com/2",
 	enabled: import.meta.env.PROD && !import.meta.env.VITE_E2E,
-	sendDefaultPii: true,
-	integrations: [Sentry.browserTracingIntegration()],
-	tracesSampleRate: process.env.NODE_ENV === "production" ? 1 : 0,
-	tracePropagationTargets: [
-		"localhost",
-		/^https:\/\/parolier.jubilate.fr\/api\//,
-	],
+	release: `jubilatebook@${__APP_VERSION__}`,
+	integrations: [],
+	tracesSampleRate: 0,
 });
 
 const router = createBrowserRouter([
