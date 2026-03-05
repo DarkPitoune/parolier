@@ -1,5 +1,6 @@
 import { PageHeader, SongViewer, useLeader } from "@/components";
 import { useTaggedSong } from "@/hooks/queries/useSongQueries";
+import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { analyticsSong } from "@/utils/supabase";
 import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
@@ -13,6 +14,9 @@ function SongPage() {
 	const songIdNum = songId ? Number(songId) : undefined;
 	const { data: song } = useTaggedSong(songIdNum);
 	const { setLeaderSong } = useLeader();
+
+	useRecordVisit(song ? { path: `/songs/${songId}`, title: `${song.id}. ${song.title}`, type: "song" } : null);
+	useRestoreScroll();
 
 	// Keep screen awake while viewing song
 	useWakeLock();

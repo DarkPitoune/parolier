@@ -1,5 +1,6 @@
 import { PageHeader, SettingsSidePanel, useLeader } from "@/components";
 import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
+import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
 import { MagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import clsx from "clsx";
 import {
@@ -36,6 +37,13 @@ function Bible() {
 	const { leader } = useLeader();
 	const { book: selectedBook, chapter: selectedChapter } = useParams();
 	const navigate = useNavigate();
+
+	useRecordVisit(
+		selectedBook && selectedChapter
+			? { path: `/bible/${selectedBook}/${selectedChapter}`, title: `${selectedBook} ${selectedChapter}`, type: "bible" }
+			: null,
+	);
+	useRestoreScroll();
 
 	const books = useMemo(() => Object.keys(bible), [bible]);
 	const chapters = useMemo(

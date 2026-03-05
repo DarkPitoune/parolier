@@ -20,7 +20,10 @@
       "WebFetch(domain:annuaire.catholique-savoie.fr)",
       "WebFetch(domain:fr.wikipedia.org)",
       "Bash(git diff:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(pnpm tsc:*)",
+      "Bash(pnpm exec:*)"
     ],
     "deny": [],
     "ask": []

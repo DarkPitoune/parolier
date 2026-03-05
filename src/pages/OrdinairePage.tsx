@@ -1,6 +1,7 @@
 import { PageHeader, SettingsSidePanel, useLeader } from "@/components";
 import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
 import { DynamicText } from "@/components/DynamicText";
+import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
 import { useOrdinaireDetail } from "@/hooks/queries/useSongQueries";
 import { queryKeys } from "@/utils/queryKeys";
 import {
@@ -113,6 +114,10 @@ export function OrdinairePage() {
 	const { ordinaireId } = useParams<{ ordinaireId: string }>();
 	const id = ordinaireId ? Number(ordinaireId) : undefined;
 	const { data: ordinaire } = useOrdinaireDetail(id);
+
+	useRecordVisit(ordinaire ? { path: `/ordinaires/${ordinaireId}`, title: ordinaire.name, type: "ordinaire" } : null);
+	useRestoreScroll();
+
 	const addChorus = useAtomValue(addChorusAtom);
 	const showChords = useAtomValue(showChordsAtom);
 	const [tonality, setTonality] = useState(0);

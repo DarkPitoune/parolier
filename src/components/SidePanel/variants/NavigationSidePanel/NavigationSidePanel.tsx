@@ -1,22 +1,26 @@
+import {
+	CONTENT_TYPE_ICONS,
+	navigationHistoryAtom,
+} from "@/hooks/useNavigationHistory";
 import { queryKeys } from "@/utils/queryKeys";
 import { newSongMutation } from "@/utils/supabase";
-import { useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-import { SidePanel } from "../../SidePanel";
 import {
-	MusicalNoteIcon,
-	FireIcon,
-	RectangleGroupIcon,
-	DocumentTextIcon,
 	BookOpenIcon,
 	CalendarDaysIcon,
-	QueueListIcon,
 	ChartBarIcon,
-	PresentationChartLineIcon,
+	DocumentTextIcon,
+	FireIcon,
+	MusicalNoteIcon,
 	PlusIcon,
+	PresentationChartLineIcon,
+	QueueListIcon,
+	RectangleGroupIcon,
 } from "@heroicons/react/16/solid";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAtomValue } from "jotai";
+import toast from "react-hot-toast";
+import { Link, useNavigate } from "react-router-dom";
+import { SidePanel } from "../../SidePanel";
 
 export function NavigationSidePanel({
 	open,
@@ -24,6 +28,7 @@ export function NavigationSidePanel({
 }: { open: boolean; setOpen: (open: boolean) => void }) {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
+	const history = useAtomValue(navigationHistoryAtom);
 	const createNewSong = async () => {
 		const title = prompt("Titre de la chanson");
 		if (!title) return;
@@ -111,6 +116,33 @@ export function NavigationSidePanel({
 					Nouvelle chanson
 				</button>
 			</div>
+			{history.length > 0 && (
+				<>
+					<hr className="border-gray-200 dark:border-gray-600 my-2" />
+					<h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-3 py-1 uppercase tracking-wide">
+						Récents
+					</h3>
+					<div className="flex flex-col border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden mx-1">
+						{history.map((entry) => {
+							const Icon = CONTENT_TYPE_ICONS[entry.type];
+							return (
+								<button
+									key={entry.path}
+									type="button"
+									onClick={() => {
+										navigate(entry.path, { state: { restoreScrollY: entry.scrollY } });
+										setOpen(false);
+									}}
+									className="flex items-center gap-2 px-3 py-1.5 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition text-left w-full min-w-0"
+								>
+									<Icon className="w-4 h-4 shrink-0" />
+									<span className="truncate">{entry.title}</span>
+								</button>
+							);
+						})}
+					</div>
+				</>
+			)}
 		</SidePanel>
 	);
 }
