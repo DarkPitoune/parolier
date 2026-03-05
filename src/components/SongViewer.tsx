@@ -1,10 +1,11 @@
-import { type TaggedSong } from "@/utils/supabase";
+import type { TaggedSong } from "@/utils/supabase";
 import { transposeLine } from "@/utils/tonalManipulation";
 import { useAtomValue } from "jotai";
-import { Fragment, useState } from "react";
+import { useSetAtom } from "jotai";
+import { Fragment, useEffect } from "react";
 import { addChorusAtom, showChordsAtom } from "./Contexts/SettingsContext";
+import { tonalityAtom } from "./Contexts/SettingsContext";
 import { DynamicText } from "./DynamicText";
-import { SettingsSidePanel } from "./SidePanel/variants/SettingsSidePanel";
 import { TagChip } from "./TagChip";
 
 function SongViewer({
@@ -13,21 +14,22 @@ function SongViewer({
 }: { song: TaggedSong; showTitle?: boolean }) {
 	const addChorusSetting = useAtomValue(addChorusAtom);
 	const showChords = useAtomValue(showChordsAtom);
-	const [tonality, setTonality] = useState(0);
+	const tonality = useAtomValue(tonalityAtom);
+	const setTonality = useSetAtom(tonalityAtom);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: reset tonality when song changes
+	useEffect(() => {
+		setTonality(0);
+	}, [song.id, setTonality]);
 
 	const strophes = addChorusSetting
 		? song?.strophes
 		: song?.strophes?.filter(
-			(strophe) => strophe.type === "section" || !strophe.repetition,
-		);
+				(strophe) => strophe.type === "section" || !strophe.repetition,
+			);
 
 	return (
 		<div className="bg-white dark:bg-gray-800">
-			<SettingsSidePanel
-				tonality={tonality}
-				setTonality={setTonality}
-				song={song}
-			/>
 			<div className="flex flex-col gap-2 lg:gap-4 p-4">
 				{showTitle && (
 					<div className="flex gap-4 items-center font-flame text-xl lg:text-3xl text-jubilateBlue-500 dark:text-jubilateBlue-400">

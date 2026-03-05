@@ -1,5 +1,4 @@
 import { PageHeader } from "@/components";
-import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
 import { getPopularSongsQuery } from "@/utils/supabase";
 import * as Sentry from "@sentry/react";
 import { useEffect, useState } from "react";
@@ -9,7 +8,6 @@ function Analytics() {
 	const [analytics, setAnalytics] = useState<
 		{ title: string; count: number }[]
 	>([]);
-	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
 	const [startDate, setStartDate] = useState<string>("");
 	const [endDate, setEndDate] = useState<string>("");
 	const [isLoading, setIsLoading] = useState(true);
@@ -80,15 +78,7 @@ function Analytics() {
 
 	return (
 		<div className="min-h-screen bg-white dark:bg-gray-800">
-			<PageHeader
-				variant="list"
-				title="Statistiques"
-				right={
-					<button type="button" onClick={() => setIsNavigationPanelOpen(true)}>
-						<img className="h-12" src="/svg/logo.svg" alt="Logo" />
-					</button>
-				}
-			/>
+			<PageHeader variant="list" title="Statistiques" />
 
 			<div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
 				<div className="flex flex-col gap-3 sm:gap-4">
@@ -215,11 +205,6 @@ function Analytics() {
 					</div>
 				)}
 			</div>
-
-			<NavigationSidePanel
-				open={isNavigationPanelOpen}
-				setOpen={setIsNavigationPanelOpen}
-			/>
 		</div>
 	);
 }

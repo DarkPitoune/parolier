@@ -1,5 +1,4 @@
-import { PageHeader, SettingsSidePanel, useLeader } from "@/components";
-import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
+import { PageHeader, useLeader } from "@/components";
 import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
 import { MagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import clsx from "clsx";
@@ -30,7 +29,6 @@ interface BibleVerse {
 function Bible() {
 	const [bible, setBible] = useState<BibleBook>({});
 	const [verses, setVerses] = useState<BibleVerse[]>([]);
-	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
 	const [searchValue, setSearchValue] = useState("");
 	const [filteredBooks, setFilteredBooks] = useState<string[]>([]);
 	const [searchResults, setSearchResults] = useState<BibleVerse[]>([]);
@@ -40,7 +38,11 @@ function Bible() {
 
 	useRecordVisit(
 		selectedBook && selectedChapter
-			? { path: `/bible/${selectedBook}/${selectedChapter}`, title: `${selectedBook} ${selectedChapter}`, type: "bible" }
+			? {
+					path: `/bible/${selectedBook}/${selectedChapter}`,
+					title: `${selectedBook} ${selectedChapter}`,
+					type: "bible",
+				}
 			: null,
 	);
 	useRestoreScroll();
@@ -157,11 +159,6 @@ function Bible() {
 
 	return (
 		<div className="bg-white dark:bg-gray-800 min-h-screen">
-			<SettingsSidePanel />
-			<NavigationSidePanel
-				open={isNavigationPanelOpen}
-				setOpen={setIsNavigationPanelOpen}
-			/>
 			<div
 				className={clsx(
 					"transition-all sticky bg-white dark:bg-gray-800 print:hidden",
@@ -181,14 +178,6 @@ function Bible() {
 								placeholder="Rechercher un livre ou un texte..."
 							/>
 						</div>
-					}
-					right={
-						<button
-							type="button"
-							onClick={() => setIsNavigationPanelOpen(true)}
-						>
-							<img className="h-12" src="/svg/logo.svg" alt="Logo" />
-						</button>
 					}
 				/>
 			</div>

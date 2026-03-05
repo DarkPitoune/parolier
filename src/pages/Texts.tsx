@@ -1,5 +1,4 @@
-import { PageHeader, SettingsSidePanel, useLeader } from "@/components";
-import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
+import { PageHeader, useLeader } from "@/components";
 import { TextItem, getTextItemId } from "@/components/TextItem";
 import {
 	type AllTexts,
@@ -23,7 +22,6 @@ function Texts() {
 	const [texts, setTexts] = useState<AllTexts>([]);
 	const [searchResults, setSearchResults] = useState<AllTexts | null>(null);
 	const filteredTexts = searchResults ?? texts;
-	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
 	const navigate = useNavigate();
 	const [selectedTextIndex, setSelectedTextIndex] = useState<number | null>(
 		null,
@@ -134,11 +132,6 @@ function Texts() {
 
 	return (
 		<div className="bg-white dark:bg-gray-800">
-			<SettingsSidePanel />
-			<NavigationSidePanel
-				open={isNavigationPanelOpen}
-				setOpen={setIsNavigationPanelOpen}
-			/>
 			<div
 				className={clsx(
 					"transition-all sticky bg-white dark:bg-gray-800 print:hidden",
@@ -157,14 +150,6 @@ function Texts() {
 								placeholder="Rechercher un texte..."
 							/>
 						</div>
-					}
-					right={
-						<button
-							type="button"
-							onClick={() => setIsNavigationPanelOpen(true)}
-						>
-							<img className="h-12" src="/svg/logo.svg" alt="Logo" />
-						</button>
 					}
 				/>
 			</div>

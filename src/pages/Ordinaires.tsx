@@ -1,8 +1,7 @@
-import { PageHeader, SettingsSidePanel, useLeader } from "@/components";
-import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
+import { PageHeader, useLeader } from "@/components";
 import {
-	useAllOrdinaires,
 	useAllOrdinaireSongs,
+	useAllOrdinaires,
 } from "@/hooks/queries/useSongQueries";
 import { queryKeys } from "@/utils/queryKeys";
 import { newOrdinaireMutation } from "@/utils/supabase";
@@ -37,7 +36,6 @@ export function Ordinaires() {
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
 	const { leader } = useLeader();
-	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 
 	const ordinaires = useMemo(() => ordinairesData ?? [], [ordinairesData]);
@@ -105,11 +103,6 @@ export function Ordinaires() {
 
 	return (
 		<div className="bg-white dark:bg-gray-800 min-h-screen">
-			<SettingsSidePanel />
-			<NavigationSidePanel
-				open={isNavigationPanelOpen}
-				setOpen={setIsNavigationPanelOpen}
-			/>
 			<div
 				className={clsx(
 					"transition-all sticky bg-white dark:bg-gray-800 print:hidden z-10",
@@ -128,14 +121,6 @@ export function Ordinaires() {
 								placeholder="Chercher un ordinaire..."
 							/>
 						</div>
-					}
-					right={
-						<button
-							type="button"
-							onClick={() => setIsNavigationPanelOpen(true)}
-						>
-							<img className="h-12" src="/svg/logo.svg" alt="Logo" />
-						</button>
 					}
 				/>
 			</div>

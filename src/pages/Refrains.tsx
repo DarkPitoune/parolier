@@ -1,10 +1,4 @@
-import {
-	PageHeader,
-	SettingsSidePanel,
-	SongItem,
-	useLeader,
-} from "@/components";
-import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
+import { PageHeader, SongItem, useLeader } from "@/components";
 import { getSongItemId } from "@/components/SongItem";
 import { useAllRefrains } from "@/hooks/queries/useSongQueries";
 import { queryKeys } from "@/utils/queryKeys";
@@ -34,7 +28,6 @@ export function Refrains() {
 
 	const [searchResults, setSearchResults] = useState<AllRefrains | null>(null);
 	const filteredRefrains = searchResults ?? refrains;
-	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
 	const navigate = useNavigate();
 	const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 	const fuse = useMemo(
@@ -133,11 +126,6 @@ export function Refrains() {
 
 	return (
 		<div className="bg-white dark:bg-gray-800">
-			<SettingsSidePanel />
-			<NavigationSidePanel
-				open={isNavigationPanelOpen}
-				setOpen={setIsNavigationPanelOpen}
-			/>
 			<div
 				className={clsx(
 					"transition-all sticky bg-white dark:bg-gray-800 print:hidden",
@@ -156,14 +144,6 @@ export function Refrains() {
 								placeholder="Chercher un refrain..."
 							/>
 						</div>
-					}
-					right={
-						<button
-							type="button"
-							onClick={() => setIsNavigationPanelOpen(true)}
-						>
-							<img className="h-12" src="/svg/logo.svg" alt="Logo" />
-						</button>
 					}
 				/>
 			</div>

@@ -15,7 +15,15 @@ function SongPage() {
 	const { data: song } = useTaggedSong(songIdNum);
 	const { setLeaderSong } = useLeader();
 
-	useRecordVisit(song ? { path: `/songs/${songId}`, title: `${song.id}. ${song.title}`, type: "song" } : null);
+	useRecordVisit(
+		song
+			? {
+					path: `/songs/${songId}`,
+					title: `${song.id}. ${song.title}`,
+					type: "song",
+				}
+			: null,
+	);
 	useRestoreScroll();
 
 	// Keep screen awake while viewing song
@@ -60,7 +68,6 @@ function SongPage() {
 						>
 							<ComputerDesktopIcon className="size-6 fill-white" />
 						</Link>
-
 					</div>
 				}
 			/>

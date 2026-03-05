@@ -1,7 +1,6 @@
 import type { Strophe } from "@/assets/types";
 import {
 	PageHeader,
-	SettingsSidePanel,
 	SlideViewer,
 	SongPicker,
 	SongPickerInline,
@@ -472,7 +471,6 @@ const PresenterPage = () => {
 			{showMobileSongPicker && (
 				<SongPicker handleClose={handleMobileSongSelect} />
 			)}
-			<SettingsSidePanel />
 		</div>
 	);
 };

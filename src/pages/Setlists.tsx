@@ -1,19 +1,16 @@
-import { PageHeader, SettingsSidePanel } from "@/components";
-import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel/NavigationSidePanel";
+import { PageHeader } from "@/components";
 import { useAllSetlists } from "@/hooks/queries/useSetlistQueries";
 import { queryKeys } from "@/utils/queryKeys";
 import { deleteSetlistMutation, newSetlistMutation } from "@/utils/supabase";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/16/solid";
-import { useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const Setlists = () => {
 	const { data: setslists = [] } = useAllSetlists();
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
-
-	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
 
 	const createMutation = useMutation({
 		mutationFn: () => newSetlistMutation(),
@@ -41,19 +38,7 @@ const Setlists = () => {
 
 	return (
 		<div className="bg-white dark:bg-gray-800 text-black dark:text-white">
-			<PageHeader
-				variant="list"
-				title="Setlists"
-				right={
-					<button type="button" onClick={() => setIsNavigationPanelOpen(true)}>
-						<img className="h-12" src="/svg/logo.svg" alt="Logo" />
-					</button>
-				}
-			/>
-			<NavigationSidePanel
-				open={isNavigationPanelOpen}
-				setOpen={setIsNavigationPanelOpen}
-			/>
+			<PageHeader variant="list" title="Setlists" />
 			<div className="flex flex-col items-stretch divide-y">
 				{setslists?.map((setlist) => (
 					<div
@@ -86,7 +71,6 @@ const Setlists = () => {
 						: "Créer une setlist"}
 				</button>
 			</div>
-			<SettingsSidePanel />
 		</div>
 	);
 };

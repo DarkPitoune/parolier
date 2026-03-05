@@ -1,14 +1,8 @@
-import {
-	PageHeader,
-	SettingsSidePanel,
-	SongItem,
-	useLeader,
-} from "@/components";
+import { PageHeader, SongItem, useLeader } from "@/components";
 import {
 	filtersAtom,
 	tagTabOpenAtom,
 } from "@/components/Contexts/SettingsContext";
-import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
 import { getSongItemId } from "@/components/SongItem";
 import { TagChip } from "@/components/TagChip";
 import { useAllSongs, useAllTags } from "@/hooks/queries/useSongQueries";
@@ -47,7 +41,6 @@ function Index() {
 	const filteredSongs = searchResults ?? songs;
 	const [selectedTags, setSelectedTags] = useAtom<number[]>(filtersAtom);
 	const [tagTabOpen, setTagTabOpen] = useAtom(tagTabOpenAtom);
-	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
 	const navigate = useNavigate();
 	const [selectedSongIndex, setSelectedSongIndex] = useState<number | null>(
 		null,
@@ -162,11 +155,6 @@ function Index() {
 
 	return (
 		<div className="bg-white dark:bg-gray-800 pb-12">
-			<SettingsSidePanel />
-			<NavigationSidePanel
-				open={isNavigationPanelOpen}
-				setOpen={setIsNavigationPanelOpen}
-			/>
 			<div
 				className={clsx(
 					"transition-all sticky bg-white dark:bg-gray-800 print:hidden",
@@ -185,14 +173,6 @@ function Index() {
 								placeholder="Vite, une idée..."
 							/>
 						</div>
-					}
-					right={
-						<button
-							type="button"
-							onClick={() => setIsNavigationPanelOpen(true)}
-						>
-							<img className="h-12" src="/svg/logo.svg" alt="Logo" />
-						</button>
 					}
 				/>
 				<div className="px-6 py-2 flex flex-col items-stretch shadow-sm font-flame">

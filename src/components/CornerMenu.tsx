@@ -1,20 +1,11 @@
-import { CogIcon } from "@heroicons/react/24/solid";
-import { useAtom } from "jotai";
-import { settingsOpenAtom } from "./Contexts/SettingsContext";
-
-export const CornerMenu = () => {
-	const [settingsOpened, setSettingsOpened] = useAtom(settingsOpenAtom);
-
+export const CornerMenu = ({ onOpen }: { onOpen: () => void }) => {
 	return (
 		<button
-			onClick={() => setSettingsOpened(!settingsOpened)}
+			onClick={onOpen}
 			type="button"
-			className="fixed -bottom-1 -right-1 z-10 print:hidden size-14 rounded-full bg-gray-500 flex items-center justify-center"
+			className="fixed -bottom-1 -right-1 z-10 print:hidden size-14 rounded-full bg-jubilateBlue-500 flex items-center justify-center"
 		>
-			<CogIcon
-				color="white"
-				className="size-9"
-			/>
+			<img className="h-8" src="/svg/Jubilate_Croix.svg" alt="Menu" />
 		</button>
 	);
 };

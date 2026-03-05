@@ -22,7 +22,7 @@ test.describe("Navigation history", () => {
 		await expect(page.getByTestId("song-list")).toBeVisible();
 
 		// 4. Open nav panel (click logo)
-		await page.locator('img[alt="Logo"]').click();
+		await page.locator('img[alt="Menu"]').click();
 
 		// 5. Verify "Récents" section contains the song
 		await expect(page.getByText("Récents")).toBeVisible();
@@ -62,7 +62,7 @@ test.describe("Navigation history", () => {
 		expect(history[0].scrollY).toBeGreaterThanOrEqual(200);
 
 		// 5. Open nav panel and click the recent entry
-		await page.locator('img[alt="Logo"]').click();
+		await page.locator('img[alt="Menu"]').click();
 		await page.getByText("Récents").waitFor();
 		const recentBtn = page
 			.locator("button", { has: page.locator(".truncate") })

@@ -25,8 +25,6 @@ export const isDarkAtom = atom((get) => {
 	return get(systemPrefersDarkAtom);
 });
 
-export const settingsOpenAtom = atom(false);
-
 export const tonalityAtom = atom(0);
 
 // True is : I want to see the slide help

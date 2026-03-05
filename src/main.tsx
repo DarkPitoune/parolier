@@ -1,9 +1,4 @@
-import {
-	AuthContextProvider,
-	CornerMenu,
-	ErrorBoundary,
-	isDarkAtom,
-} from "@/components";
+import { AuthContextProvider, ErrorBoundary, isDarkAtom } from "@/components";
 import { systemPrefersDarkAtom } from "@/components/Contexts/SettingsContext";
 import {
 	Analytics,
@@ -17,28 +12,31 @@ import {
 	SongPage,
 	TextEditor,
 } from "@/pages";
-import { QueryClientProvider } from "@tanstack/react-query";
 import * as Sentry from "@sentry/react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import { Toaster } from "react-hot-toast";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { Outlet, RouterProvider, createBrowserRouter } from "react-router-dom";
 import { BackgroundFetchIndicator } from "./components/BackgroundFetchIndicator";
+import { CornerMenu } from "./components/CornerMenu";
 import { LeaderListener } from "./components/LeaderListener";
 import { OfflineBanner } from "./components/OfflineBanner";
+import { GlobalSidePanel } from "./components/SidePanel/variants/GlobalSidePanel";
 import { CachePage } from "./pages/CachePage";
-import { TextPage } from "./pages/TextPage";
 import { OrdinairePage } from "./pages/OrdinairePage";
 import { Ordinaires } from "./pages/Ordinaires";
 import { Refrains } from "./pages/Refrains";
+import { TextPage } from "./pages/TextPage";
 import { Texts } from "./pages/Texts";
 import "./index.css";
-import { SetlistPage } from "./pages/SetlistPage";
-import SongEditor from "./pages/SongEditor";
+import { useState } from "react";
 import { usePrefetchAllSetlistSteps } from "./hooks/queries/useSetlistQueries";
 import { usePrefetchAllSongs } from "./hooks/queries/useSongQueries";
+import { SetlistPage } from "./pages/SetlistPage";
+import SongEditor from "./pages/SongEditor";
 import { queryClient } from "./utils/queryClient";
 
 Sentry.init({
@@ -49,102 +47,118 @@ Sentry.init({
 	tracesSampleRate: 0,
 });
 
+const Layout = () => {
+	const [panelOpen, setPanelOpen] = useState(false);
+	return (
+		<>
+			<Outlet />
+			<GlobalSidePanel open={panelOpen} onClose={() => setPanelOpen(false)} />
+			<CornerMenu onOpen={() => setPanelOpen(true)} />
+		</>
+	);
+};
+
 const router = createBrowserRouter([
 	{
-		path: "/",
-		element: <Index />,
-	},
-	{
-		path: "/refrains",
-		element: <Refrains />,
-	},
-	{
-		path: "/ordinaires",
-		element: <Ordinaires />,
-	},
-	{
-		path: "/ordinaires/:ordinaireId",
-		element: <OrdinairePage />,
-	},
-	{
-		path: "/texts",
-		element: <Texts />,
-	},
-	{
-		path: "/texts/:textId",
-		element: <TextPage />,
-	},
-	{
-		path: "/texts/:textId/edit",
-		element: <TextEditor />,
-	},
-	{
-		path: "/bible",
-		element: <Bible />,
-	},
-	{
-		path: "/bible/:book",
-		element: <Bible />,
-	},
-	{
-		path: "/bible/:book/:chapter",
-		element: <Bible />,
-	},
-	{
-		path: "/messe",
-		element: <Messe />,
-	},
-	{
-		path: "/setlists",
-		element: <Setlists />,
-	},
-	{
-		path: "/setlists/:setlistId/edit",
-		element: <SetlistEditor />,
-	},
-	{
-		path: "/setlists/:setlistId",
-		element: <SetlistPage />,
-	},
-	{
-		path: "/setlists/:setlistId/steps/:stepNumber/slide",
-		element: <SlidePage />,
-	},
-	{
-		path: "/songs/:songId",
-		element: <SongPage />,
-	},
-	{
-		path: "/songs/:songId/edit",
-		element: <SongEditor />,
-	},
-	{
-		path: "/slides",
-		element: <SlidePage />,
-	},
-	{
-		path: "/slides/:songId",
-		element: <SlidePage />,
-	},
-	{
-		path: "/analytics",
-		element: <Analytics />,
-	},
-	{
-		path: "/presenter",
-		element: <PresenterPage />,
-	},
-	{
-		path: "/presenter/:setlistId/:stepNumber",
-		element: <PresenterPage />,
-	},
-	{
-		path: "/cache",
-		element: <CachePage />,
-	},
-	{
-		path: "*",
-		element: <img src="https://http.dog/404.jpg" alt="404" />,
+		element: <Layout />,
+		children: [
+			{
+				path: "/",
+				element: <Index />,
+			},
+			{
+				path: "/refrains",
+				element: <Refrains />,
+			},
+			{
+				path: "/ordinaires",
+				element: <Ordinaires />,
+			},
+			{
+				path: "/ordinaires/:ordinaireId",
+				element: <OrdinairePage />,
+			},
+			{
+				path: "/texts",
+				element: <Texts />,
+			},
+			{
+				path: "/texts/:textId",
+				element: <TextPage />,
+			},
+			{
+				path: "/texts/:textId/edit",
+				element: <TextEditor />,
+			},
+			{
+				path: "/bible",
+				element: <Bible />,
+			},
+			{
+				path: "/bible/:book",
+				element: <Bible />,
+			},
+			{
+				path: "/bible/:book/:chapter",
+				element: <Bible />,
+			},
+			{
+				path: "/messe",
+				element: <Messe />,
+			},
+			{
+				path: "/setlists",
+				element: <Setlists />,
+			},
+			{
+				path: "/setlists/:setlistId/edit",
+				element: <SetlistEditor />,
+			},
+			{
+				path: "/setlists/:setlistId",
+				element: <SetlistPage />,
+			},
+			{
+				path: "/setlists/:setlistId/steps/:stepNumber/slide",
+				element: <SlidePage />,
+			},
+			{
+				path: "/songs/:songId",
+				element: <SongPage />,
+			},
+			{
+				path: "/songs/:songId/edit",
+				element: <SongEditor />,
+			},
+			{
+				path: "/slides",
+				element: <SlidePage />,
+			},
+			{
+				path: "/slides/:songId",
+				element: <SlidePage />,
+			},
+			{
+				path: "/analytics",
+				element: <Analytics />,
+			},
+			{
+				path: "/presenter",
+				element: <PresenterPage />,
+			},
+			{
+				path: "/presenter/:setlistId/:stepNumber",
+				element: <PresenterPage />,
+			},
+			{
+				path: "/cache",
+				element: <CachePage />,
+			},
+			{
+				path: "*",
+				element: <img src="https://http.dog/404.jpg" alt="404" />,
+			},
+		],
 	},
 ]);
 
@@ -188,7 +202,6 @@ const App = () => {
 						<ErrorBoundary>
 							<RouterProvider router={router} />
 						</ErrorBoundary>
-						<CornerMenu />
 					</main>
 				</div>
 			</AuthContextProvider>

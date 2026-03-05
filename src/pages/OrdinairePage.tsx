@@ -1,8 +1,12 @@
-import { PageHeader, SettingsSidePanel, useLeader } from "@/components";
-import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
+import { PageHeader, useLeader } from "@/components";
+import {
+	addChorusAtom,
+	showChordsAtom,
+	tonalityAtom,
+} from "@/components/Contexts/SettingsContext";
 import { DynamicText } from "@/components/DynamicText";
-import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
 import { useOrdinaireDetail } from "@/hooks/queries/useSongQueries";
+import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
 import { queryKeys } from "@/utils/queryKeys";
 import {
 	type OrdinaireDetail,
@@ -10,18 +14,14 @@ import {
 	supabaseUrl,
 } from "@/utils/supabase";
 import { transposeLine } from "@/utils/tonalManipulation";
-import {
-	addChorusAtom,
-	showChordsAtom,
-} from "@/components/Contexts/SettingsContext";
-import { DocumentTextIcon } from "@heroicons/react/24/outline";
 import { PlusIcon } from "@heroicons/react/16/solid";
-import { useAtomValue } from "jotai";
-import { Fragment, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { DocumentTextIcon } from "@heroicons/react/24/outline";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
+import { useAtom, useAtomValue } from "jotai";
+import { Fragment, useEffect } from "react";
 import toast from "react-hot-toast";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 const ROLE_ORDER = [
 	"kyrie",
@@ -115,14 +115,26 @@ export function OrdinairePage() {
 	const id = ordinaireId ? Number(ordinaireId) : undefined;
 	const { data: ordinaire } = useOrdinaireDetail(id);
 
-	useRecordVisit(ordinaire ? { path: `/ordinaires/${ordinaireId}`, title: ordinaire.name, type: "ordinaire" } : null);
+	useRecordVisit(
+		ordinaire
+			? {
+					path: `/ordinaires/${ordinaireId}`,
+					title: ordinaire.name,
+					type: "ordinaire",
+				}
+			: null,
+	);
 	useRestoreScroll();
 
 	const addChorus = useAtomValue(addChorusAtom);
 	const showChords = useAtomValue(showChordsAtom);
-	const [tonality, setTonality] = useState(0);
-	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
+	const [tonality, setTonality] = useAtom(tonalityAtom);
 	const { leader } = useLeader();
+
+	// Reset tonality on mount
+	useEffect(() => {
+		setTonality(0);
+	}, [setTonality]);
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
 
@@ -177,11 +189,6 @@ export function OrdinairePage() {
 
 	return (
 		<div className="bg-white dark:bg-gray-800 min-h-screen">
-			<SettingsSidePanel tonality={tonality} setTonality={setTonality} />
-			<NavigationSidePanel
-				open={isNavigationPanelOpen}
-				setOpen={setIsNavigationPanelOpen}
-			/>
 			<div
 				className={clsx(
 					"transition-all sticky bg-white dark:bg-gray-800 print:hidden z-10",
@@ -203,14 +210,6 @@ export function OrdinairePage() {
 								{ordinaire.name}
 							</h1>
 						</div>
-					}
-					right={
-						<button
-							type="button"
-							onClick={() => setIsNavigationPanelOpen(true)}
-						>
-							<img className="h-12" src="/svg/logo.svg" alt="Logo" />
-						</button>
 					}
 				/>
 			</div>

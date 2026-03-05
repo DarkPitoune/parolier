@@ -1,10 +1,4 @@
-import {
-	PageHeader,
-	SettingsSidePanel,
-	SongPickerInline,
-	useLeader,
-} from "@/components";
-import { NavigationSidePanel } from "@/components/SidePanel/variants/NavigationSidePanel";
+import { PageHeader, SongPickerInline, useLeader } from "@/components";
 import { useAllTaggedSongs } from "@/hooks/queries/useSongQueries";
 import {
 	type SongSuggestion,
@@ -137,7 +131,6 @@ function Messe() {
 	const [messeData, setMesseData] = useState<MesseData | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [isNavigationPanelOpen, setIsNavigationPanelOpen] = useState(false);
 	const [creatingSetlist, setCreatingSetlist] = useState(false);
 	const { leader } = useLeader();
 	const navigate = useNavigate();
@@ -268,11 +261,6 @@ function Messe() {
 
 	return (
 		<div className="bg-white dark:bg-gray-800 min-h-screen">
-			<SettingsSidePanel />
-			<NavigationSidePanel
-				open={isNavigationPanelOpen}
-				setOpen={setIsNavigationPanelOpen}
-			/>
 			<div
 				className={clsx(
 					"transition-all sticky bg-white dark:bg-gray-800 print:hidden",
@@ -291,14 +279,6 @@ function Messe() {
 								className="h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
 							/>
 						</div>
-					}
-					right={
-						<button
-							type="button"
-							onClick={() => setIsNavigationPanelOpen(true)}
-						>
-							<img className="h-12" src="/svg/logo.svg" alt="Logo" />
-						</button>
 					}
 				/>
 			</div>
@@ -403,7 +383,9 @@ function Messe() {
 												<h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
 													{lecture.titre}
 												</h3>
-												<span className={`text-sm font-medium ${lecture.verset_evangile ? "text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900" : "text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900"} px-2 py-1 rounded-sm`}>
+												<span
+													className={`text-sm font-medium ${lecture.verset_evangile ? "text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900" : "text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900"} px-2 py-1 rounded-sm`}
+												>
 													{lecture.ref}
 												</span>
 											</div>

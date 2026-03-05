@@ -1,11 +1,13 @@
 import { BackButton, DynamicText, SongViewer } from "@/components";
+import { tonalityAtom } from "@/components/Contexts/SettingsContext";
 import SwipeableTabs, { type Tab } from "@/components/SwipeableTabs";
 import { useSetlist } from "@/hooks/queries/useSetlistQueries";
 import {
 	ComputerDesktopIcon,
 	PresentationChartLineIcon,
 } from "@heroicons/react/24/solid";
-import { useMemo, useState } from "react";
+import { useSetAtom } from "jotai";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 function SetlistPage() {
@@ -21,6 +23,12 @@ function SetlistPage() {
 	);
 
 	const [activeTab, setActiveTab] = useState(0);
+	const setTonality = useSetAtom(tonalityAtom);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: reset tonality when switching tabs
+	useEffect(() => {
+		setTonality(0);
+	}, [activeTab, setTonality]);
 
 	const handleChangeTab = (index: number) => {
 		setActiveTab(index);

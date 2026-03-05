@@ -16,7 +16,15 @@ function TextPage() {
 	const [rightClickMenuPosition, setRightClickMenuPosition] =
 		useState<RightClickMenuPosition | null>(null);
 
-	useRecordVisit(text ? { path: `/texts/${textId}`, title: `${text.id}. ${text.title}`, type: "text" } : null);
+	useRecordVisit(
+		text
+			? {
+					path: `/texts/${textId}`,
+					title: `${text.id}. ${text.title}`,
+					type: "text",
+				}
+			: null,
+	);
 	useRestoreScroll();
 
 	const handleOnContextMenu: React.MouseEventHandler<HTMLDivElement> = (e) => {
