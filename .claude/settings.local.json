@@ -24,7 +24,8 @@
       "Bash(wc:*)",
       "Bash(pnpm tsc:*)",
       "Bash(pnpm exec:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
