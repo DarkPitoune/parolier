@@ -31,7 +31,7 @@ export function Refrains() {
 	const navigate = useNavigate();
 	const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 	const fuse = useMemo(
-		() => new Fuse(refrains, { keys: ["title"] }),
+		() => new Fuse(refrains, { keys: ["title"], threshold: 0.3 }),
 		[refrains],
 	);
 	const { leader } = useLeader();

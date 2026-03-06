@@ -45,7 +45,7 @@ function Index() {
 	const [selectedSongIndex, setSelectedSongIndex] = useState<number | null>(
 		null,
 	);
-	const fuse = useMemo(() => new Fuse(songs, { keys: ["title"] }), [songs]);
+	const fuse = useMemo(() => new Fuse(songs, { keys: ["title"], threshold: 0.3 }), [songs]);
 	const { leader } = useLeader();
 
 	const toggleTag = (id: number) => {

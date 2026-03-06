@@ -63,7 +63,7 @@ export function Ordinaires() {
 						.map((s) => s.title)
 						.join(" "),
 				})),
-				{ keys: ["name", "songTitles"], threshold: 0.4 },
+				{ keys: ["name", "songTitles"], threshold: 0.3 },
 			),
 		[ordinaires, songsByOrdinaire],
 	);

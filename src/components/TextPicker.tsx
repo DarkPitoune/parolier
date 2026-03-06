@@ -87,7 +87,7 @@ const TextPicker = ({ handleClose }: TextPickerProps) => {
 	}, [filteredTexts, selectedTextId, handleClose]);
 
 	const fuse = useMemo(
-		() => new Fuse(texts, { keys: ["title", "content"] }),
+		() => new Fuse(texts, { keys: ["title", "content"], threshold: 0.3 }),
 		[texts],
 	);
 	const [searchValue, setSearchValue] = useState("");

@@ -27,7 +27,7 @@ function Texts() {
 		null,
 	);
 	const fuse = useMemo(
-		() => new Fuse(texts, { keys: ["title", "content"] }),
+		() => new Fuse(texts, { keys: ["title", "content"], threshold: 0.3 }),
 		[texts],
 	);
 	const { leader } = useLeader();
