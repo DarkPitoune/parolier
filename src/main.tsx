@@ -19,7 +19,12 @@ import { useAtomValue, useSetAtom } from "jotai";
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import { Toaster } from "react-hot-toast";
-import { Outlet, RouterProvider, createBrowserRouter } from "react-router-dom";
+import {
+	Outlet,
+	RouterProvider,
+	ScrollRestoration,
+	createBrowserRouter,
+} from "react-router-dom";
 import { BackgroundFetchIndicator } from "./components/BackgroundFetchIndicator";
 import { CornerMenu } from "./components/CornerMenu";
 import { LeaderListener } from "./components/LeaderListener";
@@ -51,6 +56,7 @@ const Layout = () => {
 	const [panelOpen, setPanelOpen] = useState(false);
 	return (
 		<>
+			<ScrollRestoration />
 			<Outlet />
 			<GlobalSidePanel open={panelOpen} onClose={() => setPanelOpen(false)} />
 			<CornerMenu onOpen={() => setPanelOpen(true)} />
