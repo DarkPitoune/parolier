@@ -1,6 +1,11 @@
 import { PageHeader, useLeader } from "@/components";
 import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
-import { MagnifyingGlassIcon } from "@heroicons/react/16/solid";
+import {
+	formatReadingRef,
+	useBibleToday,
+} from "@/hooks/queries/useBibleTodayQuery";
+import { BookOpenIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid";
+import { ChevronRightIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -10,7 +15,7 @@ import {
 	useMemo,
 	useState,
 } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 interface BibleBookEntry {
 	abbr: string;
@@ -24,6 +29,33 @@ interface BibleVerse {
 	chapter: string;
 	verse: string;
 	text: string;
+}
+
+function BibleTodayBanner() {
+	const { data } = useBibleToday();
+	if (!data) return null;
+
+	return (
+		<Link
+			to="/bible/today"
+			className="flex items-center gap-3 mb-4 px-4 py-3 rounded-lg bg-jubilateBlue-50 dark:bg-slate-700 border-l-4 border-jubilateBlue-500 hover:bg-jubilateBlue-100 dark:hover:bg-slate-600 transition"
+		>
+			<BookOpenIcon className="w-5 h-5 shrink-0 text-jubilateBlue-500 dark:text-jubilateBlue-400" />
+			<span className="text-sm text-gray-800 dark:text-gray-200 flex-1">
+				<span className="font-semibold text-jubilateBlue-600 dark:text-jubilateBlue-400">
+					Lecture du jour
+				</span>
+				<span className="mx-2">—</span>
+				{data.readings.map((r, i) => (
+					<span key={r.book}>
+						{i > 0 && " · "}
+						{formatReadingRef(r)}
+					</span>
+				))}
+			</span>
+			<ChevronRightIcon className="w-5 h-5 shrink-0 text-gray-400" />
+		</Link>
+	);
 }
 
 function Bible() {
@@ -233,6 +265,9 @@ function Bible() {
 								</h1>
 							</div>
 						</div>
+
+						{/* Bible in a year – today's reading banner */}
+						{!selectedBook && <BibleTodayBanner />}
 
 						{/* Book selection */}
 						{!selectedBook && (

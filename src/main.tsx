@@ -3,6 +3,7 @@ import { systemPrefersDarkAtom } from "@/components/Contexts/SettingsContext";
 import {
 	Analytics,
 	Bible,
+	BibleToday,
 	Index,
 	Messe,
 	PresenterPage,
@@ -99,6 +100,10 @@ const router = createBrowserRouter([
 			{
 				path: "/bible",
 				element: <Bible />,
+			},
+			{
+				path: "/bible/today",
+				element: <BibleToday />,
 			},
 			{
 				path: "/bible/:book",

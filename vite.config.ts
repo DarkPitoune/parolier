@@ -643,6 +643,22 @@ const manifest: Partial<VitePWAOptions> = {
           ],
         },
       },
+      // Bible in a year: changes daily, NetworkFirst
+      {
+        urlPattern: ({ url }) =>
+          url.hostname === "bible-api-lovat.vercel.app" &&
+          url.pathname.startsWith("/bible-in-a-year"),
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "bible-today-cache",
+          networkTimeoutSeconds: 3,
+          expiration: {
+            maxEntries: 5,
+            maxAgeSeconds: 2 * 24 * 60 * 60,
+          },
+          cacheableResponse: { statuses: [200] },
+        },
+      },
       // Bible API: static content, CacheFirst
       {
         urlPattern: ({ url }) => url.hostname === "bible-api-lovat.vercel.app",
