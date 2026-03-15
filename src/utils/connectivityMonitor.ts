@@ -40,6 +40,7 @@ const probeConnectivity = async (): Promise<boolean> => {
 				signal: controller.signal,
 				headers: {
 					apikey: supabaseKey,
+					"X-Connectivity-Probe": "1",
 				},
 			},
 		);

@@ -531,6 +531,12 @@ const manifest: Partial<VitePWAOptions> = {
     clientsClaim: true,
     skipWaiting: true,
     runtimeCaching: [
+      // Connectivity probe: bypass SW cache so offline detection works
+      {
+        urlPattern: ({ request }) =>
+          request.headers.get("X-Connectivity-Probe") === "1",
+        handler: "NetworkOnly",
+      },
       // Songs & tags: rarely change, StaleWhileRevalidate is fine
       {
         urlPattern: ({ url }) =>

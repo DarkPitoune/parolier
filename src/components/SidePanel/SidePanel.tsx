@@ -36,7 +36,7 @@ function SidePanel({ open, onClose, title, header, children }: SidePanelProps) {
           <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-24">
             <DialogPanel
               transition
-              className="pointer-events-auto relative w-screen max-w-md transform transition duration-300 ease-in-out data-closed:translate-x-full sm:duration-500"
+              className="pointer-events-auto relative w-screen max-w-md min-w-0 transform transition duration-300 ease-in-out data-closed:translate-x-full sm:duration-500"
             >
               <div className="flex h-full gap-2 md:gap-6 flex-col overflow-y-scroll bg-white dark:bg-gray-800 py-6 shadow-xl px-4 sm:px-6 text-black dark:text-white">
                 {header ?? (

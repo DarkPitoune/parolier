@@ -4,6 +4,11 @@ import {
 } from "@/utils/connectivityMonitor";
 import { useEffect, useState } from "react";
 
+const isSlideMode = () => {
+	const path = window.location.pathname;
+	return path.startsWith("/slides") || path.endsWith("/slide");
+};
+
 export const OfflineBanner = () => {
 	const [status, setStatus] = useState<ConnectivityStatus>("checking");
 
@@ -13,12 +18,15 @@ export const OfflineBanner = () => {
 
 	if (status !== "offline") return null;
 
+	const dotOnly = isSlideMode();
+
 	return (
 		<div
 			data-testid="offline-banner"
-			className="sticky top-0 bg-gray-700 text-white text-center text-sm py-1 z-50 h-6"
+			className="fixed bottom-3 left-3 flex items-center gap-1.5 bg-gray-700/90 text-white text-xs px-2.5 py-1 rounded-full z-50 backdrop-blur-sm"
 		>
-			Mode hors-ligne — données en cache
+			<span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+			{!dotOnly && "Hors-ligne"}
 		</div>
 	);
 };
