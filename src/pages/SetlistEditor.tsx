@@ -213,7 +213,7 @@ const SetlistEditor = () => {
 												handleSwapItemsPosition(item.id, setlist[index + 1].id)
 											}
 										>
-											<ArrowDownIcon className="bg-jubilateBlue-500 bg-opacity-85 hover:bg-opacity-100 text-white w-6 p-1 rounded-md" />
+											<ArrowDownIcon className="bg-jubilateBlue-500/85 hover:bg-jubilateBlue-500 text-white w-6 p-1 rounded-md" />
 										</button>
 									) : (
 										<div className="col-span-1" />
@@ -226,7 +226,7 @@ const SetlistEditor = () => {
 												handleSwapItemsPosition(item.id, setlist[index - 1].id)
 											}
 										>
-											<ArrowUpIcon className="bg-jubilateBlue-500 bg-opacity-85 hover:bg-opacity-100 text-white w-6 p-1 rounded-md" />
+											<ArrowUpIcon className="bg-jubilateBlue-500/85 hover:bg-jubilateBlue-500 text-white w-6 p-1 rounded-md" />
 										</button>
 									) : (
 										<div className="col-span-1" />
@@ -236,7 +236,7 @@ const SetlistEditor = () => {
 										className="col-span-1"
 										onClick={() => handleDelete(item.id)}
 									>
-										<XMarkIcon className="bg-jubilateRed bg-opacity-85 hover:bg-opacity-100 text-white w-6 p-1 rounded-md" />
+										<XMarkIcon className="bg-jubilateRed/85 hover:bg-jubilateRed text-white w-6 p-1 rounded-md" />
 									</button>
 								</div>
 							</li>

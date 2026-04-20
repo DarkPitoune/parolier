@@ -386,7 +386,7 @@ function SettingsContent() {
 				/>
 			</div>
 
-			<div className="flex flex-col gap-4 border border-jubilateBlue-300 bg-jubilateBlue-300 bg-opacity-30 px-4 py-2 rounded-md items-center">
+			<div className="flex flex-col gap-4 border border-jubilateBlue-300 bg-jubilateBlue-300/30 px-4 py-2 rounded-md items-center">
 				<h2 className="text-center font-flame text-jubilateBlue-500 dark:text-jubilateBlue-400 text-2xl">
 					Leader de chant
 				</h2>

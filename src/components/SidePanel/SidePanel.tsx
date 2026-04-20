@@ -28,7 +28,7 @@ function SidePanel({ open, onClose, title, header, children }: SidePanelProps) {
     >
       <DialogBackdrop
         transition
-        className="fixed inset-0 bg-jubilateBlue-300 bg-opacity-40 transition duration-300 ease-in-out data-closed:opacity-0"
+        className="fixed inset-0 bg-jubilateBlue-300/40 transition duration-300 ease-in-out data-closed:opacity-0"
       />
 
       <div className="fixed inset-0 overflow-hidden">

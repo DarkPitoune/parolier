@@ -313,7 +313,7 @@ function Bible() {
 										<span
 											key={`${verse.verse}`}
 											id={`verse-${verse.verse}`}
-											className="hover:bg-gray-100 dark:hover:bg-gray-700 hover:bg-opacity-50 transition-colors duration-200 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 scroll-mt-24"
+											className="hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-200 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 scroll-mt-24"
 										>
 											<span className="text-sm font-medium text-red-700 dark:text-jubilateBlue-400 mr-1">
 												{Number(verse.verse)}
