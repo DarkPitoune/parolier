@@ -32,6 +32,7 @@ import { LeaderListener } from "./components/LeaderListener";
 import { OfflineBanner } from "./components/OfflineBanner";
 import { GlobalSidePanel } from "./components/SidePanel/variants/GlobalSidePanel";
 import { CachePage } from "./pages/CachePage";
+import { CertificatePage } from "./pages/CertificatePage";
 import { OrdinairePage } from "./pages/OrdinairePage";
 import { Ordinaires } from "./pages/Ordinaires";
 import { Refrains } from "./pages/Refrains";
@@ -41,6 +42,7 @@ import "./index.css";
 import { useState } from "react";
 import { usePrefetchAllSetlistSteps } from "./hooks/queries/useSetlistQueries";
 import { usePrefetchAllSongs } from "./hooks/queries/useSongQueries";
+import { usePrefetchAllTexts } from "./hooks/queries/useTextQueries";
 import { SetlistPage } from "./pages/SetlistPage";
 import SongEditor from "./pages/SongEditor";
 import { queryClient } from "./utils/queryClient";
@@ -166,6 +168,10 @@ const router = createBrowserRouter([
 				element: <CachePage />,
 			},
 			{
+				path: "/certificate",
+				element: <CertificatePage />,
+			},
+			{
 				path: "*",
 				element: <img src="https://http.dog/404.jpg" alt="404" />,
 			},
@@ -178,6 +184,7 @@ if (navigator.storage) navigator.storage.persist(); // our way to tackle long te
 const PrefetchData = () => {
 	usePrefetchAllSongs();
 	usePrefetchAllSetlistSteps();
+	usePrefetchAllTexts();
 	return null;
 };
 

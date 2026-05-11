@@ -4,6 +4,10 @@ import { atomWithStorage, createJSONStorage } from "jotai/utils";
 export const fontSizeAtom = atomWithStorage("settings.fontSize", 2);
 export const showChordsAtom = atomWithStorage("settings.showChords", true);
 export const addChorusAtom = atomWithStorage("settings.addChorus", false);
+export const globalSearchEnabledAtom = atomWithStorage(
+	"globalSearchEnabled",
+	false,
+);
 export type ThemeMode = "system" | "dark" | "light";
 export const themeModeAtom = atomWithStorage<ThemeMode>(
 	"settings.themeMode",

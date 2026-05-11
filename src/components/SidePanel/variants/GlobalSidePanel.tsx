@@ -7,7 +7,10 @@ import {
 } from "@/components";
 import { leaderAtom, useLeader } from "@/components/Contexts/LeaderContext";
 import type { ThemeMode } from "@/components/Contexts/SettingsContext";
-import { tonalityAtom } from "@/components/Contexts/SettingsContext";
+import {
+	globalSearchEnabledAtom,
+	tonalityAtom,
+} from "@/components/Contexts/SettingsContext";
 import {
 	CONTENT_TYPE_ICONS,
 	navigationHistoryAtom,
@@ -238,6 +241,9 @@ function SettingsContent() {
 	const setFontSize = useSetAtom(fontSizeAtom);
 	const [themeMode, setThemeMode] = useAtom(themeModeAtom);
 	const [showChords, setShowChords] = useAtom(showChordsAtom);
+	const [globalSearchEnabled, setGlobalSearchEnabled] = useAtom(
+		globalSearchEnabledAtom,
+	);
 	const [isLeaderPanelOpen, setIsLeaderPanelOpenInternal] = useState(true);
 	const [addChorus, setAddChorus] = useAtom(addChorusAtom);
 	const [tonality, setTonality] = useAtom(tonalityAtom);
@@ -334,6 +340,25 @@ function SettingsContent() {
 					checked={showChords}
 					onChange={(e) => {
 						setShowChords(e.target.checked);
+					}}
+					className="w-5 h-5 accent-jubilateBlue-500 dark:accent-jubilateBlue-400 rounded-2xl"
+				/>
+			</div>
+
+			<div
+				className="flex justify-between gap-4"
+				aria-label="global search choice"
+			>
+				<h1 className="font-flame text-2xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
+					Recherche globale (bêta)
+				</h1>
+
+				<input
+					id="globalSearchCheckbox"
+					type="checkbox"
+					checked={globalSearchEnabled}
+					onChange={(e) => {
+						setGlobalSearchEnabled(e.target.checked);
 					}}
 					className="w-5 h-5 accent-jubilateBlue-500 dark:accent-jubilateBlue-400 rounded-2xl"
 				/>

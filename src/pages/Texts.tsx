@@ -1,13 +1,15 @@
 import { PageHeader, useLeader } from "@/components";
+import { globalSearchEnabledAtom } from "@/components/Contexts/SettingsContext";
 import { TextItem, getTextItemId } from "@/components/TextItem";
-import {
-	type AllTexts,
-	allTextsQuery,
-	newTextMutation,
-} from "@/utils/supabase";
+import { UnifiedSearch } from "@/components/UnifiedSearch/UnifiedSearch";
+import { unifiedSearchQueryAtom } from "@/components/UnifiedSearch/unifiedSearchAtoms";
+import { useAllTexts } from "@/hooks/queries/useTextQueries";
+import { normalize } from "@/utils/normalize";
+import { type AllTexts, newTextMutation } from "@/utils/supabase";
 import { MagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import clsx from "clsx";
 import Fuse from "fuse.js";
+import { useAtomValue } from "jotai";
 import {
 	type ChangeEventHandler,
 	useCallback,
@@ -19,28 +21,30 @@ import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 
 function Texts() {
-	const [texts, setTexts] = useState<AllTexts>([]);
+	const { data: textsData } = useAllTexts();
+	const texts = useMemo<AllTexts>(() => textsData ?? [], [textsData]);
 	const [searchResults, setSearchResults] = useState<AllTexts | null>(null);
+	const globalSearchEnabled = useAtomValue(globalSearchEnabledAtom);
+	const globalSearchQuery = useAtomValue(unifiedSearchQueryAtom);
 	const filteredTexts = searchResults ?? texts;
 	const navigate = useNavigate();
 	const [selectedTextIndex, setSelectedTextIndex] = useState<number | null>(
 		null,
 	);
 	const fuse = useMemo(
-		() => new Fuse(texts, { keys: ["title", "content"], threshold: 0.3 }),
+		() =>
+			new Fuse(texts, {
+				keys: ["title", "content"],
+				threshold: 0.3,
+				getFn: (obj, path) => {
+					const k = Array.isArray(path) ? path[0] : path;
+					const v = (obj as Record<string, unknown>)[k];
+					return typeof v === "string" ? normalize(v) : "";
+				},
+			}),
 		[texts],
 	);
 	const { leader } = useLeader();
-
-	useEffect(() => {
-		allTextsQuery().then(({ data }) => {
-			if (data && data.length > 0) {
-				data.sort((a, b) => a.id - b.id);
-				setTexts(data);
-				fuse.setCollection(data);
-			}
-		});
-	}, [fuse.setCollection]);
 
 	const scrollToSelectedText = useCallback(() => {
 		if (selectedTextIndex !== null) {
@@ -55,6 +59,7 @@ function Texts() {
 	useEffect(scrollToSelectedText, [scrollToSelectedText]);
 
 	useEffect(() => {
+		if (globalSearchEnabled) return;
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (selectedTextIndex !== null && event.key === "ArrowUp") {
 				event.preventDefault();
@@ -92,7 +97,7 @@ function Texts() {
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [selectedTextIndex, filteredTexts, navigate]);
+	}, [globalSearchEnabled, selectedTextIndex, filteredTexts, navigate]);
 
 	const [searchValue, setSearchValue] = useState("");
 
@@ -108,7 +113,7 @@ function Texts() {
 					setSelectedTextIndex(0);
 				} else {
 					setSearchResults(
-						fuse.search(event.target.value).map((hit) => hit.item),
+						fuse.search(normalize(event.target.value)).map((hit) => hit.item),
 					);
 					setSelectedTextIndex(null);
 				}
@@ -116,6 +121,25 @@ function Texts() {
 		},
 		[fuse, texts],
 	);
+
+	useEffect(() => {
+		if (!globalSearchEnabled) return;
+		setSearchValue(globalSearchQuery);
+		if (globalSearchQuery.length === 0) {
+			setSearchResults(null);
+			return;
+		}
+		if (!Number.isNaN(Number(globalSearchQuery))) {
+			const text = texts.find((t) => t.id === Number(globalSearchQuery));
+			setSearchResults(text ? [text] : []);
+			setSelectedTextIndex(0);
+		} else {
+			setSearchResults(
+				fuse.search(normalize(globalSearchQuery)).map((hit) => hit.item),
+			);
+			setSelectedTextIndex(null);
+		}
+	}, [globalSearchEnabled, globalSearchQuery, texts, fuse]);
 
 	const createNewText = async () => {
 		const title = prompt("Titre du texte");
@@ -141,15 +165,22 @@ function Texts() {
 				<PageHeader
 					variant="list"
 					left={
-						<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
-							<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
-							<input
-								className="w-full h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
-								type="search"
-								onChange={search}
+						globalSearchEnabled ? (
+							<UnifiedSearch
+								currentSection="texts"
 								placeholder="Rechercher un texte..."
 							/>
-						</div>
+						) : (
+							<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
+								<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
+								<input
+									className="w-full h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
+									type="search"
+									onChange={search}
+									placeholder="Rechercher un texte..."
+								/>
+							</div>
+						)
 					}
 				/>
 			</div>

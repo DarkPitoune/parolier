@@ -1,11 +1,15 @@
 import { PageHeader, SongItem, useLeader } from "@/components";
 import {
 	filtersAtom,
+	globalSearchEnabledAtom,
 	tagTabOpenAtom,
 } from "@/components/Contexts/SettingsContext";
 import { getSongItemId } from "@/components/SongItem";
 import { TagChip } from "@/components/TagChip";
+import { UnifiedSearch } from "@/components/UnifiedSearch/UnifiedSearch";
+import { unifiedSearchQueryAtom } from "@/components/UnifiedSearch/unifiedSearchAtoms";
 import { useAllSongs, useAllTags } from "@/hooks/queries/useSongQueries";
+import { normalize } from "@/utils/normalize";
 import supabase, { type AllSongs } from "@/utils/supabase";
 import {
 	ChevronRightIcon,
@@ -13,7 +17,7 @@ import {
 } from "@heroicons/react/16/solid";
 import clsx from "clsx";
 import Fuse from "fuse.js";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import {
 	type ChangeEventHandler,
 	useCallback,
@@ -38,6 +42,8 @@ function Index() {
 	);
 
 	const [searchResults, setSearchResults] = useState<AllSongs | null>(null);
+	const globalSearchEnabled = useAtomValue(globalSearchEnabledAtom);
+	const globalSearchQuery = useAtomValue(unifiedSearchQueryAtom);
 	const filteredSongs = searchResults ?? songs;
 	const [selectedTags, setSelectedTags] = useAtom<number[]>(filtersAtom);
 	const [tagTabOpen, setTagTabOpen] = useAtom(tagTabOpenAtom);
@@ -45,7 +51,19 @@ function Index() {
 	const [selectedSongIndex, setSelectedSongIndex] = useState<number | null>(
 		null,
 	);
-	const fuse = useMemo(() => new Fuse(songs, { keys: ["title"], threshold: 0.3 }), [songs]);
+	const fuse = useMemo(
+		() =>
+			new Fuse(songs, {
+				keys: ["title"],
+				threshold: 0.3,
+				getFn: (obj, path) => {
+					const k = Array.isArray(path) ? path[0] : path;
+					const v = (obj as Record<string, unknown>)[k];
+					return typeof v === "string" ? normalize(v) : "";
+				},
+			}),
+		[songs],
+	);
 	const { leader } = useLeader();
 
 	const toggleTag = (id: number) => {
@@ -68,6 +86,7 @@ function Index() {
 	useEffect(scrollToSelectedSong, [scrollToSelectedSong]);
 
 	useEffect(() => {
+		if (globalSearchEnabled) return;
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (selectedSongIndex !== null && event.key === "ArrowUp") {
 				event.preventDefault();
@@ -105,7 +124,7 @@ function Index() {
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [selectedSongIndex, filteredSongs, navigate]);
+	}, [globalSearchEnabled, selectedSongIndex, filteredSongs, navigate]);
 
 	const [searchValue, setSearchValue] = useState("");
 
@@ -121,7 +140,7 @@ function Index() {
 					setSelectedSongIndex(0);
 				} else {
 					setSearchResults(
-						fuse.search(event.target.value).map((hit) => hit.item),
+						fuse.search(normalize(event.target.value)).map((hit) => hit.item),
 					);
 					setSelectedSongIndex(null);
 				}
@@ -129,6 +148,25 @@ function Index() {
 		},
 		[fuse, songs],
 	);
+
+	useEffect(() => {
+		if (!globalSearchEnabled) return;
+		setSearchValue(globalSearchQuery);
+		if (globalSearchQuery.length === 0) {
+			setSearchResults(null);
+			return;
+		}
+		if (!Number.isNaN(Number(globalSearchQuery))) {
+			const song = songs.find((s) => s.id === Number(globalSearchQuery));
+			setSearchResults(song ? [song] : []);
+			setSelectedSongIndex(0);
+		} else {
+			setSearchResults(
+				fuse.search(normalize(globalSearchQuery)).map((hit) => hit.item),
+			);
+			setSelectedSongIndex(null);
+		}
+	}, [globalSearchEnabled, globalSearchQuery, songs, fuse]);
 
 	const isCorrectTag = (song: AllSongs[number]) => {
 		if (selectedTags.length === 0) return true;
@@ -164,15 +202,22 @@ function Index() {
 				<PageHeader
 					variant="list"
 					left={
-						<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
-							<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
-							<input
-								className="w-full h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
-								type="search"
-								onChange={search}
+						globalSearchEnabled ? (
+							<UnifiedSearch
+								currentSection="songs"
 								placeholder="Vite, une idée..."
 							/>
-						</div>
+						) : (
+							<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
+								<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
+								<input
+									className="w-full h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
+									type="search"
+									onChange={search}
+									placeholder="Vite, une idée..."
+								/>
+							</div>
+						)
 					}
 				/>
 				<div className="px-6 py-2 flex flex-col items-stretch shadow-sm font-flame">

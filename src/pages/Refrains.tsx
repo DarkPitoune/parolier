@@ -1,12 +1,17 @@
 import { PageHeader, SongItem, useLeader } from "@/components";
+import { globalSearchEnabledAtom } from "@/components/Contexts/SettingsContext";
 import { getSongItemId } from "@/components/SongItem";
+import { UnifiedSearch } from "@/components/UnifiedSearch/UnifiedSearch";
+import { unifiedSearchQueryAtom } from "@/components/UnifiedSearch/unifiedSearchAtoms";
 import { useAllRefrains } from "@/hooks/queries/useSongQueries";
+import { normalize } from "@/utils/normalize";
 import { queryKeys } from "@/utils/queryKeys";
 import { type AllRefrains, newRefrainMutation } from "@/utils/supabase";
 import { MagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import Fuse from "fuse.js";
+import { useAtomValue } from "jotai";
 import {
 	type ChangeEventHandler,
 	useCallback,
@@ -27,11 +32,22 @@ export function Refrains() {
 	);
 
 	const [searchResults, setSearchResults] = useState<AllRefrains | null>(null);
+	const globalSearchEnabled = useAtomValue(globalSearchEnabledAtom);
+	const globalSearchQuery = useAtomValue(unifiedSearchQueryAtom);
 	const filteredRefrains = searchResults ?? refrains;
 	const navigate = useNavigate();
 	const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 	const fuse = useMemo(
-		() => new Fuse(refrains, { keys: ["title"], threshold: 0.3 }),
+		() =>
+			new Fuse(refrains, {
+				keys: ["title"],
+				threshold: 0.3,
+				getFn: (obj, path) => {
+					const k = Array.isArray(path) ? path[0] : path;
+					const v = (obj as Record<string, unknown>)[k];
+					return typeof v === "string" ? normalize(v) : "";
+				},
+			}),
 		[refrains],
 	);
 	const { leader } = useLeader();
@@ -49,6 +65,7 @@ export function Refrains() {
 	useEffect(scrollToSelected, [scrollToSelected]);
 
 	useEffect(() => {
+		if (globalSearchEnabled) return;
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (selectedIndex !== null && event.key === "ArrowUp") {
 				event.preventDefault();
@@ -85,7 +102,7 @@ export function Refrains() {
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
 		};
-	}, [selectedIndex, filteredRefrains, navigate]);
+	}, [globalSearchEnabled, selectedIndex, filteredRefrains, navigate]);
 
 	const search: ChangeEventHandler<HTMLInputElement> = useCallback(
 		(event) => {
@@ -100,7 +117,7 @@ export function Refrains() {
 					setSelectedIndex(0);
 				} else {
 					setSearchResults(
-						fuse.search(event.target.value).map((hit) => hit.item),
+						fuse.search(normalize(event.target.value)).map((hit) => hit.item),
 					);
 					setSelectedIndex(null);
 				}
@@ -108,6 +125,24 @@ export function Refrains() {
 		},
 		[fuse, refrains],
 	);
+
+	useEffect(() => {
+		if (!globalSearchEnabled) return;
+		if (globalSearchQuery.length === 0) {
+			setSearchResults(null);
+			return;
+		}
+		if (!Number.isNaN(Number(globalSearchQuery))) {
+			const refrain = refrains.find((r) => r.id === Number(globalSearchQuery));
+			setSearchResults(refrain ? [refrain] : []);
+			setSelectedIndex(0);
+		} else {
+			setSearchResults(
+				fuse.search(normalize(globalSearchQuery)).map((hit) => hit.item),
+			);
+			setSelectedIndex(null);
+		}
+	}, [globalSearchEnabled, globalSearchQuery, refrains, fuse]);
 
 	const createNewRefrain = async () => {
 		const title = prompt("Titre du refrain");
@@ -135,15 +170,22 @@ export function Refrains() {
 				<PageHeader
 					variant="list"
 					left={
-						<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
-							<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
-							<input
-								className="w-full h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
-								type="search"
-								onChange={search}
+						globalSearchEnabled ? (
+							<UnifiedSearch
+								currentSection="refrains"
 								placeholder="Chercher un refrain..."
 							/>
-						</div>
+						) : (
+							<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
+								<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
+								<input
+									className="w-full h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
+									type="search"
+									onChange={search}
+									placeholder="Chercher un refrain..."
+								/>
+							</div>
+						)
 					}
 				/>
 			</div>

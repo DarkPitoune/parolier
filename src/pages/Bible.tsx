@@ -1,13 +1,20 @@
 import { PageHeader, useLeader } from "@/components";
-import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
+import { globalSearchEnabledAtom } from "@/components/Contexts/SettingsContext";
+import { UnifiedSearch } from "@/components/UnifiedSearch/UnifiedSearch";
+import {
+	type BibleBookEntry,
+	type BibleVerse,
+	useBible,
+} from "@/hooks/queries/useBibleQueries";
 import {
 	formatReadingRef,
 	useBibleToday,
 } from "@/hooks/queries/useBibleTodayQuery";
+import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
 import { BookOpenIcon, MagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import { ChevronRightIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
-import { useQuery } from "@tanstack/react-query";
+import { useAtomValue } from "jotai";
 import {
 	type ChangeEventHandler,
 	useCallback,
@@ -16,20 +23,6 @@ import {
 	useState,
 } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-
-interface BibleBookEntry {
-	abbr: string;
-	name: string;
-	chapters: { [chapter: string]: { [verse: string]: string } };
-}
-
-interface BibleVerse {
-	bookAbbr: string;
-	bookName: string;
-	chapter: string;
-	verse: string;
-	text: string;
-}
 
 function BibleTodayBanner() {
 	const { data } = useBibleToday();
@@ -59,21 +52,14 @@ function BibleTodayBanner() {
 }
 
 function Bible() {
-	const { data: bible = [], isLoading } = useQuery({
-		queryKey: ["bible"],
-		queryFn: async () => {
-			const res = await fetch("https://bible-api-lovat.vercel.app/bible.json");
-			const data: { books: BibleBookEntry[] } = await res.json();
-			return data.books;
-		},
-		staleTime: Number.POSITIVE_INFINITY,
-	});
+	const { data: bible = [], isLoading } = useBible();
 	const [verses, setVerses] = useState<BibleVerse[]>([]);
 	const [searchValue, setSearchValue] = useState("");
 	const [filteredBooks, setFilteredBooks] = useState<BibleBookEntry[] | null>(
 		null,
 	);
 	const [searchResults, setSearchResults] = useState<BibleVerse[]>([]);
+	const globalSearchEnabled = useAtomValue(globalSearchEnabledAtom);
 	const { leader } = useLeader();
 	const { book: selectedBook, chapter: selectedChapter } = useParams();
 	const navigate = useNavigate();
@@ -205,16 +191,23 @@ function Bible() {
 				<PageHeader
 					variant="list"
 					left={
-						<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
-							<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
-							<input
-								className="w-full h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
-								type="search"
-								onChange={search}
-								value={searchValue}
+						globalSearchEnabled ? (
+							<UnifiedSearch
+								currentSection="bible"
 								placeholder="Rechercher un livre ou un texte..."
 							/>
-						</div>
+						) : (
+							<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
+								<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
+								<input
+									className="w-full h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
+									type="search"
+									onChange={search}
+									value={searchValue}
+									placeholder="Rechercher un livre ou un texte..."
+								/>
+							</div>
+						)
 					}
 				/>
 			</div>

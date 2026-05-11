@@ -1,14 +1,18 @@
 import { PageHeader } from "@/components";
+import { globalSearchEnabledAtom } from "@/components/Contexts/SettingsContext";
+import { UnifiedSearch } from "@/components/UnifiedSearch/UnifiedSearch";
 import { useAllSetlists } from "@/hooks/queries/useSetlistQueries";
 import { queryKeys } from "@/utils/queryKeys";
 import { deleteSetlistMutation, newSetlistMutation } from "@/utils/supabase";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAtomValue } from "jotai";
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const Setlists = () => {
 	const { data: setslists = [] } = useAllSetlists();
+	const globalSearchEnabled = useAtomValue(globalSearchEnabledAtom);
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
 
@@ -38,7 +42,18 @@ const Setlists = () => {
 
 	return (
 		<div className="bg-white dark:bg-gray-800 text-black dark:text-white">
-			<PageHeader variant="list" title="Setlists" />
+			<PageHeader
+				variant="list"
+				title={globalSearchEnabled ? undefined : "Setlists"}
+				left={
+					globalSearchEnabled ? (
+						<UnifiedSearch
+							currentSection="setlists"
+							placeholder="Rechercher une setlist..."
+						/>
+					) : undefined
+				}
+			/>
 			<div className="flex flex-col items-stretch divide-y">
 				{setslists?.map((setlist) => (
 					<div
