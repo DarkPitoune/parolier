@@ -1,6 +1,10 @@
 import { PageHeader } from "@/components";
 import { globalSearchEnabledAtom } from "@/components/Contexts/SettingsContext";
-import { UnifiedSearch } from "@/components/UnifiedSearch/UnifiedSearch";
+import {
+	UnifiedSearchInput,
+	UnifiedSearchResults,
+} from "@/components/UnifiedSearch/UnifiedSearch";
+import { useUnifiedSearch } from "@/components/UnifiedSearch/useUnifiedSearch";
 import { useAllSetlists } from "@/hooks/queries/useSetlistQueries";
 import { queryKeys } from "@/utils/queryKeys";
 import { deleteSetlistMutation, newSetlistMutation } from "@/utils/supabase";
@@ -13,6 +17,7 @@ import { Link, useNavigate } from "react-router-dom";
 const Setlists = () => {
 	const { data: setslists = [] } = useAllSetlists();
 	const globalSearchEnabled = useAtomValue(globalSearchEnabledAtom);
+	const unifiedSearch = useUnifiedSearch("setlists");
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
 
@@ -47,45 +52,49 @@ const Setlists = () => {
 				title={globalSearchEnabled ? undefined : "Setlists"}
 				left={
 					globalSearchEnabled ? (
-						<UnifiedSearch
-							currentSection="setlists"
+						<UnifiedSearchInput
+							search={unifiedSearch}
 							placeholder="Rechercher une setlist..."
 						/>
 					) : undefined
 				}
 			/>
-			<div className="flex flex-col items-stretch divide-y">
-				{setslists?.map((setlist) => (
-					<div
-						key={setlist.id}
-						className="px-2 text-black dark:text-white hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 flex items-center gap-3 relative overflow-clip"
-					>
-						<Link className="grow py-4" to={`/setlists/${setlist.id}`}>
-							{setlist.name}
-						</Link>
-						<button
-							type="button"
-							onClick={() => handleDeleteSetlist(setlist.id)}
-							disabled={deleteMutation.isPending}
+			{globalSearchEnabled && unifiedSearch.query.trim().length > 0 ? (
+				<UnifiedSearchResults search={unifiedSearch} />
+			) : (
+				<div className="flex flex-col items-stretch divide-y">
+					{setslists?.map((setlist) => (
+						<div
+							key={setlist.id}
+							className="px-2 text-black dark:text-white hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 flex items-center gap-3 relative overflow-clip"
 						>
-							<TrashIcon className="size-9 rounded-full bg-jubilateRed p-2 fill-stone-800" />
-						</button>
-						<Link to={`/setlists/${setlist.id}/edit`}>
-							<PencilSquareIcon className="size-9 p-2 bg-jubilateGreen rounded-full fill-stone-800" />
-						</Link>
-					</div>
-				))}
-				<button
-					type="button"
-					onClick={() => createMutation.mutate()}
-					disabled={createMutation.isPending}
-					className="flex items-center place-self-center gap-2 px-4 py-2 bg-jubilateBlue-500 hover:bg-jubilateBlue-600 disabled:opacity-50 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-				>
-					{createMutation.isPending
-						? "Création en cours..."
-						: "Créer une setlist"}
-				</button>
-			</div>
+							<Link className="grow py-4" to={`/setlists/${setlist.id}`}>
+								{setlist.name}
+							</Link>
+							<button
+								type="button"
+								onClick={() => handleDeleteSetlist(setlist.id)}
+								disabled={deleteMutation.isPending}
+							>
+								<TrashIcon className="size-9 rounded-full bg-jubilateRed p-2 fill-stone-800" />
+							</button>
+							<Link to={`/setlists/${setlist.id}/edit`}>
+								<PencilSquareIcon className="size-9 p-2 bg-jubilateGreen rounded-full fill-stone-800" />
+							</Link>
+						</div>
+					))}
+					<button
+						type="button"
+						onClick={() => createMutation.mutate()}
+						disabled={createMutation.isPending}
+						className="flex items-center place-self-center gap-2 px-4 py-2 bg-jubilateBlue-500 hover:bg-jubilateBlue-600 disabled:opacity-50 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+					>
+						{createMutation.isPending
+							? "Création en cours..."
+							: "Créer une setlist"}
+					</button>
+				</div>
+			)}
 		</div>
 	);
 };

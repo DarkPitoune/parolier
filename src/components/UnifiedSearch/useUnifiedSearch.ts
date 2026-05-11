@@ -215,6 +215,12 @@ export const useUnifiedSearch = (currentSection: Section) => {
 		return [currentSection, ...rest].filter((s) => results[s].length > 0);
 	}, [currentSection, results]);
 
+	const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: reset selection whenever query changes
+	useEffect(() => {
+		setSelectedIndex(null);
+	}, [query]);
+
 	const flatResults = useMemo<FlatResult[]>(() => {
 		const flat: FlatResult[] = [];
 		for (const section of sectionOrder) {
@@ -263,5 +269,15 @@ export const useUnifiedSearch = (currentSection: Section) => {
 		return flat;
 	}, [results, sectionOrder]);
 
-	return { query, setQuery, results, sectionOrder, flatResults };
+	return {
+		query,
+		setQuery,
+		results,
+		sectionOrder,
+		flatResults,
+		selectedIndex,
+		setSelectedIndex,
+	};
 };
+
+export type UnifiedSearchState = ReturnType<typeof useUnifiedSearch>;

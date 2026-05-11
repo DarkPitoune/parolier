@@ -1,8 +1,11 @@
 import { PageHeader, SongItem, useLeader } from "@/components";
 import { globalSearchEnabledAtom } from "@/components/Contexts/SettingsContext";
 import { getSongItemId } from "@/components/SongItem";
-import { UnifiedSearch } from "@/components/UnifiedSearch/UnifiedSearch";
-import { unifiedSearchQueryAtom } from "@/components/UnifiedSearch/unifiedSearchAtoms";
+import {
+	UnifiedSearchInput,
+	UnifiedSearchResults,
+} from "@/components/UnifiedSearch/UnifiedSearch";
+import { useUnifiedSearch } from "@/components/UnifiedSearch/useUnifiedSearch";
 import { useAllRefrains } from "@/hooks/queries/useSongQueries";
 import { normalize } from "@/utils/normalize";
 import { queryKeys } from "@/utils/queryKeys";
@@ -33,7 +36,7 @@ export function Refrains() {
 
 	const [searchResults, setSearchResults] = useState<AllRefrains | null>(null);
 	const globalSearchEnabled = useAtomValue(globalSearchEnabledAtom);
-	const globalSearchQuery = useAtomValue(unifiedSearchQueryAtom);
+	const unifiedSearch = useUnifiedSearch("refrains");
 	const filteredRefrains = searchResults ?? refrains;
 	const navigate = useNavigate();
 	const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -126,26 +129,8 @@ export function Refrains() {
 		[fuse, refrains],
 	);
 
-	useEffect(() => {
-		if (!globalSearchEnabled) return;
-		if (globalSearchQuery.length === 0) {
-			setSearchResults(null);
-			return;
-		}
-		if (!Number.isNaN(Number(globalSearchQuery))) {
-			const refrain = refrains.find((r) => r.id === Number(globalSearchQuery));
-			setSearchResults(refrain ? [refrain] : []);
-			setSelectedIndex(0);
-		} else {
-			setSearchResults(
-				fuse.search(normalize(globalSearchQuery)).map((hit) => hit.item),
-			);
-			setSelectedIndex(null);
-		}
-	}, [globalSearchEnabled, globalSearchQuery, refrains, fuse]);
-
-	const createNewRefrain = async () => {
-		const title = prompt("Titre du refrain");
+	const createNewRefrain = async (suggestedTitle?: string) => {
+		const title = prompt("Titre du refrain", suggestedTitle ?? "");
 		if (!title) return;
 		const { error, data } = await newRefrainMutation(title);
 		if (error) {
@@ -171,8 +156,8 @@ export function Refrains() {
 					variant="list"
 					left={
 						globalSearchEnabled ? (
-							<UnifiedSearch
-								currentSection="refrains"
+							<UnifiedSearchInput
+								search={unifiedSearch}
 								placeholder="Chercher un refrain..."
 							/>
 						) : (
@@ -189,31 +174,40 @@ export function Refrains() {
 					}
 				/>
 			</div>
-			<div
-				className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300 dark:bg-gray-800 print:block print:p-0"
-				style={{ columnCount: 2 }}
-			>
-				{filteredRefrains.map((refrain, index) => (
-					<Link
-						key={refrain.id}
-						to={`/songs/${refrain.id}`}
-						className={
-							index === selectedIndex ? "bg-gray-300 dark:bg-slate-700" : ""
-						}
+			{globalSearchEnabled && unifiedSearch.query.trim().length > 0 ? (
+				<UnifiedSearchResults
+					search={unifiedSearch}
+					onCreateRefrain={createNewRefrain}
+				/>
+			) : (
+				<>
+					<div
+						className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300 dark:bg-gray-800 print:block print:p-0"
+						style={{ columnCount: 2 }}
 					>
-						<SongItem song={refrain} />
-					</Link>
-				))}
-			</div>
-			<div className="flex justify-center py-4">
-				<button
-					className="px-4 py-2 bg-jubilateBlue-500 text-white rounded-full hover:bg-jubilateBlue-600 transition"
-					type="button"
-					onClick={createNewRefrain}
-				>
-					Nouveau refrain
-				</button>
-			</div>
+						{filteredRefrains.map((refrain, index) => (
+							<Link
+								key={refrain.id}
+								to={`/songs/${refrain.id}`}
+								className={
+									index === selectedIndex ? "bg-gray-300 dark:bg-slate-700" : ""
+								}
+							>
+								<SongItem song={refrain} />
+							</Link>
+						))}
+					</div>
+					<div className="flex justify-center py-4">
+						<button
+							className="px-4 py-2 bg-jubilateBlue-500 text-white rounded-full hover:bg-jubilateBlue-600 transition"
+							type="button"
+							onClick={() => createNewRefrain()}
+						>
+							Nouveau refrain
+						</button>
+					</div>
+				</>
+			)}
 		</div>
 	);
 }

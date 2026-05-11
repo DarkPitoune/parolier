@@ -1,8 +1,11 @@
 import { PageHeader, useLeader } from "@/components";
 import { globalSearchEnabledAtom } from "@/components/Contexts/SettingsContext";
 import { TextItem, getTextItemId } from "@/components/TextItem";
-import { UnifiedSearch } from "@/components/UnifiedSearch/UnifiedSearch";
-import { unifiedSearchQueryAtom } from "@/components/UnifiedSearch/unifiedSearchAtoms";
+import {
+	UnifiedSearchInput,
+	UnifiedSearchResults,
+} from "@/components/UnifiedSearch/UnifiedSearch";
+import { useUnifiedSearch } from "@/components/UnifiedSearch/useUnifiedSearch";
 import { useAllTexts } from "@/hooks/queries/useTextQueries";
 import { normalize } from "@/utils/normalize";
 import { type AllTexts, newTextMutation } from "@/utils/supabase";
@@ -25,7 +28,7 @@ function Texts() {
 	const texts = useMemo<AllTexts>(() => textsData ?? [], [textsData]);
 	const [searchResults, setSearchResults] = useState<AllTexts | null>(null);
 	const globalSearchEnabled = useAtomValue(globalSearchEnabledAtom);
-	const globalSearchQuery = useAtomValue(unifiedSearchQueryAtom);
+	const unifiedSearch = useUnifiedSearch("texts");
 	const filteredTexts = searchResults ?? texts;
 	const navigate = useNavigate();
 	const [selectedTextIndex, setSelectedTextIndex] = useState<number | null>(
@@ -122,25 +125,6 @@ function Texts() {
 		[fuse, texts],
 	);
 
-	useEffect(() => {
-		if (!globalSearchEnabled) return;
-		setSearchValue(globalSearchQuery);
-		if (globalSearchQuery.length === 0) {
-			setSearchResults(null);
-			return;
-		}
-		if (!Number.isNaN(Number(globalSearchQuery))) {
-			const text = texts.find((t) => t.id === Number(globalSearchQuery));
-			setSearchResults(text ? [text] : []);
-			setSelectedTextIndex(0);
-		} else {
-			setSearchResults(
-				fuse.search(normalize(globalSearchQuery)).map((hit) => hit.item),
-			);
-			setSelectedTextIndex(null);
-		}
-	}, [globalSearchEnabled, globalSearchQuery, texts, fuse]);
-
 	const createNewText = async () => {
 		const title = prompt("Titre du texte");
 		if (!title) return;
@@ -166,8 +150,8 @@ function Texts() {
 					variant="list"
 					left={
 						globalSearchEnabled ? (
-							<UnifiedSearch
-								currentSection="texts"
+							<UnifiedSearchInput
+								search={unifiedSearch}
 								placeholder="Rechercher un texte..."
 							/>
 						) : (
@@ -184,39 +168,47 @@ function Texts() {
 					}
 				/>
 			</div>
-			<div className="p-6">
-				<div className="flex justify-between items-center mb-4">
-					<h1 className="text-2xl font-bold text-black dark:text-white">
-						Textes
-					</h1>
-					<button
-						className="px-4 py-2 bg-jubilateBlue-500 text-white rounded-sm hover:bg-jubilateBlue-600 transition"
-						onClick={createNewText}
-						type="button"
-					>
-						Nouveau texte
-					</button>
-				</div>
-			</div>
-			<div className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300 dark:bg-gray-800 print:block print:p-0">
-				{filteredTexts.map((text, index) => (
-					<Link
-						key={text.id}
-						to={`/texts/${text.id}`}
-						className={
-							index === selectedTextIndex ? "bg-gray-300 dark:bg-slate-700" : ""
-						}
-					>
-						<TextItem text={text} />
-					</Link>
-				))}
-
-				{filteredTexts.length === 0 && searchValue && (
-					<div className="px-2 py-8 text-center text-gray-500 dark:text-gray-400">
-						Aucun texte trouvé pour "{searchValue}"
+			{globalSearchEnabled && unifiedSearch.query.trim().length > 0 ? (
+				<UnifiedSearchResults search={unifiedSearch} />
+			) : (
+				<>
+					<div className="p-6">
+						<div className="flex justify-between items-center mb-4">
+							<h1 className="text-2xl font-bold text-black dark:text-white">
+								Textes
+							</h1>
+							<button
+								className="px-4 py-2 bg-jubilateBlue-500 text-white rounded-sm hover:bg-jubilateBlue-600 transition"
+								onClick={createNewText}
+								type="button"
+							>
+								Nouveau texte
+							</button>
+						</div>
 					</div>
-				)}
-			</div>
+					<div className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300 dark:bg-gray-800 print:block print:p-0">
+						{filteredTexts.map((text, index) => (
+							<Link
+								key={text.id}
+								to={`/texts/${text.id}`}
+								className={
+									index === selectedTextIndex
+										? "bg-gray-300 dark:bg-slate-700"
+										: ""
+								}
+							>
+								<TextItem text={text} />
+							</Link>
+						))}
+
+						{filteredTexts.length === 0 && searchValue && (
+							<div className="px-2 py-8 text-center text-gray-500 dark:text-gray-400">
+								Aucun texte trouvé pour "{searchValue}"
+							</div>
+						)}
+					</div>
+				</>
+			)}
 		</div>
 	);
 }

@@ -6,8 +6,11 @@ import {
 } from "@/components/Contexts/SettingsContext";
 import { getSongItemId } from "@/components/SongItem";
 import { TagChip } from "@/components/TagChip";
-import { UnifiedSearch } from "@/components/UnifiedSearch/UnifiedSearch";
-import { unifiedSearchQueryAtom } from "@/components/UnifiedSearch/unifiedSearchAtoms";
+import {
+	UnifiedSearchInput,
+	UnifiedSearchResults,
+} from "@/components/UnifiedSearch/UnifiedSearch";
+import { useUnifiedSearch } from "@/components/UnifiedSearch/useUnifiedSearch";
 import { useAllSongs, useAllTags } from "@/hooks/queries/useSongQueries";
 import { normalize } from "@/utils/normalize";
 import supabase, { type AllSongs } from "@/utils/supabase";
@@ -43,7 +46,7 @@ function Index() {
 
 	const [searchResults, setSearchResults] = useState<AllSongs | null>(null);
 	const globalSearchEnabled = useAtomValue(globalSearchEnabledAtom);
-	const globalSearchQuery = useAtomValue(unifiedSearchQueryAtom);
+	const unifiedSearch = useUnifiedSearch("songs");
 	const filteredSongs = searchResults ?? songs;
 	const [selectedTags, setSelectedTags] = useAtom<number[]>(filtersAtom);
 	const [tagTabOpen, setTagTabOpen] = useAtom(tagTabOpenAtom);
@@ -149,39 +152,18 @@ function Index() {
 		[fuse, songs],
 	);
 
-	useEffect(() => {
-		if (!globalSearchEnabled) return;
-		setSearchValue(globalSearchQuery);
-		if (globalSearchQuery.length === 0) {
-			setSearchResults(null);
-			return;
-		}
-		if (!Number.isNaN(Number(globalSearchQuery))) {
-			const song = songs.find((s) => s.id === Number(globalSearchQuery));
-			setSearchResults(song ? [song] : []);
-			setSelectedSongIndex(0);
-		} else {
-			setSearchResults(
-				fuse.search(normalize(globalSearchQuery)).map((hit) => hit.item),
-			);
-			setSelectedSongIndex(null);
-		}
-	}, [globalSearchEnabled, globalSearchQuery, songs, fuse]);
-
 	const isCorrectTag = (song: AllSongs[number]) => {
 		if (selectedTags.length === 0) return true;
 		return song.tags.some(({ id }) => selectedTags.includes(id));
 	};
 
-	const askNewSong = () => {
+	const askNewSong = (title: string) => {
 		if (
-			window.confirm(
-				`Voulez-vous vraiment demander l'ajout de "${searchValue}" ?`,
-			)
+			window.confirm(`Voulez-vous vraiment demander l'ajout de "${title}" ?`)
 		) {
 			const promise = supabase
 				.from("song_requests")
-				.insert({ title: searchValue })
+				.insert({ title })
 				.then() as Promise<void>;
 			toast.promise(promise, {
 				loading: "Chargement...",
@@ -203,8 +185,8 @@ function Index() {
 					variant="list"
 					left={
 						globalSearchEnabled ? (
-							<UnifiedSearch
-								currentSection="songs"
+							<UnifiedSearchInput
+								search={unifiedSearch}
 								placeholder="Vite, une idée..."
 							/>
 						) : (
@@ -251,34 +233,43 @@ function Index() {
 					</div>
 				</div>
 			</div>
-			<div
-				className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300 dark:bg-gray-800 print:block print:p-0"
-				style={{ columnCount: 2 }}
-				data-testid="song-list"
-			>
-				{filteredSongs.filter(isCorrectTag).map((song, index) => (
-					<Link
-						key={song.id}
-						to={`/songs/${song.id}`}
-						data-testid={`song-link-${song.id}`}
-						className={
-							index === selectedSongIndex ? "bg-gray-300 dark:bg-slate-700" : ""
-						}
-					>
-						<SongItem song={song} />
-					</Link>
-				))}
+			{globalSearchEnabled && unifiedSearch.query.trim().length > 0 ? (
+				<UnifiedSearchResults
+					search={unifiedSearch}
+					onAskNewSong={askNewSong}
+				/>
+			) : (
+				<div
+					className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300 dark:bg-gray-800 print:block print:p-0"
+					style={{ columnCount: 2 }}
+					data-testid="song-list"
+				>
+					{filteredSongs.filter(isCorrectTag).map((song, index) => (
+						<Link
+							key={song.id}
+							to={`/songs/${song.id}`}
+							data-testid={`song-link-${song.id}`}
+							className={
+								index === selectedSongIndex
+									? "bg-gray-300 dark:bg-slate-700"
+									: ""
+							}
+						>
+							<SongItem song={song} />
+						</Link>
+					))}
 
-				{searchValue && (
-					<button
-						className="px-2 py-4 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 text-black dark:text-white w-full"
-						onClick={askNewSong}
-						type="button"
-					>
-						Demander l'ajout de <b>"{searchValue}"</b> dans la liste
-					</button>
-				)}
-			</div>
+					{searchValue && (
+						<button
+							className="px-2 py-4 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 text-black dark:text-white w-full"
+							onClick={() => askNewSong(searchValue)}
+							type="button"
+						>
+							Demander l'ajout de <b>"{searchValue}"</b> dans la liste
+						</button>
+					)}
+				</div>
+			)}
 		</div>
 	);
 }
