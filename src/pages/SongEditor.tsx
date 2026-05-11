@@ -1,4 +1,5 @@
 import type { Line, Strophe } from "@/assets/types";
+import { sanitizeNbspString, sanitizeStrophes } from "@/utils/sanitizeNbsp";
 import supabase, {
 	allTagsQuery,
 	type TaggedSong,
@@ -66,16 +67,20 @@ const SongEditor = () => {
 		if (!song) return;
 		const { strophes, title, sheet_music_url } = song;
 
-		const songNoEmptyLines = {
-			title,
-			sheet_music_url,
-			strophes: strophes.map((strophe) => ({
+		const cleanedStrophes = sanitizeStrophes(
+			strophes.map((strophe) => ({
 				...strophe,
 				content:
 					typeof strophe.content === "string"
 						? strophe.content
 						: strophe.content.filter((line) => line.text || line.chords),
-			})) as Json[],
+			})) as Strophe[],
+		);
+
+		const songNoEmptyLines = {
+			title: sanitizeNbspString(title),
+			sheet_music_url,
+			strophes: cleanedStrophes as Json[],
 		};
 
 		const { error: errorSong } = await supabase
