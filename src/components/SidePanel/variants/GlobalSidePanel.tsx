@@ -22,6 +22,7 @@ import {
 	newSongMutation,
 } from "@/utils/supabase";
 import {
+	BeakerIcon,
 	BookOpenIcon,
 	CalendarDaysIcon,
 	ChartBarIcon,
@@ -345,25 +346,6 @@ function SettingsContent() {
 				/>
 			</div>
 
-			<div
-				className="flex justify-between gap-4"
-				aria-label="global search choice"
-			>
-				<h1 className="font-flame text-2xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
-					Recherche globale (bêta)
-				</h1>
-
-				<input
-					id="globalSearchCheckbox"
-					type="checkbox"
-					checked={globalSearchEnabled}
-					onChange={(e) => {
-						setGlobalSearchEnabled(e.target.checked);
-					}}
-					className="w-5 h-5 accent-jubilateBlue-500 dark:accent-jubilateBlue-400 rounded-2xl"
-				/>
-			</div>
-
 			<div className="flex flex-col gap-2" aria-label="tonality choice">
 				<div className="flex justify-between">
 					<h1 className="font-flame text-2xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
@@ -523,6 +505,31 @@ function SettingsContent() {
 						)}
 					</>
 				)}
+			</div>
+
+			<div
+				className="flex justify-between gap-4 items-center"
+				aria-label="global search choice"
+			>
+				<div className="flex items-center gap-2">
+					<h1 className="font-flame text-2xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
+						Recherche globale
+					</h1>
+					<BeakerIcon
+						className="w-5 fill-jubilateBlue-500 dark:fill-jubilateBlue-400"
+						aria-label="Fonctionnalité expérimentale"
+					/>
+				</div>
+
+				<input
+					id="globalSearchCheckbox"
+					type="checkbox"
+					checked={globalSearchEnabled}
+					onChange={(e) => {
+						setGlobalSearchEnabled(e.target.checked);
+					}}
+					className="w-5 h-5 accent-jubilateBlue-500 dark:accent-jubilateBlue-400 rounded-2xl"
+				/>
 			</div>
 		</>
 	);
