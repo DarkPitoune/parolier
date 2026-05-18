@@ -72,7 +72,11 @@ describe("sanitizeStrophes", () => {
 
 	it("returns the same line reference when nothing changed (identity preserved)", () => {
 		const line = { text: "hello", chords: "C" };
-		const strophe = { type: "verse" as const, repetition: false, content: [line] };
+		const strophe = {
+			type: "verse" as const,
+			repetition: false,
+			content: [line],
+		};
 		const out = sanitizeStrophes([strophe]);
 		if (out[0].type !== "section") {
 			expect(out[0].content[0]).toBe(line);

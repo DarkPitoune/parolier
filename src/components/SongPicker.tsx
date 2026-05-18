@@ -72,7 +72,10 @@ const SongPicker = ({ handleClose }: SongPickerProps) => {
 		};
 	}, [filteredSongs, selectedSongId, handleClose]);
 
-	const fuse = useMemo(() => new Fuse(songs, { keys: ["title"], threshold: 0.3 }), [songs]);
+	const fuse = useMemo(
+		() => new Fuse(songs, { keys: ["title"], threshold: 0.3 }),
+		[songs],
+	);
 	const [searchValue, setSearchValue] = useState("");
 
 	const search: ChangeEventHandler<HTMLInputElement> = useCallback(
