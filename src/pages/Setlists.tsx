@@ -59,7 +59,7 @@ const Setlists = () => {
 					) : undefined
 				}
 			/>
-			{globalSearchEnabled && unifiedSearch.query.trim().length > 0 ? (
+			{globalSearchEnabled && unifiedSearch.showResults ? (
 				<UnifiedSearchResults search={unifiedSearch} />
 			) : (
 				<div className="flex flex-col items-stretch divide-y">
