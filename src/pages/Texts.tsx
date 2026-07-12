@@ -168,7 +168,7 @@ function Texts() {
 					}
 				/>
 			</div>
-			{globalSearchEnabled && unifiedSearch.query.trim().length > 0 ? (
+			{globalSearchEnabled && unifiedSearch.showResults ? (
 				<UnifiedSearchResults search={unifiedSearch} />
 			) : (
 				<>

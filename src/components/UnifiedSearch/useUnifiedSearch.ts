@@ -1,10 +1,15 @@
 import { filtersAtom } from "@/components/Contexts/SettingsContext";
 import { type BibleVerse, useBible } from "@/hooks/queries/useBibleQueries";
 import { useAllSetlists } from "@/hooks/queries/useSetlistQueries";
-import { useAllRefrains, useAllSongs } from "@/hooks/queries/useSongQueries";
+import {
+	useAllOrdinaires,
+	useAllRefrains,
+	useAllSongs,
+} from "@/hooks/queries/useSongQueries";
 import { useAllTexts } from "@/hooks/queries/useTextQueries";
 import { normalize } from "@/utils/normalize";
 import type {
+	AllOrdinaires,
 	AllRefrains,
 	AllSetlists,
 	AllSongs,
@@ -12,10 +17,21 @@ import type {
 } from "@/utils/supabase";
 import Fuse from "fuse.js";
 import { useAtom, useAtomValue } from "jotai";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+	MAX_RECENT,
+	type RecentSearch,
+	recentSearchesAtom,
+} from "./recentSearchesAtoms";
 import { unifiedSearchQueryAtom } from "./unifiedSearchAtoms";
 
-export type Section = "songs" | "refrains" | "texts" | "bible" | "setlists";
+export type Section =
+	| "songs"
+	| "refrains"
+	| "texts"
+	| "bible"
+	| "setlists"
+	| "ordinaires";
 
 export const CANONICAL_SECTION_ORDER: Section[] = [
 	"songs",
@@ -23,12 +39,14 @@ export const CANONICAL_SECTION_ORDER: Section[] = [
 	"texts",
 	"bible",
 	"setlists",
+	"ordinaires",
 ];
 
 export type SongRow = AllSongs[number];
 export type RefrainRow = AllRefrains[number];
 export type TextRow = AllTexts[number];
 export type SetlistRow = AllSetlists[number];
+export type OrdinaireRow = AllOrdinaires[number];
 
 export interface UnifiedResults {
 	songs: SongRow[];
@@ -36,12 +54,15 @@ export interface UnifiedResults {
 	texts: TextRow[];
 	bible: BibleVerse[];
 	setlists: SetlistRow[];
+	ordinaires: OrdinaireRow[];
 }
 
 export interface FlatResult {
 	section: Section;
 	href: string;
 	key: string;
+	label: string;
+	sublabel?: string;
 }
 
 const SECTION_CAP = 5;
@@ -96,6 +117,31 @@ const scanBible = (
 export const useUnifiedSearch = (currentSection: Section) => {
 	const [query, setQuery] = useAtom(unifiedSearchQueryAtom);
 	const filters = useAtomValue(filtersAtom);
+	const [focused, setFocused] = useState(false);
+	const [recentSearches, setRecentSearches] = useAtom(recentSearchesAtom);
+
+	const recordHit = useCallback(
+		(hit: Omit<RecentSearch, "pickedAt">) => {
+			setRecentSearches((prev) =>
+				[
+					{ ...hit, pickedAt: Date.now() },
+					...prev.filter((r) => r.href !== hit.href),
+				].slice(0, MAX_RECENT),
+			);
+		},
+		[setRecentSearches],
+	);
+
+	const removeRecent = useCallback(
+		(href: string) => {
+			setRecentSearches((prev) => prev.filter((r) => r.href !== href));
+		},
+		[setRecentSearches],
+	);
+
+	const clearRecents = useCallback(() => {
+		setRecentSearches([]);
+	}, [setRecentSearches]);
 
 	useEffect(
 		() => () => {
@@ -108,6 +154,7 @@ export const useUnifiedSearch = (currentSection: Section) => {
 	const { data: refrainsData } = useAllRefrains();
 	const { data: textsData } = useAllTexts();
 	const { data: setlistsData } = useAllSetlists();
+	const { data: ordinairesData } = useAllOrdinaires();
 
 	const debouncedQuery = useDebouncedValue(query, BIBLE_DEBOUNCE_MS);
 	const bibleEligible = debouncedQuery.trim().length >= BIBLE_MIN_CHARS;
@@ -125,6 +172,10 @@ export const useUnifiedSearch = (currentSection: Section) => {
 		() => new Fuse(textsData ?? [], fuseOptions<TextRow>(["title", "content"])),
 		[textsData],
 	);
+	const ordinairesFuse = useMemo(
+		() => new Fuse(ordinairesData ?? [], fuseOptions<OrdinaireRow>(["name"])),
+		[ordinairesData],
+	);
 
 	const results = useMemo<UnifiedResults>(() => {
 		const trimmed = query.trim();
@@ -135,6 +186,7 @@ export const useUnifiedSearch = (currentSection: Section) => {
 				texts: [],
 				bible: [],
 				setlists: [],
+				ordinaires: [],
 			};
 		}
 		const isNumeric = /^\d+$/.test(trimmed);
@@ -186,6 +238,13 @@ export const useUnifiedSearch = (currentSection: Section) => {
 					.filter((s) => normalize(s.name ?? "").includes(normalizedQuery))
 					.slice(0, SECTION_CAP);
 
+		const ordinaires: OrdinaireRow[] = isNumeric
+			? []
+			: ordinairesFuse
+					.search(normalizedQuery)
+					.map((h) => h.item)
+					.slice(0, SECTION_CAP);
+
 		const bible: BibleVerse[] =
 			isNumeric || debouncedQuery.trim().length < BIBLE_MIN_CHARS
 				? []
@@ -194,7 +253,7 @@ export const useUnifiedSearch = (currentSection: Section) => {
 						SECTION_CAP,
 					);
 
-		return { songs, refrains, texts, bible, setlists };
+		return { songs, refrains, texts, bible, setlists, ordinaires };
 	}, [
 		query,
 		debouncedQuery,
@@ -208,6 +267,7 @@ export const useUnifiedSearch = (currentSection: Section) => {
 		songsFuse,
 		refrainsFuse,
 		textsFuse,
+		ordinairesFuse,
 	]);
 
 	const sectionOrder = useMemo<Section[]>(() => {
@@ -230,6 +290,8 @@ export const useUnifiedSearch = (currentSection: Section) => {
 						section,
 						href: `/songs/${song.id}`,
 						key: `song-${song.id}`,
+						label: song.title,
+						sublabel: `#${song.id}`,
 					});
 				}
 			} else if (section === "refrains") {
@@ -238,6 +300,8 @@ export const useUnifiedSearch = (currentSection: Section) => {
 						section,
 						href: `/songs/${refrain.id}`,
 						key: `refrain-${refrain.id}`,
+						label: refrain.title,
+						sublabel: `#${refrain.id}`,
 					});
 				}
 			} else if (section === "texts") {
@@ -246,6 +310,8 @@ export const useUnifiedSearch = (currentSection: Section) => {
 						section,
 						href: `/texts/${text.id}`,
 						key: `text-${text.id}`,
+						label: text.title,
+						sublabel: `#${text.id}`,
 					});
 				}
 			} else if (section === "bible") {
@@ -254,6 +320,7 @@ export const useUnifiedSearch = (currentSection: Section) => {
 						section,
 						href: `/bible/${encodeURIComponent(verse.bookAbbr)}/${encodeURIComponent(verse.chapter)}#verse-${verse.verse}`,
 						key: `bible-${verse.bookAbbr}-${verse.chapter}-${verse.verse}`,
+						label: `${verse.bookName} ${verse.chapter}:${verse.verse}`,
 					});
 				}
 			} else if (section === "setlists") {
@@ -262,12 +329,25 @@ export const useUnifiedSearch = (currentSection: Section) => {
 						section,
 						href: `/setlists/${setlist.id}`,
 						key: `setlist-${setlist.id}`,
+						label: setlist.name ?? "",
+					});
+				}
+			} else if (section === "ordinaires") {
+				for (const ordinaire of results.ordinaires) {
+					flat.push({
+						section,
+						href: `/ordinaires/${ordinaire.id}`,
+						key: `ordinaire-${ordinaire.id}`,
+						label: ordinaire.name ?? "",
 					});
 				}
 			}
 		}
 		return flat;
 	}, [results, sectionOrder]);
+
+	const showResults =
+		query.trim().length > 0 || (focused && recentSearches.length > 0);
 
 	return {
 		query,
@@ -277,6 +357,13 @@ export const useUnifiedSearch = (currentSection: Section) => {
 		flatResults,
 		selectedIndex,
 		setSelectedIndex,
+		focused,
+		setFocused,
+		showResults,
+		recentSearches,
+		recordHit,
+		removeRecent,
+		clearRecents,
 	};
 };
 

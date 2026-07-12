@@ -233,7 +233,7 @@ function Index() {
 					</div>
 				</div>
 			</div>
-			{globalSearchEnabled && unifiedSearch.query.trim().length > 0 ? (
+			{globalSearchEnabled && unifiedSearch.showResults ? (
 				<UnifiedSearchResults
 					search={unifiedSearch}
 					onAskNewSong={askNewSong}
