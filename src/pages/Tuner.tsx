@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components";
+import { TunerGraph } from "@/components/TunerGraph";
 import { useTuner } from "@/hooks/useTuner";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import clsx from "clsx";
@@ -114,6 +115,11 @@ function Tuner() {
 									</p>
 								</>
 							)}
+						</div>
+
+						{/* Scrolling pitch-over-time graph */}
+						<div className="w-full max-w-md">
+							<TunerGraph cents={reading?.cents ?? null} />
 						</div>
 
 						<p className="max-w-md text-center text-sm text-gray-400 dark:text-gray-500">

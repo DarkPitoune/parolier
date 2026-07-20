@@ -1,11 +1,13 @@
-// Shared AudioContext for the tuner. iOS only lets an AudioContext start (and
-// stay) running if it is created/resumed inside a user gesture. We prime it
-// from the "Accordeur" nav link click so the tuner page can auto-start without
-// its own button.
+// Shared audio capture for the tuner. iOS Safari rejects BOTH
+// `AudioContext.resume()` and `getUserMedia()` unless they originate from a
+// user gesture (with no permission prompt shown — it just fails). So we kick
+// both off from the "Accordeur" nav link click / the retry button, and hand
+// the results to the tuner page, which mounts a moment later.
 
 type AudioContextCtor = typeof AudioContext;
 
 let ctx: AudioContext | null = null;
+let streamPromise: Promise<MediaStream> | null = null;
 
 const getCtor = (): AudioContextCtor | null => {
 	if (typeof window === "undefined") return null;
@@ -17,24 +19,77 @@ const getCtor = (): AudioContextCtor | null => {
 	);
 };
 
+/** Mic capture is only possible in a secure context with the API present. */
+export const canCaptureMic = (): boolean =>
+	typeof window !== "undefined" &&
+	window.isSecureContext &&
+	!!navigator.mediaDevices?.getUserMedia;
+
+/** True when the page isn't served over HTTPS/localhost (mic impossible). */
+export const isInsecureContext = (): boolean =>
+	typeof window !== "undefined" && !window.isSecureContext;
+
 /**
- * Create (if needed) and resume the shared tuner AudioContext. Must be called
- * from a user gesture — e.g. the nav link's `onClick` — so iOS unlocks audio.
+ * Current microphone permission, or "unknown" where the Permissions API can't
+ * answer (Safari, older Firefox). Used to tell a persisted block ("denied",
+ * where retrying is futile) apart from a transient/gesture refusal.
  */
-export const primeTunerAudioContext = (): AudioContext | null => {
+export const micPermissionState = async (): Promise<
+	PermissionState | "unknown"
+> => {
+	try {
+		if (!navigator.permissions?.query) return "unknown";
+		const status = await navigator.permissions.query({
+			name: "microphone" as PermissionName,
+		});
+		return status.state;
+	} catch {
+		return "unknown";
+	}
+};
+
+/**
+ * Create/resume the shared AudioContext and start `getUserMedia`. MUST be
+ * called synchronously from a user gesture (nav link click, retry button) so
+ * iOS unlocks audio. Idempotent — repeated calls reuse the in-flight stream.
+ */
+export const startTunerCapture = (): void => {
 	const Ctor = getCtor();
-	if (!Ctor) return null;
-	if (!ctx || ctx.state === "closed") ctx = new Ctor();
-	if (ctx.state === "suspended") ctx.resume().catch(() => {});
+	if (Ctor) {
+		if (!ctx || ctx.state === "closed") ctx = new Ctor();
+		if (ctx.state === "suspended") ctx.resume().catch(() => {});
+	}
+	if (!streamPromise && navigator.mediaDevices?.getUserMedia) {
+		streamPromise = navigator.mediaDevices.getUserMedia({ audio: true });
+	}
+};
+
+/** The shared AudioContext, creating one if a gesture hasn't already. */
+export const getTunerAudioContext = (): AudioContext | null => {
+	const Ctor = getCtor();
+	if (Ctor && (!ctx || ctx.state === "closed")) ctx = new Ctor();
 	return ctx;
 };
 
-/** Return the shared context, creating it if one doesn't exist yet. */
-export const getTunerAudioContext = (): AudioContext | null =>
-	ctx && ctx.state !== "closed" ? ctx : primeTunerAudioContext();
+/**
+ * The mic stream promise, starting capture if no gesture has yet. On desktop
+ * this on-demand start still prompts fine; on iOS it only succeeds when a
+ * gesture kicked it off (otherwise it rejects and the retry button re-tries).
+ */
+export const getTunerStream = (): Promise<MediaStream> | null => {
+	if (!streamPromise) startTunerCapture();
+	return streamPromise;
+};
 
-/** Close and forget the shared context (called when the tuner unmounts). */
-export const releaseTunerAudioContext = (): void => {
+/** Stop the mic, close the context, and reset so a gesture can re-capture. */
+export const stopTunerCapture = (): void => {
+	const pending = streamPromise;
+	streamPromise = null;
+	pending
+		?.then((stream) => {
+			for (const track of stream.getTracks()) track.stop();
+		})
+		.catch(() => {});
 	ctx?.close().catch(() => {});
 	ctx = null;
 };

@@ -1,7 +1,12 @@
 import { type NoteReading, frequencyToNote } from "@/utils/pitch";
 import {
+	canCaptureMic,
 	getTunerAudioContext,
-	releaseTunerAudioContext,
+	getTunerStream,
+	isInsecureContext,
+	micPermissionState,
+	startTunerCapture,
+	stopTunerCapture,
 } from "@/utils/tunerAudio";
 import { PitchDetector } from "pitchy";
 import { useCallback, useEffect, useState } from "react";
@@ -26,13 +31,14 @@ interface TunerState {
 }
 
 interface UseTunerResult extends TunerState {
-	/** Re-request mic access (e.g. after the user granted permission). */
+	/** Re-request mic access from a user gesture (e.g. the retry button). */
 	retry: () => void;
 }
 
 /**
  * Real-time microphone pitch detection using the Web Audio API + pitchy.
- * Listens automatically while mounted and releases the mic on unmount.
+ * Consumes the mic stream / AudioContext primed by the nav link gesture (see
+ * tunerAudio.ts), listens while mounted, and releases everything on unmount.
  */
 export function useTuner(): UseTunerResult {
 	const [state, setState] = useState<TunerState>({
@@ -47,58 +53,46 @@ export function useTuner(): UseTunerResult {
 	// biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` intentionally re-triggers mic acquisition
 	useEffect(() => {
 		let cancelled = false;
-		let stream: MediaStream | null = null;
-		let audioContext: AudioContext | null = null;
 		let raf: number | null = null;
 		let smoothFreq: number | null = null;
 
-		const release = () => {
-			if (raf !== null) cancelAnimationFrame(raf);
-			for (const track of stream?.getTracks() ?? []) track.stop();
-			releaseTunerAudioContext();
+		const fail = (message: string) => {
+			setState({
+				reading: null,
+				clarity: 0,
+				isListening: false,
+				error: message,
+			});
+			toast.error(message);
 		};
 
 		const run = async () => {
-			if (!navigator.mediaDevices?.getUserMedia) {
-				const message = "Micro non disponible sur cet appareil";
-				setState({
-					reading: null,
-					clarity: 0,
-					isListening: false,
-					error: message,
-				});
-				toast.error(message);
+			if (!canCaptureMic()) {
+				fail(
+					isInsecureContext()
+						? "Le micro nécessite une connexion sécurisée (HTTPS)"
+						: "Micro non disponible sur cet appareil",
+				);
 				return;
 			}
 
 			try {
-				stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-				// Unmounted during the permission grant → release and bail.
-				if (cancelled) {
-					for (const track of stream.getTracks()) track.stop();
+				const streamPromise = getTunerStream();
+				if (!streamPromise) {
+					fail("Micro non disponible sur cet appareil");
 					return;
 				}
+				const stream = await streamPromise;
+				// Unmounted during the permission grant → unmount cleanup handles it.
+				if (cancelled) return;
 
-				// Shared context, ideally already primed+running from the nav link
-				// click (required for iOS); resume defensively otherwise.
-				audioContext = getTunerAudioContext();
+				const audioContext = getTunerAudioContext();
 				if (!audioContext) {
-					const message = "Micro non disponible sur cet appareil";
-					setState({
-						reading: null,
-						clarity: 0,
-						isListening: false,
-						error: message,
-					});
-					toast.error(message);
-					for (const track of stream.getTracks()) track.stop();
+					fail("Micro non disponible sur cet appareil");
 					return;
 				}
 				if (audioContext.state === "suspended") await audioContext.resume();
-				if (cancelled) {
-					release();
-					return;
-				}
+				if (cancelled) return;
 
 				const analyser = audioContext.createAnalyser();
 				analyser.fftSize = FFT_SIZE;
@@ -135,18 +129,20 @@ export function useTuner(): UseTunerResult {
 				raf = requestAnimationFrame(loop);
 			} catch (err) {
 				if (cancelled) return;
+				console.error("Tuner microphone error:", err);
 				const isDenied =
 					err instanceof DOMException && err.name === "NotAllowedError";
-				const message = isDenied
-					? "Accès au micro refusé"
-					: "Impossible d'accéder au micro";
-				setState({
-					reading: null,
-					clarity: 0,
-					isListening: false,
-					error: message,
-				});
-				toast.error(message);
+				let message = "Impossible d'accéder au micro";
+				if (isDenied) {
+					// A persisted "denied" means retrying is futile — point the user
+					// to their browser settings instead of the generic refusal.
+					message =
+						(await micPermissionState()) === "denied"
+							? "Micro bloqué. Réactivez-le dans les réglages du navigateur."
+							: "Accès au micro refusé.";
+				}
+				if (cancelled) return;
+				fail(message);
 			}
 		};
 
@@ -154,11 +150,18 @@ export function useTuner(): UseTunerResult {
 
 		return () => {
 			cancelled = true;
-			release();
+			if (raf !== null) cancelAnimationFrame(raf);
+			stopTunerCapture();
 		};
 	}, [attempt]);
 
-	const retry = useCallback(() => setAttempt((a) => a + 1), []);
+	const retry = useCallback(() => {
+		// This runs inside the button-click gesture, so re-priming here lets iOS
+		// grant the mic on the retry even if the first (non-gesture) try failed.
+		stopTunerCapture();
+		startTunerCapture();
+		setAttempt((a) => a + 1);
+	}, []);
 
 	return { ...state, retry };
 }

@@ -21,7 +21,7 @@ import {
 	getLeaderPositionsQuery,
 	newSongMutation,
 } from "@/utils/supabase";
-import { primeTunerAudioContext } from "@/utils/tunerAudio";
+import { startTunerCapture } from "@/utils/tunerAudio";
 import {
 	BeakerIcon,
 	BookOpenIcon,
@@ -180,7 +180,7 @@ function NavigationContent({ onClose }: { onClose: () => void }) {
 				<Link
 					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
 					to="/tuner"
-					onClick={() => primeTunerAudioContext()}
+					onClick={() => startTunerCapture()}
 				>
 					<SpeakerWaveIcon className="w-4 h-4" />
 					Accordeur
