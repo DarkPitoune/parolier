@@ -6,6 +6,7 @@ import {
 } from "@/hooks/useMasseSuggestions";
 import { queryKeys } from "@/utils/queryKeys";
 import {
+	newMesseSetlistMutation,
 	newNamedSetlistMutation,
 	setlistItemAppendMutation,
 } from "@/utils/supabase";
@@ -40,14 +41,14 @@ interface Lecture {
 	verset_evangile?: string;
 }
 
-interface Messe {
+interface MesseSchedule {
 	nom: string;
 	lectures: Lecture[];
 }
 
 interface MesseData {
 	informations: LiturgicalInformation;
-	messes: Messe[];
+	messes: MesseSchedule[];
 }
 
 const ROLE_LABELS: Record<SongSuggestion["role"], string> = {
@@ -163,6 +164,7 @@ function Messe() {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [creatingSetlist, setCreatingSetlist] = useState(false);
+	const [creatingMesse, setCreatingMesse] = useState(false);
 	const { leader } = useLeader();
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
@@ -287,6 +289,29 @@ function Messe() {
 			setError("Erreur lors de la création de la setlist");
 		} finally {
 			setCreatingSetlist(false);
+		}
+	};
+
+	const handleCreateMesse = async () => {
+		setCreatingMesse(true);
+		try {
+			const formattedDate = new Date(
+				messeData?.informations.date ?? selectedDate,
+			).toLocaleDateString("fr-FR", {
+				day: "numeric",
+				month: "long",
+				year: "numeric",
+			});
+			const { data: setlist, error: createError } =
+				await newMesseSetlistMutation(`Messe du ${formattedDate}`);
+			if (createError || !setlist) throw new Error("Erreur creation");
+
+			queryClient.invalidateQueries({ queryKey: queryKeys.setlists.list() });
+			navigate(`/setlists/${setlist.id}/edit`);
+		} catch {
+			setError("Erreur lors de la création de la messe");
+		} finally {
+			setCreatingMesse(false);
 		}
 	};
 
@@ -471,7 +496,7 @@ function Messe() {
 						))}
 
 						{/* Song Suggestions Section */}
-						<div className="border-t border-gray-200 dark:border-gray-600 pt-6 pb-20">
+						<div className="border-t border-gray-200 dark:border-gray-600 pt-6">
 							<h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
 								Suggestions de chants
 							</h2>
@@ -541,6 +566,24 @@ function Messe() {
 									</button>
 								</div>
 							)}
+						</div>
+
+						{/* Créer une messe : setlist pré-remplie avec les réponses de l'assemblée */}
+						<div className="border-t border-gray-200 dark:border-gray-600 pt-6 pb-20">
+							<button
+								type="button"
+								onClick={handleCreateMesse}
+								disabled={creatingMesse}
+								className="w-full py-3 bg-jubilateBlue-500 hover:bg-jubilateBlue-600 disabled:opacity-50 text-white rounded-lg font-medium"
+							>
+								{creatingMesse
+									? "Création..."
+									: "Créer une messe (réponses de l'assemblée)"}
+							</button>
+							<p className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
+								Crée une setlist avec les dialogues et prières de l'assemblée
+								dans l'ordre liturgique.
+							</p>
 						</div>
 					</div>
 				)}

@@ -205,6 +205,78 @@ export type NewNamedSetlistMutation = QueryData<
 	ReturnType<typeof newNamedSetlistMutation>
 >;
 
+/**
+ * Canonical liturgical order of the assembly responses (type="response"),
+ * keyed by `ordinaire_role`. Opinionated default; roles absent from the DB are
+ * skipped, and the assembled setlist stays fully editable afterwards.
+ */
+const MESSE_RESPONSE_ORDER = [
+	"salutation",
+	"acte_penitentiel",
+	"conclusion_lecture",
+	"acclamation_evangile_avant",
+	"acclamation_evangile_apres",
+	"profession_de_foi",
+	"priere_offrandes",
+	"dialogue_preface",
+	"anamnese",
+	"notre_pere",
+	"doxologie",
+	"communion",
+	"envoi",
+] as const;
+
+/** Default creed picked when several "profession_de_foi" rows exist (not rigid). */
+const DEFAULT_CREED_TITLE = "Symbole de Nicée-Constantinople";
+
+/**
+ * Creates a setlist pre-seeded with the assembly responses of the Mass in
+ * liturgical order. For the creed (two variants share the "profession_de_foi"
+ * role) it inserts the default one; the other stays available to swap in.
+ */
+export const newMesseSetlistMutation = async (name: string) => {
+	const { data: setlist, error } = await supabase
+		.from("setlists")
+		.insert({ name })
+		.select()
+		.single();
+	if (error || !setlist) return { data: setlist, error };
+
+	const { data: responses, error: responsesError } = await supabase
+		.from("songs")
+		.select("id, title, ordinaire_role")
+		.eq("type", "response");
+	if (responsesError) return { data: setlist, error: responsesError };
+
+	const ordered: { id: number }[] = [];
+	for (const role of MESSE_RESPONSE_ORDER) {
+		const matches = (responses ?? []).filter((r) => r.ordinaire_role === role);
+		if (matches.length === 0) continue;
+		if (role === "profession_de_foi" && matches.length > 1) {
+			ordered.push(
+				matches.find((r) => r.title === DEFAULT_CREED_TITLE) ?? matches[0],
+			);
+		} else {
+			ordered.push(...matches);
+		}
+	}
+
+	if (ordered.length > 0) {
+		const { error: itemsError } = await supabase.from("setlist_items").insert(
+			ordered.map((r, position) => ({
+				setlist_id: setlist.id,
+				song_id: r.id,
+				position,
+				text: null,
+				text_id: null,
+			})),
+		);
+		if (itemsError) return { data: setlist, error: itemsError };
+	}
+
+	return { data: setlist, error: null };
+};
+
 export const deleteSetlistMutation = async (setlistId: number) =>
 	supabase.from("setlists").delete().eq("id", setlistId);
 
