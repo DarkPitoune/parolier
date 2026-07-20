@@ -48,6 +48,15 @@
   ::file-selector-button {
     border-color: var(--color-gray-200, currentcolor);
   }
+
+  /*
+    Tailwind CSS v4's preflight no longer sets `cursor: pointer` on buttons.
+    Restore it app-wide, while leaving disabled controls with the default arrow.
+  */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
 }
 
 @font-face {

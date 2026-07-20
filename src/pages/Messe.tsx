@@ -7,10 +7,10 @@ import {
 import { queryKeys } from "@/utils/queryKeys";
 import {
 	type MesseReading,
+	type MesseSong,
 	newMesseSetlistMutation,
-	newNamedSetlistMutation,
-	setlistItemAppendMutation,
 } from "@/utils/supabase";
+import { Switch } from "@headlessui/react";
 import {
 	ArrowPathIcon,
 	CalendarIcon,
@@ -75,6 +75,22 @@ function splitStrophes(contenu: string): string[] {
 }
 
 /**
+ * Trim and collapse a block of extracted text into clean lines. AELF markup is
+ * `<br />\n` (a break tag followed by a literal source newline) and pads lines
+ * with non-breaking spaces, which would otherwise render as blank lines between
+ * every line and stray indentation. Drops nbsp/indentation and empty lines so
+ * each line sits on its own line with no blank line between.
+ */
+function cleanTextBlock(text: string): string {
+	return text
+		.replace(/\u00a0/g, " ")
+		.split("\n")
+		.map((line) => line.trim())
+		.filter((line) => line.length > 0)
+		.join("\n");
+}
+
+/**
  * AELF liturgical content is HTML. Setlist text steps render as plain
  * `whitespace-pre-wrap`, so convert to text while keeping structure: <br> → a
  * line break, each <p> → a paragraph separated by a blank line.
@@ -83,13 +99,14 @@ function htmlToPlainText(html: string): string {
 	const withBreaks = html.replace(/<br\s*\/?>/gi, "\n");
 	const doc = new DOMParser().parseFromString(withBreaks, "text/html");
 	const paragraphs = Array.from(doc.querySelectorAll("p"));
-	if (paragraphs.length > 0) {
-		return paragraphs
-			.map((p) => (p.textContent ?? "").trim())
-			.filter((t) => t.length > 0)
-			.join("\n\n");
-	}
-	return (doc.body.textContent ?? "").trim();
+	const blocks =
+		paragraphs.length > 0
+			? paragraphs.map((p) => p.textContent ?? "")
+			: [doc.body.textContent ?? ""];
+	return blocks
+		.map(cleanTextBlock)
+		.filter((t) => t.length > 0)
+		.join("\n\n");
 }
 
 /** Liturgical label per AELF lecture `type` (used as the setlist step title). */
@@ -213,6 +230,53 @@ function SuggestionCard({
 	);
 }
 
+function ToggleRow({
+	label,
+	description,
+	checked,
+	onChange,
+	disabled = false,
+}: {
+	label: string;
+	description: string;
+	checked: boolean;
+	onChange: (value: boolean) => void;
+	disabled?: boolean;
+}) {
+	return (
+		<div
+			className={clsx(
+				"flex items-center justify-between gap-4 py-3",
+				disabled && "opacity-50",
+			)}
+		>
+			<div>
+				<p className="font-medium text-gray-900 dark:text-gray-100">{label}</p>
+				<p className="text-sm text-gray-500 dark:text-gray-400">
+					{description}
+				</p>
+			</div>
+			<Switch
+				checked={checked}
+				onChange={onChange}
+				disabled={disabled}
+				className={clsx(
+					"relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors",
+					"disabled:cursor-not-allowed",
+					checked ? "bg-jubilateBlue-500" : "bg-gray-300 dark:bg-gray-600",
+				)}
+			>
+				<span
+					className={clsx(
+						"inline-block h-5 w-5 translate-y-0.5 rounded-full bg-white transition-transform",
+						checked ? "translate-x-5.5" : "translate-x-0.5",
+					)}
+				/>
+			</Switch>
+		</div>
+	);
+}
+
 function Messe() {
 	const [selectedDate, setSelectedDate] = useState(() => {
 		const today = new Date();
@@ -221,8 +285,11 @@ function Messe() {
 	const [messeData, setMesseData] = useState<MesseData | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [creatingSetlist, setCreatingSetlist] = useState(false);
 	const [creatingMesse, setCreatingMesse] = useState(false);
+	const [showMesseModal, setShowMesseModal] = useState(false);
+	const [optSongs, setOptSongs] = useState(false);
+	const [optResponses, setOptResponses] = useState(true);
+	const [optReadings, setOptReadings] = useState(true);
 	const { leader } = useLeader();
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
@@ -312,45 +379,16 @@ function Messe() {
 		);
 	};
 
-	const handleCreateSetlist = async () => {
-		if (!suggestions || !messeData) return;
-		setCreatingSetlist(true);
-
-		try {
-			const formattedDate = new Date(
-				messeData.informations.date,
-			).toLocaleDateString("fr-FR", {
-				day: "numeric",
-				month: "long",
-				year: "numeric",
-			});
-			const name = `Messe du ${formattedDate}`;
-
-			const { data: setlist, error: createError } =
-				await newNamedSetlistMutation(name);
-			if (createError || !setlist) throw new Error("Erreur creation");
-
-			for (let i = 0; i < suggestions.length; i++) {
-				await setlistItemAppendMutation(
-					i,
-					setlist.id,
-					suggestions[i].songId,
-					null,
-				);
-			}
-
-			queryClient.invalidateQueries({
-				queryKey: queryKeys.setlists.list(),
-			});
-			navigate(`/setlists/${setlist.id}/edit`);
-		} catch {
-			setError("Erreur lors de la création de la setlist");
-		} finally {
-			setCreatingSetlist(false);
-		}
+	const openMesseModal = () => {
+		// Default the songs toggle on only when AI suggestions are available.
+		setOptSongs(!!suggestions);
+		setOptResponses(true);
+		setOptReadings(true);
+		setShowMesseModal(true);
 	};
 
 	const handleCreateMesse = async () => {
+		setShowMesseModal(false);
 		setCreatingMesse(true);
 		try {
 			const formattedDate = new Date(
@@ -360,11 +398,19 @@ function Messe() {
 				month: "long",
 				year: "numeric",
 			});
-			const readings = buildMesseReadings(
-				messeData?.messes?.[0]?.lectures ?? [],
-			);
+			const readings = optReadings
+				? buildMesseReadings(messeData?.messes?.[0]?.lectures ?? [])
+				: [];
+			const songs: MesseSong[] =
+				optSongs && suggestions
+					? suggestions.map((s) => ({ role: s.role, songId: s.songId }))
+					: [];
 			const { data: setlist, error: createError } =
-				await newMesseSetlistMutation(`Messe du ${formattedDate}`, readings);
+				await newMesseSetlistMutation(`Messe du ${formattedDate}`, readings, {
+					songs,
+					includeResponses: optResponses,
+					includeReadings: optReadings,
+				});
 			if (createError || !setlist) throw new Error("Erreur creation");
 
 			queryClient.invalidateQueries({ queryKey: queryKeys.setlists.list() });
@@ -616,39 +662,93 @@ function Messe() {
 											}
 										/>
 									))}
-
-									<button
-										type="button"
-										onClick={handleCreateSetlist}
-										disabled={creatingSetlist}
-										className="w-full py-3 bg-jubilateGreen-500 hover:bg-jubilateGreen-600 disabled:opacity-50 text-white rounded-lg font-medium"
-									>
-										{creatingSetlist ? "Création..." : "Créer la setlist"}
-									</button>
 								</div>
 							)}
 						</div>
 
-						{/* Créer une messe : setlist pré-remplie avec les réponses de l'assemblée */}
+						{/* Créer une messe : setlist assemblée à la carte via la modale */}
 						<div className="border-t border-gray-200 dark:border-gray-600 pt-6 pb-20">
 							<button
 								type="button"
-								onClick={handleCreateMesse}
+								onClick={openMesseModal}
 								disabled={creatingMesse}
 								className="w-full py-3 bg-jubilateBlue-500 hover:bg-jubilateBlue-600 disabled:opacity-50 text-white rounded-lg font-medium"
 							>
-								{creatingMesse
-									? "Création..."
-									: "Créer une messe (réponses de l'assemblée)"}
+								{creatingMesse ? "Création..." : "Créer une messe"}
 							</button>
 							<p className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
-								Crée une setlist avec les dialogues et prières de l'assemblée
-								dans l'ordre liturgique.
+								Crée une setlist dans l'ordre liturgique, avec les éléments de
+								votre choix.
 							</p>
 						</div>
 					</div>
 				)}
 			</div>
+
+			{showMesseModal && (
+				// biome-ignore lint/a11y/useKeyWithClickEvents: overlay click-to-close, dialog handles keyboard
+				<div
+					className="bg-black/50 fixed inset-0 z-50 flex items-center justify-center p-4 print:hidden"
+					onClick={() => setShowMesseModal(false)}
+				>
+					{/* biome-ignore lint/a11y/useKeyWithClickEvents: bubble stopper */}
+					<div
+						className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800"
+						onClick={(e) => e.stopPropagation()}
+					>
+						<h2 className="mb-1 text-xl font-bold text-gray-900 dark:text-gray-100">
+							Créer une messe
+						</h2>
+						<p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+							Choisissez les éléments à inclure dans la setlist.
+						</p>
+
+						<div className="divide-y divide-gray-200 dark:divide-gray-700">
+							<ToggleRow
+								label="Chants"
+								description={
+									suggestions
+										? "Les chants suggérés par l'IA"
+										: "Générez d'abord des suggestions"
+								}
+								checked={optSongs}
+								onChange={setOptSongs}
+								disabled={!suggestions}
+							/>
+							<ToggleRow
+								label="Réponses de l'assemblée"
+								description="Dialogues et prières dans l'ordre liturgique"
+								checked={optResponses}
+								onChange={setOptResponses}
+							/>
+							<ToggleRow
+								label="Lectures"
+								description="Les lectures du jour (AELF)"
+								checked={optReadings}
+								onChange={setOptReadings}
+							/>
+						</div>
+
+						<div className="mt-6 flex gap-3">
+							<button
+								type="button"
+								onClick={() => setShowMesseModal(false)}
+								className="flex-1 rounded-lg border border-gray-300 py-2.5 font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+							>
+								Annuler
+							</button>
+							<button
+								type="button"
+								onClick={handleCreateMesse}
+								disabled={!optSongs && !optResponses && !optReadings}
+								className="flex-1 rounded-lg bg-jubilateBlue-500 py-2.5 font-medium text-white hover:bg-jubilateBlue-600 disabled:opacity-50"
+							>
+								Créer
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

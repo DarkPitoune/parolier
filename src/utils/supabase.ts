@@ -205,13 +205,29 @@ export type NewNamedSetlistMutation = QueryData<
 	ReturnType<typeof newNamedSetlistMutation>
 >;
 
-/** One liturgical slot in a Mass reading (AELF lecture), as a plain-text row
- * ready to become a `texts` entry. HTML→text conversion happens in the caller
- * (this file stays DOM-free). */
+/** One liturgical slot in a Mass reading (AELF lecture), as plain text ready to
+ * become an inline free-text setlist step. HTML→text conversion happens in the
+ * caller (this file stays DOM-free). */
 export type MesseReading = {
 	slot: "lecture_1" | "psaume" | "lecture_2" | "evangile";
 	title: string;
 	content: string;
+};
+
+/** A hymn to slot into the Mass at a given liturgical moment (AI suggestion). */
+export type MesseSong = {
+	role: "entree" | "offertoire" | "communion" | "envoi";
+	songId: number;
+};
+
+/** Which parts of the Mass to include when assembling the setlist. */
+export type MesseSetlistOptions = {
+	/** AI-suggested hymns to place at their liturgical moments. */
+	songs?: MesseSong[];
+	/** Interleave the assembly responses (type="response" songs). */
+	includeResponses?: boolean;
+	/** Persist and interleave the day's readings as `texts` rows. */
+	includeReadings?: boolean;
 };
 
 /**
@@ -222,6 +238,7 @@ export type MesseReading = {
  * halves of the gospel acclamation.
  */
 const MESSE_ORDER = [
+	{ kind: "song", role: "entree" },
 	{ kind: "response", role: "salutation" },
 	{ kind: "response", role: "acte_penitentiel" },
 	{ kind: "reading", slot: "lecture_1" },
@@ -232,12 +249,15 @@ const MESSE_ORDER = [
 	{ kind: "reading", slot: "evangile" },
 	{ kind: "response", role: "acclamation_evangile_apres" },
 	{ kind: "response", role: "profession_de_foi" },
+	{ kind: "song", role: "offertoire" },
 	{ kind: "response", role: "priere_offrandes" },
 	{ kind: "response", role: "dialogue_preface" },
 	{ kind: "response", role: "anamnese" },
 	{ kind: "response", role: "notre_pere" },
 	{ kind: "response", role: "doxologie" },
+	{ kind: "song", role: "communion" },
 	{ kind: "response", role: "communion" },
+	{ kind: "song", role: "envoi" },
 	{ kind: "response", role: "envoi" },
 ] as const;
 
@@ -246,15 +266,23 @@ const DEFAULT_CREED_TITLE = "Symbole de Nicée-Constantinople";
 
 /**
  * Creates a setlist pre-seeded with the Mass in liturgical order: the assembly
- * responses (type="response" songs) interleaved with the day's readings, which
- * are persisted as `texts` rows and referenced by `text_id`. For the creed (two
+ * responses (type="response" songs) interleaved with the day's readings. The
+ * readings are stored inline as free `text` on the setlist item (not as reusable
+ * `texts` rows) since they're one-off, day-specific content. For the creed (two
  * variants share the "profession_de_foi" role) it inserts the default one; the
  * other stays available to swap in. Readings absent for the day are skipped.
  */
 export const newMesseSetlistMutation = async (
 	name: string,
 	readings: MesseReading[] = [],
+	options: MesseSetlistOptions = {},
 ) => {
+	const {
+		songs = [],
+		includeResponses = true,
+		includeReadings = true,
+	} = options;
+
 	const { data: setlist, error } = await supabase
 		.from("setlists")
 		.insert({ name })
@@ -262,42 +290,45 @@ export const newMesseSetlistMutation = async (
 		.single();
 	if (error || !setlist) return { data: setlist, error };
 
-	const { data: responses, error: responsesError } = await supabase
-		.from("songs")
-		.select("id, title, ordinaire_role")
-		.eq("type", "response");
-	if (responsesError) return { data: setlist, error: responsesError };
+	let responses: {
+		id: number;
+		title: string;
+		ordinaire_role: string | null;
+	}[] = [];
+	if (includeResponses) {
+		const { data, error: responsesError } = await supabase
+			.from("songs")
+			.select("id, title, ordinaire_role")
+			.eq("type", "response");
+		if (responsesError) return { data: setlist, error: responsesError };
+		responses = data ?? [];
+	}
 
-	// Persist the readings as texts rows, then map each slot to its new text_id.
-	const slotToTextId = new Map<MesseReading["slot"], number>();
-	if (readings.length > 0) {
-		const { data: textRows, error: textsError } = await supabase
-			.from("texts")
-			.insert(readings.map((r) => ({ title: r.title, content: r.content })))
-			.select("id, title");
-		if (textsError) return { data: setlist, error: textsError };
-		// Match by title rather than trusting insert order.
+	// Each reading becomes an inline free-text step: its title as the first line
+	// (so it reads as a heading) followed by the content.
+	const slotToText = new Map<MesseReading["slot"], string>();
+	if (includeReadings) {
 		for (const reading of readings) {
-			const row = (textRows ?? []).find((t) => t.title === reading.title);
-			if (row) slotToTextId.set(reading.slot, row.id);
+			slotToText.set(reading.slot, `${reading.title}\n\n${reading.content}`);
 		}
 	}
 
-	const items: { song_id: number | null; text_id: number | null }[] = [];
+	const items: { song_id: number | null; text: string | null }[] = [];
 	for (const entry of MESSE_ORDER) {
-		if (entry.kind === "response") {
-			const matches = (responses ?? []).filter(
-				(r) => r.ordinaire_role === entry.role,
-			);
+		if (entry.kind === "song") {
+			const song = songs.find((s) => s.role === entry.role);
+			if (song) items.push({ song_id: song.songId, text: null });
+		} else if (entry.kind === "response") {
+			const matches = responses.filter((r) => r.ordinaire_role === entry.role);
 			if (matches.length === 0) continue;
 			const picked =
 				entry.role === "profession_de_foi" && matches.length > 1
 					? [matches.find((r) => r.title === DEFAULT_CREED_TITLE) ?? matches[0]]
 					: matches;
-			for (const r of picked) items.push({ song_id: r.id, text_id: null });
+			for (const r of picked) items.push({ song_id: r.id, text: null });
 		} else {
-			const textId = slotToTextId.get(entry.slot);
-			if (textId !== undefined) items.push({ song_id: null, text_id: textId });
+			const text = slotToText.get(entry.slot);
+			if (text !== undefined) items.push({ song_id: null, text });
 		}
 	}
 
@@ -307,8 +338,8 @@ export const newMesseSetlistMutation = async (
 				setlist_id: setlist.id,
 				song_id: item.song_id,
 				position,
-				text: null,
-				text_id: item.text_id,
+				text: item.text,
+				text_id: null,
 			})),
 		);
 		if (itemsError) return { data: setlist, error: itemsError };
