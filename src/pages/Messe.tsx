@@ -1,13 +1,19 @@
 import { PageHeader, SongPickerInline, useLeader } from "@/components";
-import { useAllTaggedSongs } from "@/hooks/queries/useSongQueries";
+import {
+	useAllOrdinaireSongs,
+	useAllOrdinaires,
+	useAllTaggedSongs,
+} from "@/hooks/queries/useSongQueries";
 import {
 	type SongSuggestion,
 	useMasseSuggestions,
 } from "@/hooks/useMasseSuggestions";
 import { queryKeys } from "@/utils/queryKeys";
 import {
+	type MesseOrdinaireSong,
 	type MesseReading,
 	type MesseSong,
+	type OrdinaireRole,
 	newMesseSetlistMutation,
 } from "@/utils/supabase";
 import { Switch } from "@headlessui/react";
@@ -58,6 +64,20 @@ const ROLE_LABELS: Record<SongSuggestion["role"], string> = {
 	communion: "Chant de communion",
 	envoi: "Chant d'envoi",
 };
+
+const ORDINAIRE_ROLES: OrdinaireRole[] = [
+	"kyrie",
+	"gloria",
+	"alleluia",
+	"sanctus",
+	"anamnese",
+	"agnus",
+];
+
+/** Narrow a raw `ordinaire_role` string to a known `OrdinaireRole`. */
+function isOrdinaireRole(role: string | null): role is OrdinaireRole {
+	return role != null && (ORDINAIRE_ROLES as string[]).includes(role);
+}
 
 /**
  * AELF returns psalm text as HTML where each strophe is its own <p> block.
@@ -290,11 +310,14 @@ function Messe() {
 	const [optSongs, setOptSongs] = useState(false);
 	const [optResponses, setOptResponses] = useState(true);
 	const [optReadings, setOptReadings] = useState(true);
+	const [ordinaireId, setOrdinaireId] = useState<number | null>(null);
 	const { leader } = useLeader();
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 
 	const { data: allSongs } = useAllTaggedSongs();
+	const { data: ordinaires } = useAllOrdinaires();
+	const { data: ordinaireSongs } = useAllOrdinaireSongs();
 	const {
 		suggestions,
 		liturgicalSummary,
@@ -384,6 +407,7 @@ function Messe() {
 		setOptSongs(!!suggestions);
 		setOptResponses(true);
 		setOptReadings(true);
+		setOrdinaireId(null);
 		setShowMesseModal(true);
 	};
 
@@ -405,9 +429,23 @@ function Messe() {
 				optSongs && suggestions
 					? suggestions.map((s) => ({ role: s.role, songId: s.songId }))
 					: [];
+			const ordinaire: MesseOrdinaireSong[] =
+				ordinaireId != null
+					? (ordinaireSongs ?? [])
+							.filter(
+								(s) =>
+									s.ordinaire_id === ordinaireId &&
+									isOrdinaireRole(s.ordinaire_role),
+							)
+							.map((s) => ({
+								role: s.ordinaire_role as OrdinaireRole,
+								songId: s.id,
+							}))
+					: [];
 			const { data: setlist, error: createError } =
 				await newMesseSetlistMutation(`Messe du ${formattedDate}`, readings, {
 					songs,
+					ordinaire,
 					includeResponses: optResponses,
 					includeReadings: optReadings,
 				});
@@ -727,6 +765,32 @@ function Messe() {
 								checked={optReadings}
 								onChange={setOptReadings}
 							/>
+							<div className="flex items-center justify-between gap-4 py-3">
+								<div>
+									<p className="font-medium text-gray-900 dark:text-gray-100">
+										Ordinaire
+									</p>
+									<p className="text-sm text-gray-500 dark:text-gray-400">
+										Kyrie, Gloria, Sanctus… du choix
+									</p>
+								</div>
+								<select
+									value={ordinaireId ?? ""}
+									onChange={(e) =>
+										setOrdinaireId(
+											e.target.value === "" ? null : Number(e.target.value),
+										)
+									}
+									className="max-w-[10rem] rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+								>
+									<option value="">Aucun</option>
+									{(ordinaires ?? []).map((o) => (
+										<option key={o.id} value={o.id}>
+											{o.name}
+										</option>
+									))}
+								</select>
+							</div>
 						</div>
 
 						<div className="mt-6 flex gap-3">
@@ -740,7 +804,12 @@ function Messe() {
 							<button
 								type="button"
 								onClick={handleCreateMesse}
-								disabled={!optSongs && !optResponses && !optReadings}
+								disabled={
+									!optSongs &&
+									!optResponses &&
+									!optReadings &&
+									ordinaireId == null
+								}
 								className="flex-1 rounded-lg bg-jubilateBlue-500 py-2.5 font-medium text-white hover:bg-jubilateBlue-600 disabled:opacity-50"
 							>
 								Créer

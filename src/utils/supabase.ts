@@ -220,10 +220,27 @@ export type MesseSong = {
 	songId: number;
 };
 
+/** Sung parts of a Mass ordinary (ordinaire), matched by `ordinaire_role`. */
+export type OrdinaireRole =
+	| "kyrie"
+	| "gloria"
+	| "alleluia"
+	| "sanctus"
+	| "anamnese"
+	| "agnus";
+
+/** An ordinaire part to slot into the Mass at its liturgical moment. */
+export type MesseOrdinaireSong = {
+	role: OrdinaireRole;
+	songId: number;
+};
+
 /** Which parts of the Mass to include when assembling the setlist. */
 export type MesseSetlistOptions = {
 	/** AI-suggested hymns to place at their liturgical moments. */
 	songs?: MesseSong[];
+	/** Sung ordinaire parts (Kyrie, Gloria, …) to place liturgically. */
+	ordinaire?: MesseOrdinaireSong[];
 	/** Interleave the assembly responses (type="response" songs). */
 	includeResponses?: boolean;
 	/** Persist and interleave the day's readings as `texts` rows. */
@@ -231,30 +248,37 @@ export type MesseSetlistOptions = {
 };
 
 /**
- * Canonical liturgical order of a Mass, interleaving assembly responses (matched
- * by `ordinaire_role`) with the readings (matched by their `slot`). Opinionated
- * default; entries absent from the DB / readings are skipped, and the assembled
- * setlist stays fully editable afterwards. The gospel sits between the two
- * halves of the gospel acclamation.
+ * Canonical liturgical order of a Mass, interleaving four kinds of entry:
+ * `song` (AI-suggested hymns, by `role`), `ordinaire` (sung ordinary parts, by
+ * `role`), `response` (assembly responses, matched by `ordinaire_role`) and
+ * `reading` (the day's readings, by `slot`). Opinionated default; entries absent
+ * from the inputs are skipped, and the assembled setlist stays fully editable
+ * afterwards. The gospel sits between the two halves of the gospel acclamation.
  */
 const MESSE_ORDER = [
 	{ kind: "song", role: "entree" },
 	{ kind: "response", role: "salutation" },
 	{ kind: "response", role: "acte_penitentiel" },
+	{ kind: "ordinaire", role: "kyrie" },
+	{ kind: "ordinaire", role: "gloria" },
 	{ kind: "reading", slot: "lecture_1" },
 	{ kind: "reading", slot: "psaume" },
 	{ kind: "reading", slot: "lecture_2" },
 	{ kind: "response", role: "conclusion_lecture" },
 	{ kind: "response", role: "acclamation_evangile_avant" },
+	{ kind: "ordinaire", role: "alleluia" },
 	{ kind: "reading", slot: "evangile" },
 	{ kind: "response", role: "acclamation_evangile_apres" },
 	{ kind: "response", role: "profession_de_foi" },
 	{ kind: "song", role: "offertoire" },
 	{ kind: "response", role: "priere_offrandes" },
 	{ kind: "response", role: "dialogue_preface" },
+	{ kind: "ordinaire", role: "sanctus" },
 	{ kind: "response", role: "anamnese" },
+	{ kind: "ordinaire", role: "anamnese" },
 	{ kind: "response", role: "notre_pere" },
 	{ kind: "response", role: "doxologie" },
+	{ kind: "ordinaire", role: "agnus" },
 	{ kind: "song", role: "communion" },
 	{ kind: "response", role: "communion" },
 	{ kind: "song", role: "envoi" },
@@ -266,11 +290,14 @@ const DEFAULT_CREED_TITLE = "Symbole de Nicée-Constantinople";
 
 /**
  * Creates a setlist pre-seeded with the Mass in liturgical order: the assembly
- * responses (type="response" songs) interleaved with the day's readings. The
- * readings are stored inline as free `text` on the setlist item (not as reusable
- * `texts` rows) since they're one-off, day-specific content. For the creed (two
- * variants share the "profession_de_foi" role) it inserts the default one; the
- * other stays available to swap in. Readings absent for the day are skipped.
+ * responses (type="response" songs) interleaved with the day's readings and,
+ * optionally, the sung ordinaire parts (Kyrie, Gloria, …). The readings are
+ * stored inline as free `text` on the setlist item (not as reusable `texts`
+ * rows) since they're one-off, day-specific content. For the creed (two variants
+ * share the "profession_de_foi" role) it inserts the default one; the other
+ * stays available to swap in. Readings absent for the day are skipped. When the
+ * ordinaire supplies a sung anamnèse, the spoken response anamnèse is dropped in
+ * its favour.
  */
 export const newMesseSetlistMutation = async (
 	name: string,
@@ -279,6 +306,7 @@ export const newMesseSetlistMutation = async (
 ) => {
 	const {
 		songs = [],
+		ordinaire = [],
 		includeResponses = true,
 		includeReadings = true,
 	} = options;
@@ -313,12 +341,19 @@ export const newMesseSetlistMutation = async (
 		}
 	}
 
+	const hasOrdinaireAnamnese = ordinaire.some((o) => o.role === "anamnese");
+
 	const items: { song_id: number | null; text: string | null }[] = [];
 	for (const entry of MESSE_ORDER) {
 		if (entry.kind === "song") {
 			const song = songs.find((s) => s.role === entry.role);
 			if (song) items.push({ song_id: song.songId, text: null });
+		} else if (entry.kind === "ordinaire") {
+			const part = ordinaire.find((o) => o.role === entry.role);
+			if (part) items.push({ song_id: part.songId, text: null });
 		} else if (entry.kind === "response") {
+			// Prefer the sung ordinaire anamnèse over the spoken response one.
+			if (entry.role === "anamnese" && hasOrdinaireAnamnese) continue;
 			const matches = responses.filter((r) => r.ordinaire_role === entry.role);
 			if (matches.length === 0) continue;
 			const picked =
