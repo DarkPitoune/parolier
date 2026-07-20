@@ -60,7 +60,16 @@ export const startTunerCapture = (): void => {
 		if (ctx.state === "suspended") ctx.resume().catch(() => {});
 	}
 	if (!streamPromise && navigator.mediaDevices?.getUserMedia) {
-		streamPromise = navigator.mediaDevices.getUserMedia({ audio: true });
+		// Disable the browser's voice processing: noise suppression treats a
+		// sustained steady tone as background noise and gates it out after ~1s,
+		// and AGC ducks the gain — both break pitch detection. We want raw audio.
+		streamPromise = navigator.mediaDevices.getUserMedia({
+			audio: {
+				echoCancellation: false,
+				noiseSuppression: false,
+				autoGainControl: false,
+			},
+		});
 	}
 };
 
