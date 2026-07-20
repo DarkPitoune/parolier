@@ -3,6 +3,7 @@ import {
 	canCaptureMic,
 	getTunerAudioContext,
 	getTunerStream,
+	isFirefox,
 	isInsecureContext,
 	micPermissionState,
 	startTunerCapture,
@@ -136,10 +137,16 @@ export function useTuner(): UseTunerResult {
 				if (isDenied) {
 					// A persisted "denied" means retrying is futile — point the user
 					// to their browser settings instead of the generic refusal.
-					message =
-						(await micPermissionState()) === "denied"
-							? "Micro bloqué. Réactivez-le dans les réglages du navigateur."
-							: "Accès au micro refusé.";
+					if ((await micPermissionState()) === "denied") {
+						message =
+							"Micro bloqué. Réactivez-le dans les réglages du navigateur.";
+					} else if (isFirefox()) {
+						// Firefox blocks the mic in private windows with no prompt.
+						message =
+							"Accès au micro refusé. La navigation privée de Firefox bloque le micro — utilisez une fenêtre normale.";
+					} else {
+						message = "Accès au micro refusé.";
+					}
 				}
 				if (cancelled) return;
 				fail(message);

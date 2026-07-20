@@ -29,6 +29,10 @@ export const canCaptureMic = (): boolean =>
 export const isInsecureContext = (): boolean =>
 	typeof window !== "undefined" && !window.isSecureContext;
 
+/** Rough Firefox check — used only to hint at its private-browsing mic block. */
+export const isFirefox = (): boolean =>
+	typeof navigator !== "undefined" && /firefox/i.test(navigator.userAgent);
+
 /**
  * Current microphone permission, or "unknown" where the Permissions API can't
  * answer (Safari, older Firefox). Used to tell a persisted block ("denied",
