@@ -205,36 +205,56 @@ export type NewNamedSetlistMutation = QueryData<
 	ReturnType<typeof newNamedSetlistMutation>
 >;
 
+/** One liturgical slot in a Mass reading (AELF lecture), as a plain-text row
+ * ready to become a `texts` entry. HTML→text conversion happens in the caller
+ * (this file stays DOM-free). */
+export type MesseReading = {
+	slot: "lecture_1" | "psaume" | "lecture_2" | "evangile";
+	title: string;
+	content: string;
+};
+
 /**
- * Canonical liturgical order of the assembly responses (type="response"),
- * keyed by `ordinaire_role`. Opinionated default; roles absent from the DB are
- * skipped, and the assembled setlist stays fully editable afterwards.
+ * Canonical liturgical order of a Mass, interleaving assembly responses (matched
+ * by `ordinaire_role`) with the readings (matched by their `slot`). Opinionated
+ * default; entries absent from the DB / readings are skipped, and the assembled
+ * setlist stays fully editable afterwards. The gospel sits between the two
+ * halves of the gospel acclamation.
  */
-const MESSE_RESPONSE_ORDER = [
-	"salutation",
-	"acte_penitentiel",
-	"conclusion_lecture",
-	"acclamation_evangile_avant",
-	"acclamation_evangile_apres",
-	"profession_de_foi",
-	"priere_offrandes",
-	"dialogue_preface",
-	"anamnese",
-	"notre_pere",
-	"doxologie",
-	"communion",
-	"envoi",
+const MESSE_ORDER = [
+	{ kind: "response", role: "salutation" },
+	{ kind: "response", role: "acte_penitentiel" },
+	{ kind: "reading", slot: "lecture_1" },
+	{ kind: "reading", slot: "psaume" },
+	{ kind: "reading", slot: "lecture_2" },
+	{ kind: "response", role: "conclusion_lecture" },
+	{ kind: "response", role: "acclamation_evangile_avant" },
+	{ kind: "reading", slot: "evangile" },
+	{ kind: "response", role: "acclamation_evangile_apres" },
+	{ kind: "response", role: "profession_de_foi" },
+	{ kind: "response", role: "priere_offrandes" },
+	{ kind: "response", role: "dialogue_preface" },
+	{ kind: "response", role: "anamnese" },
+	{ kind: "response", role: "notre_pere" },
+	{ kind: "response", role: "doxologie" },
+	{ kind: "response", role: "communion" },
+	{ kind: "response", role: "envoi" },
 ] as const;
 
 /** Default creed picked when several "profession_de_foi" rows exist (not rigid). */
 const DEFAULT_CREED_TITLE = "Symbole de Nicée-Constantinople";
 
 /**
- * Creates a setlist pre-seeded with the assembly responses of the Mass in
- * liturgical order. For the creed (two variants share the "profession_de_foi"
- * role) it inserts the default one; the other stays available to swap in.
+ * Creates a setlist pre-seeded with the Mass in liturgical order: the assembly
+ * responses (type="response" songs) interleaved with the day's readings, which
+ * are persisted as `texts` rows and referenced by `text_id`. For the creed (two
+ * variants share the "profession_de_foi" role) it inserts the default one; the
+ * other stays available to swap in. Readings absent for the day are skipped.
  */
-export const newMesseSetlistMutation = async (name: string) => {
+export const newMesseSetlistMutation = async (
+	name: string,
+	readings: MesseReading[] = [],
+) => {
 	const { data: setlist, error } = await supabase
 		.from("setlists")
 		.insert({ name })
@@ -248,27 +268,47 @@ export const newMesseSetlistMutation = async (name: string) => {
 		.eq("type", "response");
 	if (responsesError) return { data: setlist, error: responsesError };
 
-	const ordered: { id: number }[] = [];
-	for (const role of MESSE_RESPONSE_ORDER) {
-		const matches = (responses ?? []).filter((r) => r.ordinaire_role === role);
-		if (matches.length === 0) continue;
-		if (role === "profession_de_foi" && matches.length > 1) {
-			ordered.push(
-				matches.find((r) => r.title === DEFAULT_CREED_TITLE) ?? matches[0],
-			);
-		} else {
-			ordered.push(...matches);
+	// Persist the readings as texts rows, then map each slot to its new text_id.
+	const slotToTextId = new Map<MesseReading["slot"], number>();
+	if (readings.length > 0) {
+		const { data: textRows, error: textsError } = await supabase
+			.from("texts")
+			.insert(readings.map((r) => ({ title: r.title, content: r.content })))
+			.select("id, title");
+		if (textsError) return { data: setlist, error: textsError };
+		// Match by title rather than trusting insert order.
+		for (const reading of readings) {
+			const row = (textRows ?? []).find((t) => t.title === reading.title);
+			if (row) slotToTextId.set(reading.slot, row.id);
 		}
 	}
 
-	if (ordered.length > 0) {
+	const items: { song_id: number | null; text_id: number | null }[] = [];
+	for (const entry of MESSE_ORDER) {
+		if (entry.kind === "response") {
+			const matches = (responses ?? []).filter(
+				(r) => r.ordinaire_role === entry.role,
+			);
+			if (matches.length === 0) continue;
+			const picked =
+				entry.role === "profession_de_foi" && matches.length > 1
+					? [matches.find((r) => r.title === DEFAULT_CREED_TITLE) ?? matches[0]]
+					: matches;
+			for (const r of picked) items.push({ song_id: r.id, text_id: null });
+		} else {
+			const textId = slotToTextId.get(entry.slot);
+			if (textId !== undefined) items.push({ song_id: null, text_id: textId });
+		}
+	}
+
+	if (items.length > 0) {
 		const { error: itemsError } = await supabase.from("setlist_items").insert(
-			ordered.map((r, position) => ({
+			items.map((item, position) => ({
 				setlist_id: setlist.id,
-				song_id: r.id,
+				song_id: item.song_id,
 				position,
 				text: null,
-				text_id: null,
+				text_id: item.text_id,
 			})),
 		);
 		if (itemsError) return { data: setlist, error: itemsError };

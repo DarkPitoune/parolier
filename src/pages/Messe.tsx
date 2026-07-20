@@ -6,6 +6,7 @@ import {
 } from "@/hooks/useMasseSuggestions";
 import { queryKeys } from "@/utils/queryKeys";
 import {
+	type MesseReading,
 	newMesseSetlistMutation,
 	newNamedSetlistMutation,
 	setlistItemAppendMutation,
@@ -71,6 +72,63 @@ function splitStrophes(contenu: string): string[] {
 		.map((p) => p.innerHTML.trim())
 		.filter((html) => html.length > 0);
 	return strophes.length > 0 ? strophes : [contenu];
+}
+
+/**
+ * AELF liturgical content is HTML. Setlist text steps render as plain
+ * `whitespace-pre-wrap`, so convert to text while keeping structure: <br> → a
+ * line break, each <p> → a paragraph separated by a blank line.
+ */
+function htmlToPlainText(html: string): string {
+	const withBreaks = html.replace(/<br\s*\/?>/gi, "\n");
+	const doc = new DOMParser().parseFromString(withBreaks, "text/html");
+	const paragraphs = Array.from(doc.querySelectorAll("p"));
+	if (paragraphs.length > 0) {
+		return paragraphs
+			.map((p) => (p.textContent ?? "").trim())
+			.filter((t) => t.length > 0)
+			.join("\n\n");
+	}
+	return (doc.body.textContent ?? "").trim();
+}
+
+/** Liturgical label per AELF lecture `type` (used as the setlist step title). */
+const LECTURE_LABELS: Record<MesseReading["slot"], string> = {
+	lecture_1: "Première lecture",
+	psaume: "Psaume",
+	lecture_2: "Deuxième lecture",
+	evangile: "Évangile",
+};
+
+/**
+ * Turn the day's AELF readings into plain-text `MesseReading`s ready to be
+ * persisted as setlist text steps. Unknown lecture types are skipped, and only
+ * the first gospel (forme longue) is kept when several are returned.
+ */
+function buildMesseReadings(lectures: Lecture[]): MesseReading[] {
+	const readings: MesseReading[] = [];
+	let hasGospel = false;
+	for (const lecture of lectures) {
+		if (!(lecture.type in LECTURE_LABELS)) continue;
+		const slot = lecture.type as MesseReading["slot"];
+		if (slot === "evangile") {
+			if (hasGospel) continue;
+			hasGospel = true;
+		}
+		const title = lecture.ref
+			? `${LECTURE_LABELS[slot]} — ${lecture.ref}`
+			: LECTURE_LABELS[slot];
+		const parts: string[] = [];
+		if (lecture.intro_lue) parts.push(htmlToPlainText(lecture.intro_lue));
+		if (lecture.titre) parts.push(htmlToPlainText(lecture.titre));
+		if (lecture.refrain_psalmique)
+			parts.push(`Refrain : ${htmlToPlainText(lecture.refrain_psalmique)}`);
+		if (lecture.verset_evangile)
+			parts.push(`Acclamation : ${htmlToPlainText(lecture.verset_evangile)}`);
+		if (lecture.contenu) parts.push(htmlToPlainText(lecture.contenu));
+		readings.push({ slot, title, content: parts.join("\n\n") });
+	}
+	return readings;
 }
 
 function PsalmContent({ contenu }: { contenu: string }) {
@@ -302,8 +360,11 @@ function Messe() {
 				month: "long",
 				year: "numeric",
 			});
+			const readings = buildMesseReadings(
+				messeData?.messes?.[0]?.lectures ?? [],
+			);
 			const { data: setlist, error: createError } =
-				await newMesseSetlistMutation(`Messe du ${formattedDate}`);
+				await newMesseSetlistMutation(`Messe du ${formattedDate}`, readings);
 			if (createError || !setlist) throw new Error("Erreur creation");
 
 			queryClient.invalidateQueries({ queryKey: queryKeys.setlists.list() });
