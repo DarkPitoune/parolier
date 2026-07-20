@@ -57,6 +57,37 @@ const ROLE_LABELS: Record<SongSuggestion["role"], string> = {
 	envoi: "Chant d'envoi",
 };
 
+/**
+ * AELF returns psalm text as HTML where each strophe is its own <p> block.
+ * Split on those <p> boundaries so each strophe can be rendered distinctly.
+ * Returns the inner HTML of each <p>; falls back to a single block if the
+ * content isn't structured as expected.
+ */
+function splitStrophes(contenu: string): string[] {
+	const doc = new DOMParser().parseFromString(contenu, "text/html");
+	const paragraphs = Array.from(doc.querySelectorAll("p"));
+	const strophes = paragraphs
+		.map((p) => p.innerHTML.trim())
+		.filter((html) => html.length > 0);
+	return strophes.length > 0 ? strophes : [contenu];
+}
+
+function PsalmContent({ contenu }: { contenu: string }) {
+	const strophes = splitStrophes(contenu);
+	return (
+		<div className="flex flex-col gap-4">
+			{strophes.map((strophe, index) => (
+				<div
+					key={`strophe-${index}-${strophe.slice(0, 16)}`}
+					className="text-gray-800 dark:text-gray-200 leading-relaxed"
+					// biome-ignore lint/security/noDangerouslySetInnerHtml: Psalm strophe from trusted AELF API may contain HTML formatting
+					dangerouslySetInnerHTML={{ __html: strophe }}
+				/>
+			))}
+		</div>
+	);
+}
+
 function SuggestionCard({
 	suggestion,
 	onSwap,
@@ -422,13 +453,17 @@ function Messe() {
 												</div>
 											)}
 
-											<div
-												className="text-gray-800 dark:text-gray-200 leading-relaxed"
-												// biome-ignore lint/security/noDangerouslySetInnerHtml: Liturgical content from trusted AELF API contains necessary HTML formatting
-												dangerouslySetInnerHTML={{
-													__html: lecture.contenu,
-												}}
-											/>
+											{lecture.type === "psaume" ? (
+												<PsalmContent contenu={lecture.contenu} />
+											) : (
+												<div
+													className="text-gray-800 dark:text-gray-200 leading-relaxed"
+													// biome-ignore lint/security/noDangerouslySetInnerHtml: Liturgical content from trusted AELF API contains necessary HTML formatting
+													dangerouslySetInnerHTML={{
+														__html: lecture.contenu,
+													}}
+												/>
+											)}
 										</div>
 									))}
 								</div>
