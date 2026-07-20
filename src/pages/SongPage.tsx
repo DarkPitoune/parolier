@@ -6,14 +6,30 @@ import { analyticsSong } from "@/utils/supabase";
 import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
 import { DocumentTextIcon } from "@heroicons/react/24/outline";
 import { supabaseUrl } from "@/utils/supabase";
-import { useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 function SongPage() {
 	const { songId } = useParams();
 	const songIdNum = songId ? Number(songId) : undefined;
 	const { data: song } = useTaggedSong(songIdNum);
 	const { setLeaderSong } = useLeader();
+	const navigate = useNavigate();
+	const tapCount = useRef(0);
+	const tapTimer = useRef<ReturnType<typeof setTimeout>>();
+
+	const handleTitleTap = () => {
+		tapCount.current += 1;
+		clearTimeout(tapTimer.current);
+		if (tapCount.current >= 3) {
+			tapCount.current = 0;
+			navigate(`/songs/${song?.id}/edit`);
+			return;
+		}
+		tapTimer.current = setTimeout(() => {
+			tapCount.current = 0;
+		}, 500);
+	};
 
 	useRecordVisit(
 		song
@@ -48,7 +64,14 @@ function SongPage() {
 		<div data-testid="song-page">
 			<PageHeader
 				variant="detail"
-				title={`${song.id}. ${song.title}`}
+				title={
+					<h1
+						className="font-flame text-xl lg:text-3xl text-jubilateBlue-500 dark:text-jubilateBlue-400 select-none"
+						onClick={handleTitleTap}
+					>
+						{song.id}. {song.title}
+					</h1>
+				}
 				right={
 					<div className="flex items-center gap-4">
 						{song.sheet_music_url && (
