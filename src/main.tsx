@@ -12,6 +12,7 @@ import {
 	SlidePage,
 	SongPage,
 	TextEditor,
+	Tuner,
 } from "@/pages";
 import * as Sentry from "@sentry/react";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -118,6 +119,10 @@ const router = createBrowserRouter([
 			{
 				path: "/messe",
 				element: <Messe />,
+			},
+			{
+				path: "/tuner",
+				element: <Tuner />,
 			},
 			{
 				path: "/setlists",

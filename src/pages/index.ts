@@ -9,3 +9,4 @@ export { Bible } from "./Bible";
 export { BibleToday } from "./BibleToday";
 export { Messe } from "./Messe";
 export { default as TextEditor } from "./TextEditor";
+export { Tuner } from "./Tuner";

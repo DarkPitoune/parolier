@@ -21,6 +21,7 @@ import {
 	getLeaderPositionsQuery,
 	newSongMutation,
 } from "@/utils/supabase";
+import { primeTunerAudioContext } from "@/utils/tunerAudio";
 import {
 	BeakerIcon,
 	BookOpenIcon,
@@ -34,6 +35,7 @@ import {
 	PresentationChartLineIcon,
 	QueueListIcon,
 	RectangleGroupIcon,
+	SpeakerWaveIcon,
 } from "@heroicons/react/16/solid";
 import {
 	ComputerDesktopIcon,
@@ -174,6 +176,14 @@ function NavigationContent({ onClose }: { onClose: () => void }) {
 				>
 					<CalendarDaysIcon className="w-4 h-4" />
 					Messe
+				</Link>
+				<Link
+					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					to="/tuner"
+					onClick={() => primeTunerAudioContext()}
+				>
+					<SpeakerWaveIcon className="w-4 h-4" />
+					Accordeur
 				</Link>
 				<Link
 					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
