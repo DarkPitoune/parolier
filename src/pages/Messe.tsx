@@ -10,6 +10,7 @@ import {
 } from "@/hooks/useMasseSuggestions";
 import { queryKeys } from "@/utils/queryKeys";
 import {
+	CREED_TITLES,
 	type MesseOrdinaireSong,
 	type MesseReading,
 	type MesseSong,
@@ -311,6 +312,7 @@ function Messe() {
 	const [optResponses, setOptResponses] = useState(true);
 	const [optReadings, setOptReadings] = useState(true);
 	const [ordinaireId, setOrdinaireId] = useState<number | null>(null);
+	const [creedTitle, setCreedTitle] = useState<string>(CREED_TITLES.nicee);
 	const { leader } = useLeader();
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
@@ -408,6 +410,7 @@ function Messe() {
 		setOptResponses(true);
 		setOptReadings(true);
 		setOrdinaireId(null);
+		setCreedTitle(CREED_TITLES.nicee);
 		setShowMesseModal(true);
 	};
 
@@ -448,6 +451,7 @@ function Messe() {
 					ordinaire,
 					includeResponses: optResponses,
 					includeReadings: optReadings,
+					creedTitle,
 				});
 			if (createError || !setlist) throw new Error("Erreur creation");
 
@@ -759,6 +763,28 @@ function Messe() {
 								checked={optResponses}
 								onChange={setOptResponses}
 							/>
+							{optResponses && (
+								<div className="flex items-center justify-between gap-4 py-3">
+									<div>
+										<p className="font-medium text-gray-900 dark:text-gray-100">
+											Profession de foi
+										</p>
+										<p className="text-sm text-gray-500 dark:text-gray-400">
+											Le symbole à réciter
+										</p>
+									</div>
+									<select
+										value={creedTitle}
+										onChange={(e) => setCreedTitle(e.target.value)}
+										className="max-w-[10rem] rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+									>
+										<option value={CREED_TITLES.nicee}>
+											Nicée-Constantinople
+										</option>
+										<option value={CREED_TITLES.apotres}>Apôtres</option>
+									</select>
+								</div>
+							)}
 							<ToggleRow
 								label="Lectures"
 								description="Les lectures du jour (AELF)"

@@ -245,6 +245,8 @@ export type MesseSetlistOptions = {
 	includeResponses?: boolean;
 	/** Persist and interleave the day's readings as `texts` rows. */
 	includeReadings?: boolean;
+	/** Which creed variant to seed (title of the "profession_de_foi" response). */
+	creedTitle?: string;
 };
 
 /**
@@ -262,11 +264,12 @@ const MESSE_ORDER = [
 	{ kind: "ordinaire", role: "kyrie" },
 	{ kind: "ordinaire", role: "gloria" },
 	{ kind: "reading", slot: "lecture_1" },
+	{ kind: "response", role: "conclusion_lecture", afterSlot: "lecture_1" },
 	{ kind: "reading", slot: "psaume" },
 	{ kind: "reading", slot: "lecture_2" },
-	{ kind: "response", role: "conclusion_lecture" },
-	{ kind: "response", role: "acclamation_evangile_avant" },
+	{ kind: "response", role: "conclusion_lecture", afterSlot: "lecture_2" },
 	{ kind: "ordinaire", role: "alleluia" },
+	{ kind: "response", role: "acclamation_evangile_avant" },
 	{ kind: "reading", slot: "evangile" },
 	{ kind: "response", role: "acclamation_evangile_apres" },
 	{ kind: "response", role: "profession_de_foi" },
@@ -279,14 +282,20 @@ const MESSE_ORDER = [
 	{ kind: "response", role: "notre_pere" },
 	{ kind: "response", role: "doxologie" },
 	{ kind: "ordinaire", role: "agnus" },
-	{ kind: "song", role: "communion" },
 	{ kind: "response", role: "communion" },
-	{ kind: "song", role: "envoi" },
+	{ kind: "song", role: "communion" },
 	{ kind: "response", role: "envoi" },
+	{ kind: "song", role: "envoi" },
 ] as const;
 
+/** The two creed variants — both share the "profession_de_foi" role. */
+export const CREED_TITLES = {
+	nicee: "Symbole de Nicée-Constantinople",
+	apotres: "Symbole des Apôtres",
+} as const;
+
 /** Default creed picked when several "profession_de_foi" rows exist (not rigid). */
-const DEFAULT_CREED_TITLE = "Symbole de Nicée-Constantinople";
+const DEFAULT_CREED_TITLE: string = CREED_TITLES.nicee;
 
 /**
  * Creates a setlist pre-seeded with the Mass in liturgical order: the assembly
@@ -294,10 +303,12 @@ const DEFAULT_CREED_TITLE = "Symbole de Nicée-Constantinople";
  * optionally, the sung ordinaire parts (Kyrie, Gloria, …). The readings are
  * stored inline as free `text` on the setlist item (not as reusable `texts`
  * rows) since they're one-off, day-specific content. For the creed (two variants
- * share the "profession_de_foi" role) it inserts the default one; the other
- * stays available to swap in. Readings absent for the day are skipped. When the
- * ordinaire supplies a sung anamnèse, the spoken response anamnèse is dropped in
- * its favour.
+ * share the "profession_de_foi" role) it inserts the one named by `creedTitle`
+ * (defaults to Nicée-Constantinople); the other stays available to swap in.
+ * "Parole du Seigneur" is inserted after each reading it concludes (1st and 2nd
+ * lecture), skipped when that reading is absent. Readings absent for the day are
+ * skipped. When the ordinaire supplies a sung anamnèse, the spoken response
+ * anamnèse is dropped in its favour.
  */
 export const newMesseSetlistMutation = async (
 	name: string,
@@ -309,6 +320,7 @@ export const newMesseSetlistMutation = async (
 		ordinaire = [],
 		includeResponses = true,
 		includeReadings = true,
+		creedTitle = DEFAULT_CREED_TITLE,
 	} = options;
 
 	const { data: setlist, error } = await supabase
@@ -354,11 +366,14 @@ export const newMesseSetlistMutation = async (
 		} else if (entry.kind === "response") {
 			// Prefer the sung ordinaire anamnèse over the spoken response one.
 			if (entry.role === "anamnese" && hasOrdinaireAnamnese) continue;
+			// "Parole du Seigneur" follows a reading — drop it when that reading is
+			// absent for the day (e.g. no 2nd reading, or readings not included).
+			if ("afterSlot" in entry && !slotToText.has(entry.afterSlot)) continue;
 			const matches = responses.filter((r) => r.ordinaire_role === entry.role);
 			if (matches.length === 0) continue;
 			const picked =
 				entry.role === "profession_de_foi" && matches.length > 1
-					? [matches.find((r) => r.title === DEFAULT_CREED_TITLE) ?? matches[0]]
+					? [matches.find((r) => r.title === creedTitle) ?? matches[0]]
 					: matches;
 			for (const r of picked) items.push({ song_id: r.id, text: null });
 		} else {
