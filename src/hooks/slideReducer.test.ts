@@ -466,6 +466,61 @@ describe("slideReducer", () => {
 			});
 			expect(result.mode).toBe("logo");
 		});
+
+		it("preserves loaded strophes when syncing the same song (no re-fetch echo)", () => {
+			// Same songId as current state, which already has strophes loaded.
+			const payload: SyncPayload = {
+				mode: "song",
+				songId: 1,
+				stropheIndex: 2,
+				timestamp: Date.now(),
+				source: "display",
+			};
+			const result = slideReducer(songState(), {
+				type: "SYNC",
+				payload,
+			});
+			expect(result).toMatchObject({
+				mode: "song",
+				songId: 1,
+				stropheIndex: 2,
+				strophes: strophes3, // kept, not cleared — breaks the echo loop
+			});
+		});
+
+		it("keeps strophes across a logo toggle for the same song", () => {
+			const payload: SyncPayload = {
+				mode: "logo",
+				songId: 1,
+				stropheIndex: 0,
+				timestamp: Date.now(),
+				source: "display",
+			};
+			const result = slideReducer(songState(), {
+				type: "SYNC",
+				payload,
+			});
+			expect(result).toMatchObject({ mode: "logo", strophes: strophes3 });
+		});
+
+		it("clears strophes when syncing a different song (forces re-fetch)", () => {
+			const payload: SyncPayload = {
+				mode: "song",
+				songId: 99,
+				stropheIndex: 0,
+				timestamp: Date.now(),
+				source: "presenter",
+			};
+			const result = slideReducer(songState(), {
+				type: "SYNC",
+				payload,
+			});
+			expect(result).toMatchObject({
+				mode: "song",
+				songId: 99,
+				strophes: [], // consumer must re-fetch the new song
+			});
+		});
 	});
 });
 

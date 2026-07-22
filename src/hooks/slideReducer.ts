@@ -171,8 +171,26 @@ export function slideReducer(state: SlideState, event: SlideEvent): SlideState {
 		case "GO_IDLE":
 			return INITIAL_STATE;
 
-		case "SYNC":
-			return deserializeState(event.payload);
+		case "SYNC": {
+			const next = deserializeState(event.payload);
+			// Synced payloads deliberately omit the strophe array, so
+			// deserializeState returns `strophes: []` and expects the consumer
+			// to re-fetch. When the sync refers to the SAME song we already have
+			// loaded, preserve those strophes and only apply the new position/mode.
+			// This avoids the re-fetch → LOAD_SONG → re-broadcast echo loop that
+			// otherwise bounces state between the presenter and display windows
+			// (and let strophe navigation sync without resetting to strophe 0).
+			if (
+				(next.mode === "song" || next.mode === "logo") &&
+				(state.mode === "song" || state.mode === "logo") &&
+				next.songId !== null &&
+				next.songId === state.songId &&
+				state.strophes.length > 0
+			) {
+				return { ...next, strophes: state.strophes };
+			}
+			return next;
+		}
 	}
 }
 
