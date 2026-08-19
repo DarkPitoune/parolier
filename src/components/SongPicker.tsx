@@ -1,6 +1,7 @@
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useAllSongs, useTaggedSong } from "@/hooks/queries/useSongQueries";
 import type { AllSongs } from "@/utils/supabase";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import Fuse from "fuse.js";
 import {
@@ -105,7 +106,7 @@ const SongPicker = ({ handleClose }: SongPickerProps) => {
 	return (
 		// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
 		<div
-			className="bg-black/50 fixed inset-0 flex justify-center items-center"
+			className="bg-black/50 fixed inset-0 z-50 flex justify-center items-center"
 			onClick={() => handleClose()}
 		>
 			{/* biome-ignore lint/a11y/useKeyWithClickEvents: fine here since we're just doing a bubble stopper */}
@@ -136,13 +137,7 @@ const SongPicker = ({ handleClose }: SongPickerProps) => {
 									selectedSongId === song.id && "bg-gray-100 dark:bg-gray-900",
 								)}
 								type="button"
-								onClick={() => {
-									if (isMobile) {
-										handleClose(song.id);
-									} else {
-										setSelectedSongId(song.id);
-									}
-								}}
+								onClick={() => setSelectedSongId(song.id)}
 							>
 								<SongItem song={song} />
 							</button>
@@ -164,6 +159,29 @@ const SongPicker = ({ handleClose }: SongPickerProps) => {
 					{selectedSong && <SongViewer showTitle song={selectedSong} />}
 				</div>
 			</div>
+			{isMobile && selectedSongId !== null && (
+				// biome-ignore lint/a11y/useKeyWithClickEvents: fine here since we're just doing a bubble stopper
+				<div
+					className="bg-white dark:bg-gray-800 fixed inset-0 flex flex-col"
+					onClick={(e) => e.stopPropagation()}
+				>
+					<div className="flex justify-between items-center p-2 shadow-sm sticky top-0 bg-white dark:bg-gray-800">
+						<button type="button" onClick={() => setSelectedSongId(null)}>
+							<XMarkIcon className="w-8 text-black dark:text-white" />
+						</button>
+						<button
+							className="bg-jubilateBlue-500 text-white hover:bg-jubilateBlue-300 py-1.5 px-4 rounded-full transition-colors"
+							type="submit"
+							onClick={() => handleClose(selectedSongId)}
+						>
+							Sélectionner
+						</button>
+					</div>
+					<div className="grow min-h-0 overflow-y-auto">
+						{selectedSong && <SongViewer showTitle song={selectedSong} />}
+					</div>
+				</div>
+			)}
 		</div>
 	);
 };

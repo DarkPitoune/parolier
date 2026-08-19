@@ -119,7 +119,7 @@ const TextPicker = ({ handleClose }: TextPickerProps) => {
 	return (
 		// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
 		<div
-			className="bg-black/50 fixed inset-0 flex justify-center items-center"
+			className="bg-black/50 fixed inset-0 z-50 flex justify-center items-center"
 			onClick={() => handleClose()}
 		>
 			{/* biome-ignore lint/a11y/useKeyWithClickEvents: fine here since we're just doing a bubble stopper */}
