@@ -15,7 +15,7 @@ import {
 } from "@/utils/supabase";
 import type { AllTaggedSongs, TaggedSong } from "@/utils/supabase";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 
 export const useAllSongs = () =>
@@ -141,29 +141,45 @@ type SetStropheNoteVariables = {
  *
  * (A jsonb_set RPC would be genuinely atomic. It is disproportionate for one
  * band, where the worst realistic case is redoing a single note.)
+ *
+ * The sheet closes without waiting on the mutation (see SongPage), so a
+ * second note can be saved before the first one's read-modify-write lands.
+ * Two overlapping calls would otherwise both read the array before either
+ * writes, and the later write would erase the earlier note. `chain` forces
+ * each call's read to wait for the previous call's write to finish.
  */
 export const useSetStropheNote = () => {
 	const queryClient = useQueryClient();
+	const chain = useRef<Promise<unknown>>(Promise.resolve());
 
 	return useMutation({
-		mutationFn: async ({
+		mutationFn: ({
 			songId,
 			stropheIndex,
 			note,
 			expectedFingerprint,
 		}: SetStropheNoteVariables) => {
-			const { data: fresh, error: readError } = await songStrophesQuery(songId);
-			if (readError) throw readError;
+			const run = async () => {
+				const { data: fresh, error: readError } =
+					await songStrophesQuery(songId);
+				if (readError) throw readError;
 
-			const current = (fresh?.strophes ?? []) as Strophe[];
-			if (stropheFingerprint(current[stropheIndex]) !== expectedFingerprint)
-				throw new Error(STROPHE_MOVED);
+				const current = (fresh?.strophes ?? []) as Strophe[];
+				if (stropheFingerprint(current[stropheIndex]) !== expectedFingerprint)
+					throw new Error(STROPHE_MOVED);
 
-			const next = setStropheNote(current, stropheIndex, note);
-			const { data, error } = await songStrophesMutation(songId, next);
-			if (error) throw error;
+				const next = setStropheNote(current, stropheIndex, note);
+				const { data, error } = await songStrophesMutation(songId, next);
+				if (error) throw error;
 
-			return { songId, strophes: (data?.strophes ?? next) as Strophe[] };
+				return { songId, strophes: (data?.strophes ?? next) as Strophe[] };
+			};
+
+			// Run after the previous call settles, whichever way it went, so
+			// one rejection doesn't stall every save that follows it.
+			const result = chain.current.then(run, run);
+			chain.current = result.catch(() => {});
+			return result;
 		},
 		// The connectivity probe only runs every 30s, so the app can believe it
 		// is online while the wifi is already gone — a transient failure is

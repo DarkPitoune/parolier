@@ -30,6 +30,18 @@
       background-color: #ff5a5a;
     }
   }
+
+  --animate-fadeOut: fadeOut 1.2s ease-out forwards;
+
+  @keyframes fadeOut {
+    0%,
+    60% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
 }
 
 /*

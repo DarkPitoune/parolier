@@ -3,6 +3,7 @@ import { useLongPress } from "@/hooks/useLongPress";
 import { buildDisplayStrophes, getStropheNote } from "@/utils/stropheNotes";
 import type { TaggedSong } from "@/utils/supabase";
 import { transposeLine } from "@/utils/tonalManipulation";
+import { ArrowPathIcon, CheckIcon } from "@heroicons/react/16/solid";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { useSetAtom } from "jotai";
@@ -29,6 +30,8 @@ type StropheBlockProps = {
 	marker?: string;
 	revealed: boolean;
 	onLongPress?: () => void;
+	/** Save state of this strophe's note — absent once idle/confirmed-and-faded. */
+	saveStatus?: "saving" | "saved";
 };
 
 function StropheBlock({
@@ -39,6 +42,7 @@ function StropheBlock({
 	marker,
 	revealed,
 	onLongPress,
+	saveStatus,
 }: StropheBlockProps) {
 	const editable = Boolean(onLongPress);
 	const longPressHandlers = useLongPress({
@@ -49,7 +53,7 @@ function StropheBlock({
 	return (
 		<div
 			className={clsx(
-				"flex flex-col gap-1",
+				"relative flex flex-col gap-1",
 				revealed &&
 					"border-l-2 border-dashed border-jubilateBlue-300 dark:border-slate-500 pl-2",
 				// Only while editing: an unconditional select-none would take
@@ -58,6 +62,20 @@ function StropheBlock({
 			)}
 			{...longPressHandlers}
 		>
+			{saveStatus && (
+				// Deletion clears the note but still confirms the write, so this
+				// can't live inside the `note &&` block below.
+				<span
+					aria-hidden="true"
+					className="absolute right-0 top-0 text-gray-400 dark:text-gray-500"
+				>
+					{saveStatus === "saving" ? (
+						<ArrowPathIcon className="size-3.5 animate-spin" />
+					) : (
+						<CheckIcon className="size-3.5 text-jubilateGreen animate-fadeOut" />
+					)}
+				</span>
+			)}
 			{note && <PerformanceNoteRow note={note} marker={marker} />}
 			{/* The note stays OUTSIDE this grid: the chord cell is styled with
 			    `first:`, so an extra first child would silently drop its top
@@ -93,11 +111,14 @@ function SongViewer({
 	song,
 	showTitle = false,
 	onStropheLongPress,
+	noteStatus,
 }: {
 	song: TaggedSong;
 	showTitle?: boolean;
 	/** Receives the index into the ORIGINAL strophes array, never the visible position. */
 	onStropheLongPress?: (sourceIndex: number) => void;
+	/** Keyed by sourceIndex, the save state of a note currently being written. */
+	noteStatus?: Record<number, "saving" | "saved">;
 }) {
 	const addChorusSetting = useAtomValue(addChorusAtom);
 	const showChords = useAtomValue(showChordsAtom);
@@ -154,6 +175,7 @@ function SongViewer({
 											? () => onStropheLongPress(sourceIndex)
 											: undefined
 									}
+									saveStatus={noteStatus?.[sourceIndex]}
 								/>
 							) : (
 								<div className="sticky top-0" key={sourceIndex}>

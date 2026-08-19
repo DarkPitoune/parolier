@@ -17,6 +17,8 @@ import { useAtomValue } from "jotai";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
+const SAVED_BADGE_MS = 1200;
+
 function SongPage() {
 	const { songId } = useParams();
 	const songIdNum = songId ? Number(songId) : undefined;
@@ -28,6 +30,22 @@ function SongPage() {
 	const setStropheNoteMutation = useSetStropheNote();
 	const tapCount = useRef(0);
 	const tapTimer = useRef<ReturnType<typeof setTimeout>>();
+	// Keyed by stropheIndex: "saving" while the write is in flight, "saved"
+	// for a beat afterwards so the confirmation is visible, then gone.
+	const [noteStatus, setNoteStatus] = useState<
+		Record<number, "saving" | "saved">
+	>({});
+	const noteStatusTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>(
+		{},
+	);
+
+	useEffect(
+		() => () => {
+			for (const timer of Object.values(noteStatusTimers.current))
+				clearTimeout(timer);
+		},
+		[],
+	);
 
 	const handleTitleTap = () => {
 		tapCount.current += 1;
@@ -74,12 +92,38 @@ function SongPage() {
 
 	const saveNote = (note: StropheNote | undefined) => {
 		if (!song || editingIndex === null) return;
-		setStropheNoteMutation.mutate({
-			songId: song.id,
-			stropheIndex: editingIndex,
-			note,
-			expectedFingerprint: stropheFingerprint(editedStrophe),
-		});
+		const index = editingIndex;
+
+		clearTimeout(noteStatusTimers.current[index]);
+		setNoteStatus((prev) => ({ ...prev, [index]: "saving" }));
+
+		setStropheNoteMutation.mutate(
+			{
+				songId: song.id,
+				stropheIndex: index,
+				note,
+				expectedFingerprint: stropheFingerprint(editedStrophe),
+			},
+			{
+				onSuccess: () => {
+					setNoteStatus((prev) => ({ ...prev, [index]: "saved" }));
+					noteStatusTimers.current[index] = setTimeout(() => {
+						setNoteStatus((prev) => {
+							const { [index]: _removed, ...rest } = prev;
+							return rest;
+						});
+					}, SAVED_BADGE_MS);
+				},
+				// onError already surfaces a toast (see useSetStropheNote) — the
+				// badge should just get out of the way, not duplicate that.
+				onError: () => {
+					setNoteStatus((prev) => {
+						const { [index]: _removed, ...rest } = prev;
+						return rest;
+					});
+				},
+			},
+		);
 		// Never wait on the mutation: offline it stays paused indefinitely.
 		setEditingIndex(null);
 	};
@@ -123,6 +167,7 @@ function SongPage() {
 			<SongViewer
 				song={song}
 				onStropheLongPress={showNotes ? setEditingIndex : undefined}
+				noteStatus={noteStatus}
 			/>
 			<PerformanceNoteSheet
 				key={editingIndex}

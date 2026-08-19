@@ -130,11 +130,11 @@ export default function SwipeableTabs({
 	};
 
 	return (
-		<div className="flex flex-col w-full">
+		<div className="flex flex-col w-full flex-1 min-h-0">
 			{/* Tabs Navigation */}
 			<div
 				className={clsx(
-					"bg-white dark:bg-gray-800 sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700",
+					"bg-white dark:bg-gray-800 sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 shrink-0",
 					tabsClassName,
 				)}
 			>
@@ -168,7 +168,7 @@ export default function SwipeableTabs({
 			<div
 				ref={containerRef}
 				className={clsx(
-					"relative overflow-hidden touch-pan-y",
+					"relative overflow-hidden touch-pan-y flex-1 min-h-0",
 					contentClassName,
 				)}
 				onTouchStart={handleTouchStart}
@@ -177,7 +177,7 @@ export default function SwipeableTabs({
 				onTouchCancel={handleTouchEnd}
 			>
 				<div
-					className="flex transition-transform duration-300 ease-out"
+					className="flex h-full transition-transform duration-300 ease-out"
 					style={{
 						transform: `translateX(calc(-${
 							(activeTab * 100) / tabs.length
@@ -188,7 +188,7 @@ export default function SwipeableTabs({
 					{tabs.map((tab, index) => (
 						<div
 							key={tab.id || index}
-							className="shrink-0 w-full"
+							className="shrink-0 w-full h-full overflow-y-auto"
 							style={{ width: `${100 / tabs.length}%` }}
 						>
 							{tab.content}
