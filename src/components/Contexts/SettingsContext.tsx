@@ -4,6 +4,16 @@ import { atomWithStorage, createJSONStorage } from "jotai/utils";
 export const fontSizeAtom = atomWithStorage("settings.fontSize", 2);
 export const showChordsAtom = atomWithStorage("settings.showChords", true);
 export const addChorusAtom = atomWithStorage("settings.addChorus", false);
+
+// True is : I want to see the "notes de jeu" (how to play, not what to sing).
+// getOnInit avoids a first frame without notes for someone who has them on —
+// same reason slideHelpAtom below uses it.
+export const showPerformanceNotesAtom = atomWithStorage(
+	"settings.showPerformanceNotes",
+	false,
+	createJSONStorage(() => localStorage),
+	{ getOnInit: true },
+);
 export const globalSearchEnabledAtom = atomWithStorage(
 	"globalSearchEnabled",
 	false,

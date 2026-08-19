@@ -1,3 +1,4 @@
+import type { Strophe } from "@/assets/types";
 import { type QueryData, createClient } from "@supabase/supabase-js";
 import type { Json } from "../../database-generated.types";
 import type { Database } from "../../database.types";
@@ -34,6 +35,29 @@ export const taggedSongQuery = async (songId: number) =>
 		.eq("id", songId)
 		.single();
 export type TaggedSong = QueryData<ReturnType<typeof taggedSongQuery>>;
+
+/** Just the strophes column — read immediately before a partial write. */
+export const songStrophesQuery = async (songId: number) =>
+	supabase.from("songs").select("strophes").eq("id", songId).single();
+export type SongStrophes = QueryData<ReturnType<typeof songStrophesQuery>>;
+
+/**
+ * Writes the whole strophes array back. Callers must re-read first — see
+ * useSetStropheNote, which does the read-modify-write.
+ */
+export const songStrophesMutation = async (
+	songId: number,
+	strophes: Strophe[],
+) =>
+	supabase
+		.from("songs")
+		.update({ strophes: strophes as unknown as Json[] })
+		.eq("id", songId)
+		.select("strophes")
+		.single();
+export type SongStrophesMutation = QueryData<
+	ReturnType<typeof songStrophesMutation>
+>;
 
 export const allTaggedSongsQuery = async () =>
 	supabase.from("songs").select("*, tags(name, id, svg, color)").order("id");
