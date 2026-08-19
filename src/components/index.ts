@@ -27,3 +27,4 @@ export { TextPicker } from "./TextPicker";
 export { BackButton } from "./BackButton";
 export { PageHeader } from "./PageHeader";
 export { ErrorBoundary } from "./ErrorBoundary";
+export { ConfirmDialog } from "./ConfirmDialog";
