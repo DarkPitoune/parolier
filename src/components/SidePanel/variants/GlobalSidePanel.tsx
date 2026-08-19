@@ -146,6 +146,13 @@ function NavigationContent({ onClose }: { onClose: () => void }) {
 				</Link>
 				<Link
 					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+					to="/setlists"
+				>
+					<QueueListIcon className="w-4 h-4" />
+					Setlists
+				</Link>
+				<Link
+					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
 					to="/refrains"
 				>
 					<FireIcon className="w-4 h-4" />
@@ -186,13 +193,6 @@ function NavigationContent({ onClose }: { onClose: () => void }) {
 				>
 					<SpeakerWaveIcon className="w-4 h-4" />
 					Accordeur
-				</Link>
-				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-					to="/setlists"
-				>
-					<QueueListIcon className="w-4 h-4" />
-					Setlists
 				</Link>
 				<Link
 					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
