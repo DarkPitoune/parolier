@@ -200,7 +200,7 @@ function PerformanceNoteForm({
 				rows={2}
 				placeholder="on envoie — batterie entre sur « Tu es là »"
 				aria-label="Texte de la note"
-				className="w-full rounded-lg bg-jubilateBlue-100 px-3 py-2 text-sm italic text-black outline-solid outline-jubilateBlue-300 focus:outline-jubilateBlue-500 dark:bg-slate-700 dark:text-white"
+				className="w-full rounded-lg bg-jubilateBlue-100 px-3 py-2 text-base italic text-black outline-solid outline-jubilateBlue-300 focus:outline-jubilateBlue-500 dark:bg-slate-700 dark:text-white sm:text-sm"
 			/>
 
 			{isQueued && (

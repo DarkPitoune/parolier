@@ -21,7 +21,7 @@ export const TextInput = ({
 				value={value}
 				onChange={(e) => onChange(e.target.value)}
 				onBlur={onBlur}
-				className="w-full text-sm sm:text-base peer focus:outline-hidden bg-transparent"
+				className="w-full text-base peer focus:outline-hidden bg-transparent"
 			/>
 			<hr
 				className={clsx(
