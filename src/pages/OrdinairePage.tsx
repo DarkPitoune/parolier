@@ -89,7 +89,7 @@ function SongSection({
 								<Fragment key={lineIndex}>
 									{showChords && (
 										<DynamicText
-											className="bg-jubilateBlue-100 dark:bg-slate-600 outline-8 border-jubilateBlue-100 dark:border-slate-600 border-4 px-2 text-black dark:text-white first:rounded-t-md nth-last-2:rounded-b-md"
+											className="bg-jubilateBlue-100 dark:bg-slate-600 border-jubilateBlue-100 dark:border-slate-600 border-4 px-2 text-black dark:text-white first:rounded-t-md nth-last-2:rounded-b-md"
 											text={transposeLine(line.chords, tonality)}
 										/>
 									)}
