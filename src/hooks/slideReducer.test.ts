@@ -811,3 +811,29 @@ describe("getSetlistNavAction", () => {
 		});
 	});
 });
+
+describe("serializeState — performance notes", () => {
+	it("never puts a strophe note on the wire", () => {
+		// Notes are for the musicians. The projector shows the congregation
+		// the lyrics, and nothing else, so the sync payload must stay clean.
+		const noted: Strophe = {
+			type: "chorus",
+			repetition: false,
+			content: [makeLine("Tu es là présent")],
+			note: { who: ["🥁", "🎤"], how: ["🔥"], text: "on envoie" },
+		};
+		const state: SlideState = {
+			mode: "song",
+			songId: 104,
+			strophes: [noted],
+			stropheIndex: 0,
+			setlistContext: null,
+		};
+
+		const payload = serializeState(state, "presenter");
+
+		expect(payload.stropheContent).toEqual(noted.content);
+		expect(JSON.stringify(payload)).not.toContain("note");
+		expect(JSON.stringify(payload)).not.toContain("on envoie");
+	});
+});

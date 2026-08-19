@@ -1,4 +1,6 @@
+import type { Strophe, StropheNote } from "@/assets/types";
 import { queryKeys } from "@/utils/queryKeys";
+import { setStropheNote, stropheFingerprint } from "@/utils/stropheNotes";
 import {
 	allOrdinaireSongsQuery,
 	allOrdinairesQuery,
@@ -7,10 +9,14 @@ import {
 	allTaggedSongsQuery,
 	allTagsQuery,
 	ordinaireDetailQuery,
+	songStrophesMutation,
+	songStrophesQuery,
 	taggedSongQuery,
 } from "@/utils/supabase";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { AllTaggedSongs, TaggedSong } from "@/utils/supabase";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import toast from "react-hot-toast";
 
 export const useAllSongs = () =>
 	useQuery({
@@ -110,6 +116,105 @@ export const useAllOrdinaireSongs = () =>
 		gcTime: 24 * 60 * 60 * 1000,
 	});
 
+/** Thrown when the strophe a note was written against is no longer at that index. */
+export const STROPHE_MOVED = "STROPHE_MOVED";
+
+type SetStropheNoteVariables = {
+	songId: number;
+	/** Index into the ORIGINAL strophes array, never a visible position. */
+	stropheIndex: number;
+	/** `undefined` deletes the note. */
+	note: StropheNote | undefined;
+	/** Identity of the strophe as it was when the sheet opened. */
+	expectedFingerprint: string;
+};
+
+/**
+ * Writes one strophe's note.
+ *
+ * The whole strophes array has to go back, so the mutation re-reads it first
+ * rather than trusting the cache: songs.detail is seeded once at startup with
+ * a 24h gcTime and no refetch on focus, so a phone that opened the app this
+ * morning would otherwise write this morning's lyrics over anything edited
+ * since. The fingerprint then catches the case a re-read cannot — a strophe
+ * inserted or removed meanwhile, which would silently move the target.
+ *
+ * (A jsonb_set RPC would be genuinely atomic. It is disproportionate for one
+ * band, where the worst realistic case is redoing a single note.)
+ */
+export const useSetStropheNote = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({
+			songId,
+			stropheIndex,
+			note,
+			expectedFingerprint,
+		}: SetStropheNoteVariables) => {
+			const { data: fresh, error: readError } = await songStrophesQuery(songId);
+			if (readError) throw readError;
+
+			const current = (fresh?.strophes ?? []) as Strophe[];
+			if (stropheFingerprint(current[stropheIndex]) !== expectedFingerprint)
+				throw new Error(STROPHE_MOVED);
+
+			const next = setStropheNote(current, stropheIndex, note);
+			const { data, error } = await songStrophesMutation(songId, next);
+			if (error) throw error;
+
+			return { songId, strophes: (data?.strophes ?? next) as Strophe[] };
+		},
+		// The connectivity probe only runs every 30s, so the app can believe it
+		// is online while the wifi is already gone — a transient failure is
+		// worth retrying. A moved strophe is not: it will mismatch every time,
+		// so retrying only delays the toast the user needs to see.
+		retry: (failureCount, error) =>
+			error instanceof Error && error.message === STROPHE_MOVED
+				? false
+				: failureCount < 2,
+		onMutate: async ({ songId, stropheIndex, note }) => {
+			const key = queryKeys.songs.detail(songId);
+			await queryClient.cancelQueries({ queryKey: key });
+			const previous = queryClient.getQueryData<TaggedSong>(key);
+
+			if (previous?.strophes)
+				queryClient.setQueryData<TaggedSong>(key, {
+					...previous,
+					strophes: setStropheNote(previous.strophes, stropheIndex, note),
+				});
+
+			return { previous };
+		},
+		onError: (error, { songId }, context) => {
+			if (context?.previous)
+				queryClient.setQueryData(
+					queryKeys.songs.detail(songId),
+					context.previous,
+				);
+			// Optimism must never hide a failure.
+			toast.error(
+				error instanceof Error && error.message === STROPHE_MOVED
+					? "La chanson a changé, rouvre la note"
+					: "Note non enregistrée",
+			);
+		},
+		onSuccess: ({ songId, strophes }) => {
+			// Patch, don't invalidate: the write already returned the
+			// authoritative array, and invalidating allTagged would refetch
+			// every song's lyrics on church wifi.
+			queryClient.setQueryData<TaggedSong>(
+				queryKeys.songs.detail(songId),
+				(old) => (old ? { ...old, strophes } : old),
+			);
+			queryClient.setQueryData<AllTaggedSongs>(
+				queryKeys.songs.allTagged(),
+				(old) => old?.map((s) => (s.id === songId ? { ...s, strophes } : s)),
+			);
+		},
+	});
+};
+
 /**
  * Prefetches all song details in a single batch query and seeds
  * each individual song into the TanStack Query cache.
@@ -120,13 +225,23 @@ export const usePrefetchAllSongs = () => {
 
 	useEffect(() => {
 		const prefetch = async () => {
+			const startedAt = Date.now();
 			try {
 				const { data, error } = await allTaggedSongsQuery();
 				if (error || !data) return;
 
 				// Seed each song into the individual detail cache
 				for (const song of data) {
-					queryClient.setQueryData(queryKeys.songs.detail(song.id), song);
+					const key = queryKeys.songs.detail(song.id);
+					// A note saved while this batch was in flight is newer than
+					// what it carries — seeding over it would make the note
+					// vanish until the 5 min staleTime lapsed.
+					const updatedAt = queryClient.getQueryState(key)?.dataUpdatedAt ?? 0;
+					// `>=`, not `>`: a note written in the same millisecond the
+					// prefetch started must win. Skipping an entry that is merely
+					// simultaneous is harmless — it already holds data.
+					if (updatedAt >= startedAt) continue;
+					queryClient.setQueryData(key, song);
 				}
 
 				// Seed the song list cache (only songs, stripped to list fields)

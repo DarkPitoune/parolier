@@ -9,6 +9,7 @@ import { leaderAtom, useLeader } from "@/components/Contexts/LeaderContext";
 import type { ThemeMode } from "@/components/Contexts/SettingsContext";
 import {
 	globalSearchEnabledAtom,
+	showPerformanceNotesAtom,
 	tonalityAtom,
 } from "@/components/Contexts/SettingsContext";
 import {
@@ -257,6 +258,9 @@ function SettingsContent() {
 	);
 	const [isLeaderPanelOpen, setIsLeaderPanelOpenInternal] = useState(true);
 	const [addChorus, setAddChorus] = useAtom(addChorusAtom);
+	const [showPerformanceNotes, setShowPerformanceNotes] = useAtom(
+		showPerformanceNotesAtom,
+	);
 	const [tonality, setTonality] = useAtom(tonalityAtom);
 	const [username, setUsername] = useAtom(usernameAtom);
 	const [leader, setLeader] = useAtom(leaderAtom);
@@ -398,6 +402,25 @@ function SettingsContent() {
 					checked={addChorus}
 					onChange={(e) => {
 						setAddChorus(e.target.checked);
+					}}
+					className="size-5 rounded-2xl accent-jubilateBlue-500 dark:accent-jubilateBlue-400"
+				/>
+			</div>
+
+			<div
+				className="flex items-center justify-between gap-4"
+				aria-label="performance notes choice"
+			>
+				<h1 className="font-flame text-2xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
+					Notes de jeu
+				</h1>
+
+				<input
+					id="performanceNotesCheckbox"
+					type="checkbox"
+					checked={showPerformanceNotes}
+					onChange={(e) => {
+						setShowPerformanceNotes(e.target.checked);
 					}}
 					className="size-5 rounded-2xl accent-jubilateBlue-500 dark:accent-jubilateBlue-400"
 				/>

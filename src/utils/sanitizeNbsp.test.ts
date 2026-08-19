@@ -82,4 +82,19 @@ describe("sanitizeStrophes", () => {
 			expect(out[0].content[0]).toBe(line);
 		}
 	});
+
+	it("carries a note through untouched", () => {
+		// An ordinary save from SongEditor runs every strophe through here.
+		// If this ever stopped spreading, notes would vanish on edit.
+		const note = { who: ["🥁"], how: ["🔥"], text: "on envoie" };
+		const out = sanitizeStrophes([
+			{
+				type: "chorus",
+				repetition: true,
+				content: [{ text: "Tu es là ?", chords: "Em" }],
+				note,
+			},
+		]);
+		expect(out[0]).toMatchObject({ note });
+	});
 });
