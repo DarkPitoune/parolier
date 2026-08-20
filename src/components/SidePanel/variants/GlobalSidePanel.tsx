@@ -593,7 +593,7 @@ function SettingsContent() {
 				<ArrowPathIcon
 					className={clsx("w-4 h-4", refreshing && "animate-spin")}
 				/>
-				{refreshing ? "Rafraîchissement…" : "Rafraîchir l'app"}
+				Rafraîchir l'app
 			</button>
 		</>
 	);
