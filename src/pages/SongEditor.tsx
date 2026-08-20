@@ -1,4 +1,5 @@
 import type { Line, Strophe } from "@/assets/types";
+import { useSaveSongEdit } from "@/hooks/queries/useSongQueries";
 import { sanitizeNbspString, sanitizeStrophes } from "@/utils/sanitizeNbsp";
 import supabase, {
 	allTagsQuery,
@@ -6,7 +7,6 @@ import supabase, {
 	taggedSongQuery,
 	type Tags,
 } from "@/utils/supabase";
-import type { Json } from "../../database.types";
 
 import { PageHeader, TextInput } from "@/components";
 import { songEditorHelpOpen } from "@/components/Contexts/SettingsContext";
@@ -67,7 +67,9 @@ const SongEditor = () => {
 		});
 	}, [songId]);
 
-	const handleSave = async () => {
+	const saveSongEdit = useSaveSongEdit();
+
+	const handleSave = () => {
 		if (!song) return;
 		const { strophes, title, sheet_music_url } = song;
 
@@ -81,32 +83,13 @@ const SongEditor = () => {
 			})) as Strophe[],
 		);
 
-		const songNoEmptyLines = {
+		saveSongEdit.mutate({
+			songId: song.id,
 			title: sanitizeNbspString(title),
-			sheet_music_url,
-			strophes: cleanedStrophes as Json[],
-		};
-
-		const { error: errorSong } = await supabase
-			.from("songs")
-			.update(songNoEmptyLines)
-			.eq("id", song.id);
-
-		const { error: errorTags } = await supabase
-			.from("song_tag")
-			.delete()
-			.eq("song_id", song.id);
-
-		const { error: errorInsertTags } = await supabase.from("song_tag").insert(
-			selectedTags.map((tagId) => ({
-				song_id: song.id,
-				tag_id: tagId,
-			})),
-		);
-
-		if (errorSong || errorTags || errorInsertTags)
-			throw errorSong || errorTags || errorInsertTags;
-		toast.success("Modifications enregistrées");
+			sheetMusicUrl: sheet_music_url,
+			strophes: cleanedStrophes,
+			tagIds: selectedTags,
+		});
 	};
 
 	const handleChange = useCallback(
@@ -513,9 +496,10 @@ const SongEditor = () => {
 					<button
 						type="button"
 						onClick={handleSave}
-						className="bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white font-bold px-2 py-1 rounded-md shadow-xs hover:bg-jubilateBlue-700 dark:hover:bg-jubilateBlue-500"
+						disabled={saveSongEdit.isPending}
+						className="bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white font-bold px-2 py-1 rounded-md shadow-xs hover:bg-jubilateBlue-700 dark:hover:bg-jubilateBlue-500 disabled:opacity-50"
 					>
-						Enregistrer
+						{saveSongEdit.isPending ? "Enregistrement..." : "Enregistrer"}
 					</button>
 				}
 			/>

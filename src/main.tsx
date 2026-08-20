@@ -42,7 +42,10 @@ import { Texts } from "./pages/Texts";
 import "./index.css";
 import { useState } from "react";
 import { usePrefetchAllSetlistSteps } from "./hooks/queries/useSetlistQueries";
-import { usePrefetchAllSongs } from "./hooks/queries/useSongQueries";
+import {
+	usePrefetchAllSongs,
+	useSongsRealtimeSync,
+} from "./hooks/queries/useSongQueries";
 import { usePrefetchAllTexts } from "./hooks/queries/useTextQueries";
 import { SetlistPage } from "./pages/SetlistPage";
 import SongEditor from "./pages/SongEditor";
@@ -190,6 +193,7 @@ const PrefetchData = () => {
 	usePrefetchAllSongs();
 	usePrefetchAllSetlistSteps();
 	usePrefetchAllTexts();
+	useSongsRealtimeSync();
 	return null;
 };
 

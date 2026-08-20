@@ -4,6 +4,7 @@ import {
 	getStropheNote,
 	isNoteEmpty,
 	normalizeNote,
+	preserveFreshNotes,
 	setStropheNote,
 	stropheFingerprint,
 } from "./stropheNotes";
@@ -113,6 +114,61 @@ describe("stropheFingerprint", () => {
 
 	it("does not throw on a strophe with no content", () => {
 		expect(() => stropheFingerprint({} as Strophe)).not.toThrow();
+	});
+});
+
+describe("preserveFreshNotes", () => {
+	it("carries a note added server-side onto the matching edited strophe", () => {
+		const fresh = setStropheNote(song(), 1, note({ how: ["🔥"] }));
+		// Editor's draft was loaded before the note existed, but otherwise
+		// edited the same strophe's content — fingerprint still matches.
+		const edited = song();
+		const result = preserveFreshNotes(fresh, edited);
+
+		expect(getStropheNote(result[1])).toEqual({ who: ["🎤"], how: ["🔥"] });
+	});
+
+	it("drops a note the editor's stale draft still carries but the server no longer has", () => {
+		const edited = setStropheNote(song(), 1, note());
+		const fresh = song(); // note deleted concurrently, e.g. via the note sheet
+
+		const result = preserveFreshNotes(fresh, edited);
+		expect(getStropheNote(result[1])).toBeUndefined();
+	});
+
+	it("matches by content fingerprint, not index — survives reordering", () => {
+		const fresh = setStropheNote(song(), 1, note({ text: "batterie ici" }));
+		// Editor moved the noted verse from index 1 to index 3.
+		const s = song();
+		const edited = [s[0], s[2], s[3], s[1], s[4]];
+
+		const result = preserveFreshNotes(fresh, edited);
+		expect(getStropheNote(result[3])).toMatchObject({ text: "batterie ici" });
+		expect(getStropheNote(result[1])).toBeUndefined();
+	});
+
+	it("leaves a brand new strophe (no fresh match) without a note", () => {
+		const fresh = song();
+		const edited = [...song(), lyric("3. Nouveau couplet")];
+
+		const result = preserveFreshNotes(fresh, edited);
+		expect(getStropheNote(result[5])).toBeUndefined();
+	});
+
+	it("never adds a note key to a section", () => {
+		const fresh = [section("Refrain"), ...song()];
+		const edited = [section("Refrain"), ...song()];
+
+		const result = preserveFreshNotes(fresh, edited);
+		expect("note" in result[0]).toBe(false);
+	});
+
+	it("does not mutate its inputs", () => {
+		const fresh = setStropheNote(song(), 1, note());
+		const edited = song();
+		preserveFreshNotes(fresh, edited);
+
+		expect(getStropheNote(edited[1])).toBeUndefined();
 	});
 });
 

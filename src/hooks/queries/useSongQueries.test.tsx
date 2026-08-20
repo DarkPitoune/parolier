@@ -8,9 +8,28 @@ import type { ReactNode } from "react";
 import {
 	useAllSongs,
 	usePrefetchAllSongs,
+	useSaveSongEdit,
 	useSetStropheNote,
+	useSongsRealtimeSync,
 	useTaggedSong,
 } from "./useSongQueries";
+
+// biome-ignore lint/suspicious/noExplicitAny: test double for the realtime callback signature
+let realtimeCallback: ((payload: any) => void) | undefined;
+const mockChannel = {
+	on: vi.fn((_event: string, _filter: unknown, callback: typeof realtimeCallback) => {
+		realtimeCallback = callback;
+		return mockChannel;
+	}),
+	subscribe: vi.fn(),
+	unsubscribe: vi.fn(),
+};
+
+const mockSongTagTable = {
+	delete: vi.fn(() => mockSongTagTable),
+	insert: vi.fn(() => Promise.resolve({ error: null })),
+	eq: vi.fn(() => Promise.resolve({ error: null })),
+};
 
 vi.mock("@/utils/supabase", () => ({
 	allSongsQuery: vi.fn(),
@@ -19,8 +38,12 @@ vi.mock("@/utils/supabase", () => ({
 	allTagsQuery: vi.fn(),
 	songStrophesQuery: vi.fn(),
 	songStrophesMutation: vi.fn(),
+	songEditMutation: vi.fn(),
 	supabaseUrl: "https://test.supabase.co",
-	default: {},
+	default: {
+		channel: vi.fn(() => mockChannel),
+		from: vi.fn(() => mockSongTagTable),
+	},
 }));
 
 vi.mock("react-hot-toast", () => ({
@@ -32,6 +55,7 @@ import { queryKeys } from "@/utils/queryKeys";
 import {
 	allSongsQuery,
 	allTaggedSongsQuery,
+	songEditMutation,
 	songStrophesMutation,
 	songStrophesQuery,
 	taggedSongQuery,
@@ -336,5 +360,152 @@ describe("useSetStropheNote", () => {
 		expect(all[0].strophes[0]).toMatchObject({ note });
 		// Invalidating allTagged would refetch every song's lyrics on bad wifi.
 		expect(invalidate).not.toHaveBeenCalled();
+	});
+});
+
+describe("useSaveSongEdit", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mockSongTagTable.delete.mockImplementation(() => mockSongTagTable);
+		mockSongTagTable.eq.mockResolvedValue({ error: null });
+		mockSongTagTable.insert.mockResolvedValue({ error: null });
+	});
+
+	const draftStrophes: Strophe[] = [
+		{ content: [{ text: "Tu es là", chords: "Em" }], type: "verse", repetition: false },
+	];
+
+	it("preserves a note added on the server since the editor loaded", async () => {
+		vi.mocked(songStrophesQuery).mockResolvedValue({
+			data: {
+				strophes: [
+					{
+						content: [{ text: "Tu es là", chords: "Em" }],
+						type: "verse",
+						repetition: false,
+						note: { who: ["🥁"], how: [] },
+					},
+				],
+			},
+			error: null,
+		} as never);
+		vi.mocked(songEditMutation).mockResolvedValue({ error: null } as never);
+		const saved = { id: 1, title: "Titre", strophes: draftStrophes, tags: [] };
+		vi.mocked(taggedSongQuery).mockResolvedValue({
+			data: saved,
+			error: null,
+		} as never);
+
+		const { wrapper, queryClient } = createWrapper();
+		const { result } = renderHook(() => useSaveSongEdit(), { wrapper });
+
+		act(() => {
+			result.current.mutate({
+				songId: 1,
+				title: "Titre",
+				sheetMusicUrl: null,
+				strophes: draftStrophes,
+				tagIds: [],
+			});
+		});
+		await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+		const written = vi.mocked(songEditMutation).mock.calls[0][1];
+		expect(written.strophes[0]).toMatchObject({ note: { who: ["🥁"], how: [] } });
+		expect(queryClient.getQueryData(queryKeys.songs.detail(1))).toEqual(saved);
+	});
+
+	it("shows an error toast and leaves the cache untouched when the write fails", async () => {
+		vi.mocked(songStrophesQuery).mockResolvedValue({
+			data: { strophes: draftStrophes },
+			error: null,
+		} as never);
+		vi.mocked(songEditMutation).mockResolvedValue({
+			error: { message: "boom" },
+		} as never);
+
+		const { wrapper, queryClient } = createWrapper();
+		queryClient.setQueryData(queryKeys.songs.detail(1), { id: 1, title: "Old" });
+
+		const { result } = renderHook(() => useSaveSongEdit(), { wrapper });
+		act(() => {
+			result.current.mutate({
+				songId: 1,
+				title: "Titre",
+				sheetMusicUrl: null,
+				strophes: draftStrophes,
+				tagIds: [],
+			});
+		});
+		await waitFor(() => expect(result.current.isError).toBe(true));
+
+		expect(taggedSongQuery).not.toHaveBeenCalled();
+		expect(queryClient.getQueryData(queryKeys.songs.detail(1))).toEqual({
+			id: 1,
+			title: "Old",
+		});
+	});
+});
+
+describe("useSongsRealtimeSync", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		realtimeCallback = undefined;
+	});
+
+	it("subscribes to UPDATE events on songs", () => {
+		const { wrapper } = createWrapper();
+		renderHook(() => useSongsRealtimeSync(), { wrapper });
+
+		expect(mockChannel.on).toHaveBeenCalledWith(
+			"postgres_changes",
+			expect.objectContaining({ table: "songs", event: "UPDATE" }),
+			expect.any(Function),
+		);
+		expect(mockChannel.subscribe).toHaveBeenCalled();
+	});
+
+	it("patches an existing detail/allTagged cache entry when a broadcast arrives", () => {
+		const { wrapper, queryClient } = createWrapper();
+		queryClient.setQueryData(queryKeys.songs.detail(1), {
+			id: 1,
+			title: "Vieux titre",
+			tags: [{ id: 1, name: "tag", svg: null, color: null }],
+		});
+		queryClient.setQueryData(queryKeys.songs.allTagged(), [
+			{ id: 1, title: "Vieux titre", tags: [] },
+		]);
+
+		renderHook(() => useSongsRealtimeSync(), { wrapper });
+		act(() => {
+			realtimeCallback?.({ new: { id: 1, title: "Nouveau titre" } });
+		});
+
+		const detail = queryClient.getQueryData(queryKeys.songs.detail(1)) as {
+			title: string;
+			tags: unknown[];
+		};
+		expect(detail.title).toBe("Nouveau titre");
+		// The broadcast row has no `tags` join — must not clobber it.
+		expect(detail.tags).toEqual([{ id: 1, name: "tag", svg: null, color: null }]);
+	});
+
+	it("does not create a cache entry for a song nobody has fetched yet", () => {
+		const { wrapper, queryClient } = createWrapper();
+		renderHook(() => useSongsRealtimeSync(), { wrapper });
+
+		act(() => {
+			realtimeCallback?.({ new: { id: 99, title: "Inconnu" } });
+		});
+
+		expect(queryClient.getQueryData(queryKeys.songs.detail(99))).toBeUndefined();
+	});
+
+	it("unsubscribes on unmount", () => {
+		const { wrapper } = createWrapper();
+		const { unmount } = renderHook(() => useSongsRealtimeSync(), { wrapper });
+		unmount();
+
+		expect(mockChannel.unsubscribe).toHaveBeenCalled();
 	});
 });

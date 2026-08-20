@@ -537,7 +537,15 @@ const manifest: Partial<VitePWAOptions> = {
           request.headers.get("X-Connectivity-Probe") === "1",
         handler: "NetworkOnly",
       },
-      // Songs & tags: rarely change, StaleWhileRevalidate is fine
+      // Songs & tags: the critical path — must render instantly even on a
+      // slow connection or wifi-with-no-internet, so StaleWhileRevalidate
+      // stays even though the row can be edited. Freshness for lyrics/notes
+      // now comes from useSongsRealtimeSync (pushes straight into the
+      // TanStack Query cache) and useSaveSongEdit/useSetStropheNote's own
+      // cache writes on save — neither goes through a GET, so neither is
+      // slowed down or staled by this SW cache. This layer only matters as
+      // the fallback for a cold load, where "instant, maybe a second stale"
+      // beats "correct, maybe never loads".
       {
         urlPattern: ({ url }) =>
           url.href.includes("/rest/v1/songs") ||

@@ -81,6 +81,47 @@ export function stropheFingerprint(strophe: Strophe | undefined): string {
 	return `lyric:${lines[0]?.text ?? ""}`;
 }
 
+/**
+ * Carries every note from `fresh` (just re-read from the DB) onto the
+ * matching strophe in `edited` (the song editor's locally drafted array),
+ * matched by content fingerprint rather than index.
+ *
+ * The song editor never lets a user touch notes — whatever `note` a drafted
+ * strophe carries is only ever a leftover from the moment the editor loaded,
+ * which can be stale by the time "Enregistrer" is pressed if someone added,
+ * changed or deleted a note on their phone in the meantime. Making `fresh`
+ * fully authoritative (dropping any note on `edited` that has no match in
+ * `fresh`, not just adding the ones that do) means a lyrics save can never
+ * clobber a concurrent note edit, without needing a fingerprint check on the
+ * whole array the way `useSetStropheNote` needs one for a single strophe.
+ *
+ * Index isn't used for matching because the editor freely reorders, inserts
+ * and removes strophes — a note read at index 2 may no longer belong there
+ * by the time this runs. Fingerprint match fails (and the note is dropped)
+ * only when the editor also rewrote that strophe's first line badly enough
+ * to change its identity, which is rare and already the accepted limit of
+ * fingerprint-based matching elsewhere in this file.
+ */
+export function preserveFreshNotes(
+	fresh: Strophe[],
+	edited: Strophe[],
+): Strophe[] {
+	const freshNotes = new Map<string, StropheNote>();
+	for (const strophe of fresh) {
+		const note = getStropheNote(strophe);
+		if (note) freshNotes.set(stropheFingerprint(strophe), note);
+	}
+
+	return edited.map((strophe) => {
+		if (strophe.type === "section") return strophe;
+		const note = freshNotes.get(stropheFingerprint(strophe));
+		if (note) return { ...strophe, note };
+		if (!strophe.note) return strophe;
+		const { note: _dropped, ...withoutNote } = strophe;
+		return withoutNote as Strophe;
+	});
+}
+
 export interface DisplayStrophe {
 	strophe: Strophe;
 	/** Index in the ORIGINAL array. Stable React key, and the index a write must patch. */

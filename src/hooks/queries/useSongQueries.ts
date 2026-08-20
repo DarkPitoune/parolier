@@ -1,7 +1,11 @@
 import type { Strophe, StropheNote } from "@/assets/types";
 import { queryKeys } from "@/utils/queryKeys";
-import { setStropheNote, stropheFingerprint } from "@/utils/stropheNotes";
 import {
+	preserveFreshNotes,
+	setStropheNote,
+	stropheFingerprint,
+} from "@/utils/stropheNotes";
+import supabase, {
 	allOrdinaireSongsQuery,
 	allOrdinairesQuery,
 	allRefrainsQuery,
@@ -9,11 +13,19 @@ import {
 	allTaggedSongsQuery,
 	allTagsQuery,
 	ordinaireDetailQuery,
+	songEditMutation,
 	songStrophesMutation,
 	songStrophesQuery,
 	taggedSongQuery,
 } from "@/utils/supabase";
-import type { AllTaggedSongs, TaggedSong } from "@/utils/supabase";
+import type {
+	AllOrdinaireSongs,
+	AllRefrains,
+	AllSongs,
+	AllTaggedSongs,
+	TaggedSong,
+} from "@/utils/supabase";
+import type { Database } from "../../../database.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import toast from "react-hot-toast";
@@ -322,5 +334,171 @@ export const usePrefetchAllSongs = () => {
 		};
 
 		prefetch();
+	}, [queryClient]);
+};
+
+type SaveSongEditVariables = {
+	songId: number;
+	title: string;
+	sheetMusicUrl: string | null;
+	strophes: Strophe[];
+	tagIds: number[];
+};
+
+/** Patches the {id, title, tags} shape shared by the three list-projection caches. */
+function patchListEntry<T extends { id: number; title: string; tags: unknown }>(
+	entries: T[] | undefined,
+	saved: TaggedSong,
+) {
+	return entries?.map((entry) =>
+		entry.id === saved.id
+			? { ...entry, title: saved.title, tags: saved.tags }
+			: entry,
+	);
+}
+
+/**
+ * Saves the song editor's draft (title, sheet music, strophes, tags).
+ *
+ * Re-reads the strophes column immediately before writing and merges in
+ * whatever notes are currently on the server (see preserveFreshNotes) —
+ * the editor's own draft was loaded whenever the page was opened and never
+ * lets a user touch notes, so trusting it for that one field would silently
+ * erase a note someone else added, changed or deleted while this tab was
+ * open. This is the editor's counterpart to useSetStropheNote's fingerprint
+ * check: same problem (the cache/draft can be stale relative to the DB),
+ * solved per-field instead of per-strophe because the editor writes many
+ * fields at once and needs the strophes it doesn't own to survive intact.
+ *
+ * Ends with a full re-fetch rather than trusting the update's own response,
+ * since tags are written as a separate delete+insert and the cache should
+ * reflect the truly final row.
+ */
+export const useSaveSongEdit = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: async ({
+			songId,
+			title,
+			sheetMusicUrl,
+			strophes,
+			tagIds,
+		}: SaveSongEditVariables) => {
+			const { data: fresh, error: readError } = await songStrophesQuery(songId);
+			if (readError) throw readError;
+
+			const merged = preserveFreshNotes(
+				(fresh?.strophes ?? []) as Strophe[],
+				strophes,
+			);
+
+			const { error: songError } = await songEditMutation(songId, {
+				title,
+				sheet_music_url: sheetMusicUrl,
+				strophes: merged,
+			});
+			if (songError) throw songError;
+
+			const { error: deleteError } = await supabase
+				.from("song_tag")
+				.delete()
+				.eq("song_id", songId);
+			if (deleteError) throw deleteError;
+
+			if (tagIds.length > 0) {
+				const { error: insertError } = await supabase.from("song_tag").insert(
+					tagIds.map((tagId) => ({ song_id: songId, tag_id: tagId })),
+				);
+				if (insertError) throw insertError;
+			}
+
+			const { data, error } = await taggedSongQuery(songId);
+			if (error) throw error;
+			return data;
+		},
+		onSuccess: (saved) => {
+			queryClient.setQueryData<TaggedSong>(
+				queryKeys.songs.detail(saved.id),
+				saved,
+			);
+			queryClient.setQueryData<AllTaggedSongs>(
+				queryKeys.songs.allTagged(),
+				(old) => old?.map((s) => (s.id === saved.id ? saved : s)),
+			);
+			queryClient.setQueryData<AllSongs>(queryKeys.songs.list(), (old) =>
+				patchListEntry(old, saved),
+			);
+			queryClient.setQueryData<AllRefrains>(
+				queryKeys.songs.refrainList(),
+				(old) => patchListEntry(old, saved),
+			);
+			queryClient.setQueryData<AllOrdinaireSongs>(
+				queryKeys.songs.ordinaireList(),
+				(old) => patchListEntry(old, saved),
+			);
+			toast.success("Modifications enregistrées");
+		},
+		onError: () => {
+			toast.error("Modifications non enregistrées");
+		},
+	});
+};
+
+/**
+ * Pushes song content changes (lyrics, notes, title, ...) to every open tab
+ * and device the moment they land in the DB, instead of relying on the 5 min
+ * staleTime/24h gcTime to eventually notice. Mounted once at app root.
+ *
+ * Patches existing cache entries only (`old ? … : old`) — never seeds a song
+ * nobody has fetched yet, since the broadcast row lacks the `tags` join and
+ * a bare insert would show it as tagless until the next real fetch.
+ */
+export const useSongsRealtimeSync = () => {
+	const queryClient = useQueryClient();
+
+	useEffect(() => {
+		const channel = supabase.channel("songs-realtime").on(
+			"postgres_changes",
+			{ schema: "public", table: "songs", event: "UPDATE" },
+			(payload) => {
+				const row = (
+					payload as unknown as {
+						new: Database["public"]["Tables"]["songs"]["Row"];
+					}
+				).new;
+
+				queryClient.setQueryData<TaggedSong>(
+					queryKeys.songs.detail(row.id),
+					(old) => (old ? { ...old, ...row } : old),
+				);
+				queryClient.setQueryData<AllTaggedSongs>(
+					queryKeys.songs.allTagged(),
+					(old) => old?.map((s) => (s.id === row.id ? { ...s, ...row } : s)),
+				);
+				const titlePatch = <T extends { id: number; title: string }>(
+					entries: T[] | undefined,
+				) =>
+					entries?.map((s) =>
+						s.id === row.id ? { ...s, title: row.title } : s,
+					);
+				queryClient.setQueryData<AllSongs>(queryKeys.songs.list(), (old) =>
+					titlePatch(old),
+				);
+				queryClient.setQueryData<AllRefrains>(
+					queryKeys.songs.refrainList(),
+					(old) => titlePatch(old),
+				);
+				queryClient.setQueryData<AllOrdinaireSongs>(
+					queryKeys.songs.ordinaireList(),
+					(old) => titlePatch(old),
+				);
+			},
+		);
+		channel.subscribe();
+
+		return () => {
+			channel.unsubscribe();
+		};
 	}, [queryClient]);
 };

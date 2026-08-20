@@ -59,6 +59,25 @@ export type SongStrophesMutation = QueryData<
 	ReturnType<typeof songStrophesMutation>
 >;
 
+/**
+ * Writes the editor-owned fields (title, sheet music, strophes). Callers
+ * must merge in whatever notes are currently on the server first — see
+ * useSaveSongEdit, which does the read-merge-write via preserveFreshNotes.
+ */
+export const songEditMutation = async (
+	songId: number,
+	fields: {
+		title: string;
+		sheet_music_url: string | null;
+		strophes: Strophe[];
+	},
+) =>
+	supabase
+		.from("songs")
+		.update({ ...fields, strophes: fields.strophes as unknown as Json[] })
+		.eq("id", songId);
+export type SongEditMutation = QueryData<ReturnType<typeof songEditMutation>>;
+
 export const allTaggedSongsQuery = async () =>
 	supabase.from("songs").select("*, tags(name, id, svg, color)").order("id");
 export type AllTaggedSongs = QueryData<ReturnType<typeof allTaggedSongsQuery>>;
