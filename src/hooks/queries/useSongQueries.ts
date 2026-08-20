@@ -151,6 +151,13 @@ type SetStropheNoteVariables = {
 export const useSetStropheNote = () => {
 	const queryClient = useQueryClient();
 	const chain = useRef<Promise<unknown>>(Promise.resolve());
+	// Tracks the most recently issued call per strophe. A slow call's
+	// success/error can land after a newer edit to the same strophe already
+	// applied its own optimistic update — without this, the older call would
+	// patch or roll back the cache with a snapshot taken before that newer
+	// edit existed, making the display regress even though the badge shows
+	// "saved".
+	const latestAttempt = useRef<Map<string, number>>(new Map());
 
 	return useMutation({
 		mutationFn: ({
@@ -194,16 +201,26 @@ export const useSetStropheNote = () => {
 			await queryClient.cancelQueries({ queryKey: key });
 			const previous = queryClient.getQueryData<TaggedSong>(key);
 
+			const attemptKey = `${songId}:${stropheIndex}`;
+			const attempt = (latestAttempt.current.get(attemptKey) ?? 0) + 1;
+			latestAttempt.current.set(attemptKey, attempt);
+
 			if (previous?.strophes)
 				queryClient.setQueryData<TaggedSong>(key, {
 					...previous,
 					strophes: setStropheNote(previous.strophes, stropheIndex, note),
 				});
 
-			return { previous };
+			return { previous, attemptKey, attempt };
 		},
 		onError: (error, { songId }, context) => {
-			if (context?.previous)
+			// A newer edit to this strophe superseded this call — its own
+			// optimistic update (or confirmed save) is the current truth, so
+			// don't roll back past it.
+			const superseded =
+				context && latestAttempt.current.get(context.attemptKey) !== context.attempt;
+
+			if (!superseded && context?.previous)
 				queryClient.setQueryData(
 					queryKeys.songs.detail(songId),
 					context.previous,
@@ -215,7 +232,15 @@ export const useSetStropheNote = () => {
 					: "Note non enregistrée",
 			);
 		},
-		onSuccess: ({ songId, strophes }) => {
+		onSuccess: ({ songId, strophes }, _variables, context) => {
+			// Same guard: this call's read-modify-write may have read the
+			// server before a newer edit to the same strophe existed, so its
+			// returned array is stale relative to what's already in the
+			// cache — skip patching and let the newer call's own success
+			// confirm the cache instead.
+			if (context && latestAttempt.current.get(context.attemptKey) !== context.attempt)
+				return;
+
 			// Patch, don't invalidate: the write already returned the
 			// authoritative array, and invalidating allTagged would refetch
 			// every song's lyrics on church wifi.

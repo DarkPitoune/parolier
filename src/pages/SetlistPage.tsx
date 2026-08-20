@@ -51,6 +51,10 @@ function SetlistPage() {
 	const noteStatusTimers = useRef<
 		Record<string, ReturnType<typeof setTimeout>>
 	>({});
+	// Lets an older save's callback recognize it's been superseded by a
+	// newer edit to the same strophe, so it doesn't flip the badge to
+	// "saved" while that newer save is still in flight.
+	const noteAttempt = useRef<Record<string, number>>({});
 
 	useEffect(
 		() => () => {
@@ -98,6 +102,9 @@ function SetlistPage() {
 		clearTimeout(noteStatusTimers.current[key]);
 		setNoteStatus((prev) => ({ ...prev, [key]: "saving" }));
 
+		const attempt = (noteAttempt.current[key] ?? 0) + 1;
+		noteAttempt.current[key] = attempt;
+
 		setStropheNoteMutation.mutate(
 			{
 				songId,
@@ -107,6 +114,7 @@ function SetlistPage() {
 			},
 			{
 				onSuccess: () => {
+					if (noteAttempt.current[key] !== attempt) return;
 					setNoteStatus((prev) => ({ ...prev, [key]: "saved" }));
 					noteStatusTimers.current[key] = setTimeout(() => {
 						setNoteStatus((prev) => {
@@ -118,6 +126,7 @@ function SetlistPage() {
 				// onError already surfaces a toast (see useSetStropheNote) — the
 				// badge should just get out of the way, not duplicate that.
 				onError: () => {
+					if (noteAttempt.current[key] !== attempt) return;
 					setNoteStatus((prev) => {
 						const { [key]: _removed, ...rest } = prev;
 						return rest;
