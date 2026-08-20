@@ -25,9 +25,9 @@ function Tuner() {
 		50;
 
 	const accentColor = inTune
-		? "text-jubilateGreen"
+		? "text-jubilateGreen-500"
 		: reading !== null
-			? "text-jubilateYellow"
+			? "text-jubilateYellow-500"
 			: "text-gray-400 dark:text-gray-500";
 
 	return (
@@ -37,7 +37,7 @@ function Tuner() {
 			<div className="flex flex-col items-center gap-10 px-6 py-12">
 				{error ? (
 					<div className="flex flex-col items-center gap-4 pt-8">
-						<p className="text-center text-jubilateRed">{error}</p>
+						<p className="text-center text-jubilateRed-400">{error}</p>
 						<button
 							type="button"
 							onClick={retry}
@@ -80,9 +80,9 @@ function Tuner() {
 									className={clsx(
 										"absolute top-1 bottom-1 w-1 rounded-full transition-all duration-100 ease-out",
 										inTune
-											? "bg-jubilateGreen"
+											? "bg-jubilateGreen-500"
 											: reading !== null
-												? "bg-jubilateYellow"
+												? "bg-jubilateYellow-500"
 												: "bg-gray-400 dark:bg-gray-500",
 									)}
 									style={{

@@ -58,7 +58,7 @@ const LeaderListener = ({
 	if (!leader) return null;
 
 	return (
-		<div className="sticky top-0 bg-jubilateRed text-white text-center font-semibold animate-pulseBg h-6">
+		<div className="sticky top-0 bg-jubilateRed-400 text-white text-center font-semibold animate-pulseBg h-6">
 			{leader?.leading
 				? "Vous partagez votre chant"
 				: `Vous suivez ${leader?.id}`}

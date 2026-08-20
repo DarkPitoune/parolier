@@ -99,13 +99,13 @@ function SortableSetlistItem({
 				)}
 				{item.texts && (
 					<>
-						<DocumentTextIcon className="w-5 shrink-0 text-jubilateGreen" />
+						<DocumentTextIcon className="w-5 shrink-0 text-jubilateGreen-500" />
 						<TextItem text={item.texts} hover={false} />
 					</>
 				)}
 				{item.text != null && (
 					<>
-						<PencilIcon className="w-5 shrink-0 text-jubilatePurple" />
+						<PencilIcon className="w-5 shrink-0 text-jubilatePurple-400" />
 						<p className="px-2 text-black dark:text-white truncate">
 							{item.text.split("\n")[0] || "Texte libre (vide)"}
 						</p>
@@ -114,7 +114,7 @@ function SortableSetlistItem({
 			</button>
 			<div className="flex items-center h-fit w-fit my-2 mx-2">
 				<button type="button" onClick={() => onDelete(item.id)}>
-					<XMarkIcon className="size-8.5 shrink-0 rounded-full bg-jubilateRed/85 hover:bg-jubilateRed p-1 text-white transition" />
+					<XMarkIcon className="size-8.5 shrink-0 rounded-full bg-jubilateRed-400 hover:bg-jubilateRed-500 p-1 text-white transition" />
 				</button>
 			</div>
 		</li>
@@ -350,14 +350,14 @@ const SetlistEditor = () => {
 							</button>
 							<button
 								type="button"
-								className="px-4 py-2 bg-jubilateGreen/85 hover:bg-jubilateGreen text-white rounded-full transition"
+								className="px-4 py-2 bg-jubilateGreen-400 hover:bg-jubilateGreen-500 text-white rounded-full transition"
 								onClick={() => setIsTextPickerOpen(true)}
 							>
 								+ Texte existant
 							</button>
 							<button
 								type="button"
-								className="px-4 py-2 bg-jubilatePurple/85 hover:bg-jubilatePurple text-white rounded-full transition"
+								className="px-4 py-2 bg-jubilatePurple-400 hover:bg-jubilatePurple-500 text-white rounded-full transition"
 								onClick={() => handleNewTextItem()}
 							>
 								+ Texte libre

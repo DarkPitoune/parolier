@@ -11,7 +11,7 @@ const DropLeadButton = () => (
 	<div
 		data-tooltip-target="Cesser le partage"
 		data-tooltip-placement="top"
-		className="bg-jubilateRed size-12 rounded-full flex items-center justify-center place-self-center"
+		className="bg-jubilateRed-400 size-12 rounded-full flex items-center justify-center place-self-center"
 	>
 		<NoSymbolIcon color="white" className="size-8" />
 	</div>

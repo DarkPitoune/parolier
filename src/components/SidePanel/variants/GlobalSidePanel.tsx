@@ -460,7 +460,9 @@ function SettingsContent() {
 							onClick={() => setLeader(null)}
 							className="flex md:gap-4 gap-2 items-center"
 						>
-							<p className="text-jubilateRed text-sm md:text-base">Stopper</p>
+							<p className="text-jubilateRed-400 text-sm md:text-base">
+								Stopper
+							</p>
 							<DropLeadButton />
 						</button>
 					</>

@@ -225,7 +225,7 @@ function PerformanceNoteForm({
 					className={clsx(
 						"flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white",
 						willDelete
-							? "bg-jubilateRed"
+							? "bg-jubilateRed-400"
 							: "bg-jubilateBlue-500 dark:bg-jubilateBlue-400",
 					)}
 				>

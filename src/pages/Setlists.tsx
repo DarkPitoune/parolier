@@ -109,7 +109,7 @@ const Setlists = () => {
 			{globalSearchEnabled && unifiedSearch.showResults ? (
 				<UnifiedSearchResults search={unifiedSearch} />
 			) : (
-				<div className="flex flex-col items-stretch divide-y">
+				<div className="flex flex-col items-stretch divide-y pb-14">
 					{!isLoading && setslists.length === 0 && (
 						<p className="text-center text-gray-500 dark:text-gray-400 py-8">
 							Aucune setlist pour le moment.
@@ -128,10 +128,10 @@ const Setlists = () => {
 								onClick={() => setDeleteTargetId(setlist.id)}
 								disabled={deleteMutation.isPending}
 							>
-								<TrashIcon className="size-8.5 rounded-full bg-jubilateRed/85 hover:bg-jubilateRed p-2 text-white" />
+								<TrashIcon className="size-8.5 rounded-full bg-jubilateRed-500 hover:bg-jubilateRed-400 p-2 text-white" />
 							</button>
 							<Link to={`/setlists/${setlist.id}/edit`}>
-								<PencilSquareIcon className="size-8.5 p-2 bg-jubilateGreen/85 hover:bg-jubilateGreen rounded-full text-white" />
+								<PencilSquareIcon className="size-8.5 p-2 bg-jubilateGreen-500 hover:bg-jubilateGreen-400 rounded-full text-white" />
 							</Link>
 						</div>
 					))}

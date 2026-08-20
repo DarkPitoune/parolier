@@ -72,7 +72,7 @@ function StropheBlock({
 					{saveStatus === "saving" ? (
 						<ArrowPathIcon className="size-3.5 animate-spin" />
 					) : (
-						<CheckIcon className="size-3.5 text-jubilateGreen animate-fadeOut" />
+						<CheckIcon className="size-3.5 text-jubilateGreen-400 animate-fadeOut" />
 					)}
 				</span>
 			)}

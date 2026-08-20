@@ -10,22 +10,33 @@
   --color-jubilateBlue-200: #d5e2ff;
   --color-jubilateBlue-300: #abc7ff;
   --color-jubilateBlue-400: #7a9df6;
-  --color-jubilateBlue-500: #4030ec;
+  --color-jubilateBlue-500: #3835EF;
   --color-jubilateBlue-700: #2b1bd2;
 
-  --color-jubilateRed: #ff5a5a;
-  --color-jubilateGreen: #00bc48;
-  --color-jubilateCyan: #71d6f2;
-  --color-jubilateYellow: #ffc852;
-  --color-jubilatePurple: #ba7afb;
+  --color-jubilateRed-400: #FE6767;
+  --color-jubilateRed-500: #FF3232;
+
+  --color-jubilateGreen-400: #75E88E;
+  --color-jubilateGreen-500: #21CA4C;
+
+  --color-jubilateCyan-400: #72D9F6;
+  --color-jubilateCyan-500: #26CCF6;
+
+  --color-jubilateYellow-400: #FFC852;
+  --color-jubilateYellow-500: #FFB22D;
+
+  --color-jubilatePurple-400: #BA7AFB;
+  --color-jubilatePurple-500: #B15AFE;
 
   --animate-pulseBg: pulseBg 3s ease-in-out infinite;
 
   @keyframes pulseBg {
+
     0%,
     100% {
       background-color: #e74c3c;
     }
+
     50% {
       background-color: #ff5a5a;
     }
@@ -34,10 +45,12 @@
   --animate-fadeOut: fadeOut 1.2s ease-out forwards;
 
   @keyframes fadeOut {
+
     0%,
     60% {
       opacity: 1;
     }
+
     100% {
       opacity: 0;
     }
@@ -53,6 +66,7 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
+
   *,
   ::after,
   ::before,

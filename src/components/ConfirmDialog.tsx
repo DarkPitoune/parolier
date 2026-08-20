@@ -69,7 +69,7 @@ function ConfirmDialog({
 								className={clsx(
 									"px-4 py-2 rounded-full text-white transition",
 									danger
-										? "bg-jubilateRed hover:bg-jubilateRed/85"
+										? "bg-jubilateRed-500 hover:bg-jubilateRed-400"
 										: "bg-jubilateBlue-500 hover:bg-jubilateBlue-600 dark:bg-jubilateBlue-400 dark:hover:bg-jubilateBlue-300",
 								)}
 							>
