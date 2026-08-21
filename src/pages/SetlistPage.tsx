@@ -7,7 +7,10 @@ import {
 import { PerformanceNoteSheet } from "@/components/PerformanceNotes/PerformanceNoteSheet";
 import SwipeableTabs, { type Tab } from "@/components/SwipeableTabs";
 import { useSetlist } from "@/hooks/queries/useSetlistQueries";
-import { useSetStropheNote } from "@/hooks/queries/useSongQueries";
+import {
+	useSetStropheNote,
+	useTaggedSongs,
+} from "@/hooks/queries/useSongQueries";
 import { sortSetlistItems } from "@/utils/setlistOrder";
 import { getStropheNote, stropheFingerprint } from "@/utils/stropheNotes";
 import {
@@ -29,6 +32,17 @@ function SetlistPage() {
 		() => (setlistData ? sortSetlistItems(setlistData) : null),
 		[setlistData],
 	);
+
+	// The setlist join carries song identity only. Bodies come from
+	// queryKeys.songs.detail, the one place every write path patches — reading
+	// them out of the setlist row instead left saved notes rendering stale, and
+	// let a second edit of the same strophe write a pre-edit draft back.
+	const songIds = useMemo(
+		() =>
+			(setlist ?? []).flatMap((item) => (item.songs ? [item.songs.id] : [])),
+		[setlist],
+	);
+	const songsById = useTaggedSongs(songIds);
 
 	const [activeTab, setActiveTab] = useState(0);
 	const setTonality = useSetAtom(tonalityAtom);
@@ -88,7 +102,7 @@ function SetlistPage() {
 	};
 
 	const editedSong = editingSong
-		? setlist?.find((item) => item.songs?.id === editingSong.songId)?.songs
+		? songsById.get(editingSong.songId)
 		: undefined;
 	const editedStrophe = editedSong?.strophes?.[editingSong?.index ?? -1];
 
@@ -151,6 +165,7 @@ function SetlistPage() {
 	const tabs: Tab[] = renderable.map(({ item }) => {
 		if (item.songs) {
 			const songId = item.songs.id;
+			const song = songsById.get(songId);
 			const songNoteStatus: Record<number, "saving" | "saved"> = {};
 			const prefix = `${songId}:`;
 			for (const [key, status] of Object.entries(noteStatus))
@@ -158,20 +173,25 @@ function SetlistPage() {
 					songNoteStatus[Number(key.slice(prefix.length))] = status;
 
 			return {
+				// Title comes from the setlist row so the tab bar is labelled
+				// before the body lands. The tab itself is never dropped while
+				// loading: renderable's indices are presenter/slideshow steps.
 				id: item.id,
 				title: item.songs.title,
 				content: (
 					<div className="flex flex-col gap-4">
-						<SongViewer
-							showTitle
-							song={item.songs}
-							onStropheLongPress={
-								showNotes
-									? (index) => setEditingSong({ songId, index })
-									: undefined
-							}
-							noteStatus={songNoteStatus}
-						/>
+						{song && (
+							<SongViewer
+								showTitle
+								song={song}
+								onStropheLongPress={
+									showNotes
+										? (index) => setEditingSong({ songId, index })
+										: undefined
+								}
+								noteStatus={songNoteStatus}
+							/>
+						)}
 					</div>
 				),
 			};

@@ -26,7 +26,12 @@ import type {
 	TaggedSong,
 } from "@/utils/supabase";
 import type { Database } from "../../../database.types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+	useMutation,
+	useQueries,
+	useQuery,
+	useQueryClient,
+} from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 
@@ -42,17 +47,48 @@ export const useAllSongs = () =>
 		gcTime: 24 * 60 * 60 * 1000, // 24h
 	});
 
+/**
+ * The single owner of a song body. Anything that renders lyrics or notes reads
+ * through this key — never through a copy embedded in another query's join —
+ * so the write paths that patch it (useSetStropheNote, useSaveSongEdit,
+ * useSongsRealtimeSync) are enough to keep every screen in step.
+ */
+const taggedSongQueryOptions = (songId: number) => ({
+	queryKey: queryKeys.songs.detail(songId),
+	queryFn: async () => {
+		const { data, error } = await taggedSongQuery(songId);
+		if (error) throw error;
+		return data;
+	},
+	staleTime: 5 * 60 * 1000,
+	gcTime: 24 * 60 * 60 * 1000,
+});
+
 export const useTaggedSong = (songId: number | undefined) =>
 	useQuery({
-		queryKey: queryKeys.songs.detail(songId as number),
-		queryFn: async () => {
-			const { data, error } = await taggedSongQuery(songId as number);
-			if (error) throw error;
-			return data;
-		},
+		...taggedSongQueryOptions(songId as number),
 		enabled: songId !== undefined,
-		staleTime: 5 * 60 * 1000,
-		gcTime: 24 * 60 * 60 * 1000,
+	});
+
+/**
+ * Several song bodies at once, keyed by id — for a screen showing a whole
+ * setlist. Normally every one of these is a cache hit, seeded at startup by
+ * usePrefetchAllSongs; the individual fetches are the cold-start fallback.
+ *
+ * Ids are de-duplicated here rather than by each caller: a setlist may well
+ * list the same song twice, and handing useQueries two identical keys makes it
+ * warn about duplicate queries. Results are keyed off `data.id` rather than
+ * zipped against `songIds` so that de-duplication can't misalign them.
+ */
+export const useTaggedSongs = (songIds: number[]) =>
+	useQueries({
+		queries: [...new Set(songIds)].map(taggedSongQueryOptions),
+		combine: (results) => {
+			const bySongId = new Map<number, TaggedSong>();
+			for (const result of results)
+				if (result.data) bySongId.set(result.data.id, result.data);
+			return bySongId;
+		},
 	});
 
 export const useAllTaggedSongs = () =>

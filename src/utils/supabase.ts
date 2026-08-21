@@ -85,12 +85,20 @@ export type AllTaggedSongs = QueryData<ReturnType<typeof allTaggedSongsQuery>>;
 export const allTagsQuery = async () => supabase.from("tags").select();
 export type Tags = QueryData<ReturnType<typeof allTagsQuery>>;
 
+/**
+ * Deliberately carries song *identity* only — no `strophes`. A song body has a
+ * single owner in the query cache (`queryKeys.songs.detail`), which every write
+ * path already patches (useSetStropheNote, useSaveSongEdit, useSongsRealtimeSync).
+ * Embedding the body here made a second, unpatched copy: a note saved from the
+ * setlist page kept rendering the old text, and re-editing the same strophe
+ * wrote a pre-edit draft back over the note. Callers join on `songs.id`.
+ */
 export const setlistQuery = async (setlistId: string) =>
 	supabase
 		.from("setlist_items")
 		.select(
 			`id,
-			songs (id, sheet_music_url, strophes, title, type, ordinaire_id, ordinaire_role, tags (id, name, svg, color)),
+			songs (id, title, type, tags (id, name, svg, color)),
 			text, position,
 			texts (id, title, content, created_at),
 			setlists (id, name)`,
