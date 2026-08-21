@@ -8,6 +8,7 @@ import {
 	TextPicker,
 } from "@/components";
 import { useSetlist } from "@/hooks/queries/useSetlistQueries";
+import { useTaggedSong } from "@/hooks/queries/useSongQueries";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { queryKeys } from "@/utils/queryKeys";
 import { sortSetlistItems } from "@/utils/setlistOrder";
@@ -317,7 +318,12 @@ const SetlistEditor = () => {
 		return () => clearTimeout(timeout);
 	}, [textNewValue, selectedItem, setlistId, invalidateSetlist]);
 
-	const selectedSong = setlist?.find((item) => item.id === selectedItem)?.songs;
+	// The setlist join no longer carries strophes — the preview reads the song
+	// body from its single owner (queryKeys.songs.detail), so it shows the same
+	// notes and lyrics as everywhere else.
+	const selectedSongId = setlist?.find((item) => item.id === selectedItem)
+		?.songs?.id;
+	const { data: selectedSong } = useTaggedSong(selectedSongId);
 	const selectedText = setlist?.find((item) => item.id === selectedItem)?.texts;
 
 	return (

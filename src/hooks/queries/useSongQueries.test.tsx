@@ -12,6 +12,7 @@ import {
 	useSetStropheNote,
 	useSongsRealtimeSync,
 	useTaggedSong,
+	useTaggedSongs,
 } from "./useSongQueries";
 
 // biome-ignore lint/suspicious/noExplicitAny: test double for the realtime callback signature
@@ -133,6 +134,42 @@ describe("useSongQueries", () => {
 			await waitFor(() => expect(result.current.isSuccess).toBe(true));
 			expect(result.current.data).toEqual(mockSong);
 			expect(taggedSongQuery).toHaveBeenCalledWith(42);
+		});
+	});
+
+	describe("useTaggedSongs", () => {
+		it("keys results by song id and reads the same cache as useTaggedSong", async () => {
+			const cached = { id: 7, title: "Seeded", tags: [], strophes: [] };
+			vi.mocked(taggedSongQuery).mockResolvedValue({
+				data: { id: 9, title: "Fetched", tags: [], strophes: [] },
+				error: null,
+			} as never);
+
+			const { wrapper, queryClient } = createWrapper();
+			// Seeded exactly the way usePrefetchAllSongs seeds it.
+			queryClient.setQueryData(queryKeys.songs.detail(7), cached);
+
+			const { result } = renderHook(() => useTaggedSongs([7, 9]), { wrapper });
+
+			await waitFor(() => expect(result.current.size).toBe(2));
+			expect(result.current.get(7)).toEqual(cached);
+			expect(result.current.get(9)?.title).toBe("Fetched");
+			// The seeded song was served from cache, not refetched.
+			expect(taggedSongQuery).not.toHaveBeenCalledWith(7);
+		});
+
+		it("collapses a song listed twice into one query", async () => {
+			vi.mocked(taggedSongQuery).mockResolvedValue({
+				data: { id: 3, title: "Twice", tags: [], strophes: [] },
+				error: null,
+			} as never);
+
+			const { wrapper } = createWrapper();
+			const { result } = renderHook(() => useTaggedSongs([3, 3]), { wrapper });
+
+			await waitFor(() => expect(result.current.size).toBe(1));
+			expect(result.current.get(3)?.title).toBe("Twice");
+			expect(taggedSongQuery).toHaveBeenCalledTimes(1);
 		});
 	});
 
