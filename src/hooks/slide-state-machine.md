@@ -16,7 +16,9 @@ stateDiagram-v2
     song --> logo : TOGGLE_LOGO\n(preserves song data)
     song --> idle : GO_IDLE
     song --> song : NEXT_STROPHE\nPREV_STROPHE\nGOTO_STROPHE
+    song --> song : HYDRATE_STROPHES\n(keeps stropheIndex)
 
+    logo --> logo : HYDRATE_STROPHES\n(keeps stropheIndex)
     logo --> song : LOAD_SONG
     logo --> text : LOAD_TEXT
     logo --> song : TOGGLE_LOGO\n[songId != null]\n(restores position)
@@ -50,15 +52,18 @@ flowchart LR
 
 ## Transition Table
 
-| From \ Event   | LOAD_SONG       | LOAD_TEXT      | NEXT_STROPHE      | PREV_STROPHE       | GOTO_STROPHE      | TOGGLE_LOGO              | GO_IDLE   | SYNC      |
-|----------------|-----------------|----------------|-------------------|--------------------|-------------------|--------------------------|-----------|-----------|
-| **idle**       | → song          | → text         | no-op             | no-op              | no-op             | → logo (no song)         | no-op     | → any     |
-| **song**       | → song (reset)  | → text         | stropheIndex + 1  | stropheIndex - 1   | jump to index     | → logo (preserves song)  | → idle    | → any     |
-| **logo**       | → song          | → text         | no-op             | no-op              | no-op             | → song* or → idle**      | → idle    | → any     |
-| **text**       | → song          | → text         | no-op             | no-op              | no-op             | → logo (no song)         | → idle    | → any     |
+| From \ Event   | LOAD_SONG       | LOAD_TEXT      | HYDRATE_STROPHES   | NEXT_STROPHE      | PREV_STROPHE       | GOTO_STROPHE      | TOGGLE_LOGO              | GO_IDLE   | SYNC      |
+|----------------|-----------------|----------------|--------------------|-------------------|--------------------|-------------------|--------------------------|-----------|-----------|
+| **idle**       | → song          | → text         | no-op              | no-op             | no-op              | no-op             | → logo (no song)         | no-op     | → any     |
+| **song**       | → song (reset)  | → text         | fills strophes†    | stropheIndex + 1  | stropheIndex - 1   | jump to index     | → logo (preserves song)  | → idle    | → any     |
+| **logo**       | → song          | → text         | fills strophes†    | no-op             | no-op              | no-op             | → song* or → idle**      | → idle    | → any     |
+| **text**       | → song          | → text         | no-op              | no-op             | no-op              | no-op             | → logo (no song)         | → idle    | → any     |
 
 \* TOGGLE_LOGO from `logo` → `song` when `songId !== null` (restores previous position)
 \** TOGGLE_LOGO from `logo` → `idle` when `songId === null` (no song to restore)
+\† HYDRATE_STROPHES only applies when `songId` matches the state's (a late fetch for
+another song is ignored); mode, `setlistContext` and `stropheIndex` are preserved, the
+index clamped to the fetched strophes
 
 ## State Details
 
@@ -71,6 +76,7 @@ flowchart LR
 - Fields: `songId`, `stropheIndex`, `strophes[]`, `setlistContext?`
 - NEXT/PREV/GOTO_STROPHE navigate within the strophes array (clamped to bounds)
 - LOAD_SONG always resets `stropheIndex` to 0 (even if same song)
+- `strophes[]` is empty right after a sync — HYDRATE_STROPHES fills it in place
 
 ### `logo`
 - Cross/logo is displayed over the current content
@@ -89,3 +95,8 @@ flowchart LR
 - **MQTT** (`parolier/slide_state`): presenter publishes, display subscribes — syncs across devices
 - **`strophes[]` is NOT serialized** — each window fetches its own song data from Supabase
 - **SYNC events don't re-publish** — prevents infinite echo loops
+- **A window filling in those missing strophes must dispatch `HYDRATE_STROPHES`, never
+  `LOAD_SONG`.** `LOAD_SONG` means "start this song from the top", so it moves the slide the
+  window just synced to — and since every dispatch is broadcast, the other window follows.
+  That's how opening the display mid-song used to yank both windows back to slide 1.
+  `LOAD_SONG` is for explicit navigation only: a URL, a picker, a setlist step.

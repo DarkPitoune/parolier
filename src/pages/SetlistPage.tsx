@@ -8,6 +8,7 @@ import { PerformanceNoteSheet } from "@/components/PerformanceNotes/PerformanceN
 import SwipeableTabs, { type Tab } from "@/components/SwipeableTabs";
 import { useSetlist } from "@/hooks/queries/useSetlistQueries";
 import { useSetStropheNote } from "@/hooks/queries/useSongQueries";
+import { sortSetlistItems } from "@/utils/setlistOrder";
 import { getStropheNote, stropheFingerprint } from "@/utils/stropheNotes";
 import {
 	ComputerDesktopIcon,
@@ -25,10 +26,7 @@ function SetlistPage() {
 
 	const { data: setlistData } = useSetlist(setlistId);
 	const setlist = useMemo(
-		() =>
-			setlistData
-				? [...setlistData].sort((a, b) => a.position - b.position)
-				: null,
+		() => (setlistData ? sortSetlistItems(setlistData) : null),
 		[setlistData],
 	);
 
@@ -138,66 +136,74 @@ function SetlistPage() {
 		setEditingSong(null);
 	};
 
-	const tabs: Tab[] = (setlist ?? [])
-		.map((item) => {
-			if (item.songs) {
-				const songId = item.songs.id;
-				const songNoteStatus: Record<number, "saving" | "saved"> = {};
-				const prefix = `${songId}:`;
-				for (const [key, status] of Object.entries(noteStatus))
-					if (key.startsWith(prefix))
-						songNoteStatus[Number(key.slice(prefix.length))] = status;
+	// A presenter/slideshow step is an index into the *ordered setlist*, so that
+	// index has to survive this filter: an item that renders as nothing would
+	// otherwise shift every later tab off its own step.
+	const renderable = useMemo(
+		() =>
+			(setlist ?? [])
+				.map((item, stepIndex) => ({ item, stepIndex }))
+				.filter(({ item }) => item.songs || item.texts || item.text),
+		[setlist],
+	);
+	const activeStepIndex = renderable[activeTab]?.stepIndex ?? 0;
 
-				return {
-					id: item.id,
-					title: item.songs.title,
-					content: (
-						<div className="flex flex-col gap-4">
-							<SongViewer
-								showTitle
-								song={item.songs}
-								onStropheLongPress={
-									showNotes
-										? (index) => setEditingSong({ songId, index })
-										: undefined
-								}
-								noteStatus={songNoteStatus}
-							/>
+	const tabs: Tab[] = renderable.map(({ item }) => {
+		if (item.songs) {
+			const songId = item.songs.id;
+			const songNoteStatus: Record<number, "saving" | "saved"> = {};
+			const prefix = `${songId}:`;
+			for (const [key, status] of Object.entries(noteStatus))
+				if (key.startsWith(prefix))
+					songNoteStatus[Number(key.slice(prefix.length))] = status;
+
+			return {
+				id: item.id,
+				title: item.songs.title,
+				content: (
+					<div className="flex flex-col gap-4">
+						<SongViewer
+							showTitle
+							song={item.songs}
+							onStropheLongPress={
+								showNotes
+									? (index) => setEditingSong({ songId, index })
+									: undefined
+							}
+							noteStatus={songNoteStatus}
+						/>
+					</div>
+				),
+			};
+		}
+		if (item.texts)
+			return {
+				id: item.id,
+				title: item.texts.title,
+				content: (
+					<div className="flex flex-col gap-4 p-6">
+						<h2 className="text-2xl font-bold text-black dark:text-white">
+							{item.texts.title}
+						</h2>
+						<div className="whitespace-pre-wrap text-black dark:text-white leading-relaxed">
+							{item.texts.content}
 						</div>
-					),
-				};
-			}
-			if (item.texts)
-				return {
-					id: item.id,
-					title: item.texts.title,
-					content: (
-						<div className="flex flex-col gap-4 p-6">
-							<h2 className="text-2xl font-bold text-black dark:text-white">
-								{item.texts.title}
-							</h2>
-							<div className="whitespace-pre-wrap text-black dark:text-white leading-relaxed">
-								{item.texts.content}
-							</div>
-						</div>
-					),
-				};
-			if (item.text)
-				return {
-					id: item.id,
-					title: item.text.split(" ")[0],
-					content: (
-						<div className="flex flex-col gap-4 p-4">
-							<DynamicText
-								className="whitespace-pre-wrap text-black dark:text-white"
-								text={item.text}
-							/>
-						</div>
-					),
-				};
-			return null;
-		})
-		.filter((v) => v !== null);
+					</div>
+				),
+			};
+		return {
+			id: item.id,
+			title: item.text?.split(" ")[0] ?? "Texte",
+			content: (
+				<div className="flex flex-col gap-4 p-4">
+					<DynamicText
+						className="whitespace-pre-wrap text-black dark:text-white"
+						text={item.text ?? ""}
+					/>
+				</div>
+			),
+		};
+	});
 
 	return (
 		<div className="flex flex-col h-screen">
@@ -212,14 +218,15 @@ function SetlistPage() {
 				<div className="flex items-center gap-2">
 					<Link
 						className="rounded-full hidden md:block bg-green-500 hover:bg-green-600 text-white p-3"
-						to={`/presenter/${setlistId}/${activeTab + 1}`}
+						data-testid="open-presenter-btn"
+						to={`/presenter/${setlistId}/${activeStepIndex}`}
 					>
 						<PresentationChartLineIcon className="size-6 fill-white" />
 					</Link>
 					<Link
 						className="rounded-full hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-3"
 						onClick={() => document.body.requestFullscreen()}
-						to={`/setlists/${setlistId}/steps/${activeTab + 1}/slide`}
+						to={`/setlists/${setlistId}/steps/${activeStepIndex}/slide`}
 					>
 						<ComputerDesktopIcon className="size-6 fill-white" />
 					</Link>

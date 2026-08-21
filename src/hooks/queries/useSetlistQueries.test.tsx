@@ -4,24 +4,21 @@ import type { ReactNode } from "react";
 import {
 	useAllSetlists,
 	useSetlist,
-	useSetlistLength,
-	useSetlistStep,
+	useSetlistItemsCached,
 } from "./useSetlistQueries";
 
 vi.mock("@/utils/supabase", () => ({
 	allSetlistsQuery: vi.fn(),
 	setlistQuery: vi.fn(),
-	taggedSongFromSetlistStepQuery: vi.fn(),
-	setlistLengthQuery: vi.fn(),
+	setlistItemsQuery: vi.fn(),
 	supabaseUrl: "https://test.supabase.co",
 	default: {},
 }));
 
 import {
 	allSetlistsQuery,
-	setlistLengthQuery,
+	setlistItemsQuery,
 	setlistQuery,
-	taggedSongFromSetlistStepQuery,
 } from "@/utils/supabase";
 
 function createWrapper() {
@@ -79,76 +76,68 @@ describe("useSetlistQueries", () => {
 		});
 	});
 
-	describe("useSetlistStep", () => {
+	describe("useSetlistItemsCached", () => {
 		it("is disabled when setlistId is undefined", () => {
 			const { wrapper } = createWrapper();
-			const { result } = renderHook(() => useSetlistStep(undefined, 1), {
+			const { result } = renderHook(() => useSetlistItemsCached(undefined), {
 				wrapper,
 			});
 			expect(result.current.fetchStatus).toBe("idle");
 		});
 
-		it("is disabled when stepNumber is undefined", () => {
-			const { wrapper } = createWrapper();
-			const { result } = renderHook(() => useSetlistStep("abc", undefined), {
-				wrapper,
-			});
-			expect(result.current.fetchStatus).toBe("idle");
-		});
-
-		it("fetches when both params are provided", async () => {
-			vi.mocked(taggedSongFromSetlistStepQuery).mockResolvedValue({
-				data: { id: 1, songs: { id: 42, title: "Song" } },
+		it("fetches when setlistId is provided", async () => {
+			vi.mocked(setlistItemsQuery).mockResolvedValue({
+				data: [{ id: 1, position: 0, songs: { id: 42, title: "Song" } }],
 				error: null,
 			} as never);
 
 			const { wrapper } = createWrapper();
-			const { result } = renderHook(() => useSetlistStep("abc", 2), {
+			const { result } = renderHook(() => useSetlistItemsCached("abc"), {
 				wrapper,
 			});
 
 			await waitFor(() => expect(result.current.isSuccess).toBe(true));
-			expect(taggedSongFromSetlistStepQuery).toHaveBeenCalledWith("abc", 2);
-		});
-	});
-
-	describe("useSetlistLength", () => {
-		it("is disabled when setlistId is undefined", () => {
-			const { wrapper } = createWrapper();
-			const { result } = renderHook(() => useSetlistLength(undefined), {
-				wrapper,
-			});
-			expect(result.current.fetchStatus).toBe("idle");
+			expect(setlistItemsQuery).toHaveBeenCalledWith("abc");
 		});
 
-		it("extracts position from result", async () => {
-			vi.mocked(setlistLengthQuery).mockResolvedValue({
-				data: [{ position: 7 }],
+		// A step is an index into this array, so the order has to be the one
+		// sortSetlistItems defines — position first, id to break the ties that
+		// duplicate positions leave behind.
+		it("orders items by position, then id", async () => {
+			vi.mocked(setlistItemsQuery).mockResolvedValue({
+				data: [
+					{ id: 30, position: 5 },
+					{ id: 10, position: 1 },
+					{ id: 25, position: 5 },
+					{ id: 20, position: 3 },
+				],
 				error: null,
 			} as never);
 
 			const { wrapper } = createWrapper();
-			const { result } = renderHook(() => useSetlistLength("abc"), {
+			const { result } = renderHook(() => useSetlistItemsCached("abc"), {
 				wrapper,
 			});
 
 			await waitFor(() => expect(result.current.isSuccess).toBe(true));
-			expect(result.current.data).toBe(7);
+			expect(result.current.data?.map((item) => item.id)).toEqual([
+				10, 20, 25, 30,
+			]);
 		});
 
-		it("returns 0 when no items", async () => {
-			vi.mocked(setlistLengthQuery).mockResolvedValue({
+		it("returns an empty list when the setlist has no items", async () => {
+			vi.mocked(setlistItemsQuery).mockResolvedValue({
 				data: [],
 				error: null,
 			} as never);
 
 			const { wrapper } = createWrapper();
-			const { result } = renderHook(() => useSetlistLength("abc"), {
+			const { result } = renderHook(() => useSetlistItemsCached("abc"), {
 				wrapper,
 			});
 
 			await waitFor(() => expect(result.current.isSuccess).toBe(true));
-			expect(result.current.data).toBe(0);
+			expect(result.current.data).toEqual([]);
 		});
 	});
 });

@@ -40,6 +40,7 @@ export type SlideEvent =
 			setlistContext?: SetlistContext;
 	  }
 	| { type: "LOAD_TEXT"; textTitle: string; setlistContext: SetlistContext }
+	| { type: "HYDRATE_STROPHES"; songId: number; strophes: Strophe[] }
 	| { type: "NEXT_STROPHE" }
 	| { type: "PREV_STROPHE" }
 	| { type: "GOTO_STROPHE"; stropheIndex: number }
@@ -81,6 +82,25 @@ export function slideReducer(state: SlideState, event: SlideEvent): SlideState {
 				textTitle: event.textTitle,
 				setlistContext: event.setlistContext,
 			};
+
+		case "HYDRATE_STROPHES": {
+			// Sync payloads leave the strophe array out, so a window that receives
+			// one has to fetch the words itself. That fetch must NOT be a LOAD_SONG:
+			// LOAD_SONG means "start this song from the top", so it would move the
+			// slide the window just synced to — and, because every dispatch is
+			// broadcast, drag every other window along with it.
+			if (state.mode !== "song" && state.mode !== "logo") return state;
+			// A fetch that resolves after we've moved on belongs to another song.
+			if (state.songId !== event.songId) return state;
+			return {
+				...state,
+				strophes: event.strophes,
+				stropheIndex: Math.min(
+					state.stropheIndex,
+					Math.max(0, event.strophes.length - 1),
+				),
+			};
+		}
 
 		case "NEXT_STROPHE": {
 			if (state.mode === "logo" && state.songId !== null) {
@@ -198,12 +218,17 @@ export function slideReducer(state: SlideState, event: SlideEvent): SlideState {
 
 export type SetlistNavAction = "next_step" | "prev_step" | "dispatch" | "none";
 
+/**
+ * `stepNumber` is a 0-based index into the setlist's ordered items (see
+ * sortSetlistItems) and `totalSteps` is the item count — so the last step is
+ * `totalSteps - 1`.
+ */
 export function getSetlistNavAction(
 	direction: "next" | "prev",
 	state: SlideState,
 	setlistId: string | undefined,
 	stepNumber: string | undefined,
-	setlistLength: number,
+	totalSteps: number,
 ): SetlistNavAction {
 	const isText = state.mode === "text";
 	const isLogoWithSong = state.mode === "logo" && state.songId !== null;
@@ -220,12 +245,12 @@ export function getSetlistNavAction(
 
 	if (direction === "next") {
 		if (isText || strophes.length === 0) {
-			return inSetlist && step < setlistLength ? "next_step" : "none";
+			return inSetlist && step < totalSteps - 1 ? "next_step" : "none";
 		}
 		if (stropheIndex < strophes.length - 1) {
 			return "dispatch";
 		}
-		return inSetlist && step < setlistLength ? "next_step" : "none";
+		return inSetlist && step < totalSteps - 1 ? "next_step" : "none";
 	}
 
 	// prev

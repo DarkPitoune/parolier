@@ -41,7 +41,7 @@ import { TextPage } from "./pages/TextPage";
 import { Texts } from "./pages/Texts";
 import "./index.css";
 import { useState } from "react";
-import { usePrefetchAllSetlistSteps } from "./hooks/queries/useSetlistQueries";
+import { usePrefetchAllSetlistItems } from "./hooks/queries/useSetlistQueries";
 import {
 	usePrefetchAllSongs,
 	useSongsRealtimeSync,
@@ -191,7 +191,7 @@ if (navigator.storage) navigator.storage.persist(); // our way to tackle long te
 
 const PrefetchData = () => {
 	usePrefetchAllSongs();
-	usePrefetchAllSetlistSteps();
+	usePrefetchAllSetlistItems();
 	usePrefetchAllTexts();
 	useSongsRealtimeSync();
 	return null;

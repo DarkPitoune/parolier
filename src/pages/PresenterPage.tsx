@@ -5,11 +5,9 @@ import {
 	SongPicker,
 	SongPickerInline,
 } from "@/components";
-import {
-	useSetlistLength,
-	useSetlistStepCached,
-} from "@/hooks/queries/useSetlistQueries";
+import { useSetlistItemsCached } from "@/hooks/queries/useSetlistQueries";
 import { useTaggedSong } from "@/hooks/queries/useSongQueries";
+import { getSetlistNavAction } from "@/hooks/slideReducer";
 import { useMqttConnectionStatus } from "@/hooks/useMqttConnectionStatus";
 import { useSlideStateMachine } from "@/hooks/useSlideStateMachine";
 import { useWakeLock } from "@/hooks/useWakeLock";
@@ -22,12 +20,15 @@ import {
 	MusicalNoteIcon,
 	PlayIcon,
 } from "@heroicons/react/24/outline";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 const PresenterPage = () => {
 	const { setlistId, stepNumber } = useParams();
+	const navigate = useNavigate();
+	const [searchParams] = useSearchParams();
+	const startFromEnd = searchParams.get("from") === "end";
 	const [slideshowWindow, setSlideshowWindow] = useState<Window | null>(null);
 	const [showMobileSongPicker, setShowMobileSongPicker] = useState(false);
 
@@ -39,12 +40,14 @@ const PresenterPage = () => {
 	const currentStropheIndex =
 		state.mode === "song" || state.mode === "logo" ? state.stropheIndex : 0;
 	const isLogoSlide = state.mode === "logo";
+	const isTextSlide = state.mode === "text";
 	const currentSongId =
 		state.mode === "song"
 			? state.songId
 			: state.mode === "logo"
 				? state.songId
 				: null;
+	const textTitle = state.mode === "text" ? state.textTitle : null;
 
 	// Monitor MQTT connection status
 	useMqttConnectionStatus({ position: "top-center" });
@@ -52,35 +55,64 @@ const PresenterPage = () => {
 	// Keep screen awake during presentation
 	useWakeLock();
 
-	// Load setlist length via query
-	const { data: setlistLength = 0 } = useSetlistLength(setlistId);
+	// The setlist's ordered items (cache-first, prefetched at app startup).
+	// A step is an index into this array — see sortSetlistItems.
+	const { data: setlistItems } = useSetlistItemsCached(setlistId);
+	const totalSteps = setlistItems?.length ?? 0;
+	const stepData =
+		setlistItems && stepNumber !== undefined
+			? setlistItems[Number(stepNumber)]
+			: undefined;
 
-	// Load initial song from URL params via query (cache-first, prefetched at app startup)
-	const { data: stepData } = useSetlistStepCached(
-		setlistId,
-		stepNumber ? Number(stepNumber) : undefined,
-	);
+	// The text body isn't carried in the slide state (only its title is), so the
+	// readable copy comes straight from the step's data.
+	const stepText = stepData?.songs
+		? null
+		: stepData?.texts?.content ?? stepData?.text ?? null;
 
-	// Navigate to initial setlist step song when data loads
+	// Loading a step must not re-fire for a step already loaded: the cached items
+	// array changes identity when the startup prefetch lands after our own fetch,
+	// and re-dispatching LOAD_SONG would snap the operator back to strophe 0.
+	const loadedStepRef = useRef<string | null>(null);
+
+	// Load the current setlist step (song or text) when its data is available
 	useEffect(() => {
-		if (stepData?.songs) {
+		if (!stepData || !setlistId || stepNumber === undefined) return;
+
+		const stepKey = `${setlistId}:${stepNumber}`;
+		if (loadedStepRef.current === stepKey) return;
+		loadedStepRef.current = stepKey;
+
+		const setlistContext = {
+			setlistId,
+			stepNumber: Number(stepNumber),
+			totalSteps,
+		};
+
+		if (stepData.songs) {
 			dispatch({
 				type: "LOAD_SONG",
 				songId: stepData.songs.id,
 				strophes: stepData.songs.strophes,
-				setlistContext: setlistId
-					? {
-							setlistId,
-							stepNumber: Number(stepNumber),
-							totalSteps: setlistLength,
-						}
-					: undefined,
+				setlistContext,
 			});
-			toast.success(`Loaded: ${stepData.songs.title}`, {
-				position: "top-center",
-			});
+			if (startFromEnd && stepData.songs.strophes.length > 0) {
+				dispatch({
+					type: "GOTO_STROPHE",
+					stropheIndex: stepData.songs.strophes.length - 1,
+				});
+			}
+			toast.success(stepData.songs.title, { position: "top-center" });
+			return;
 		}
-	}, [stepData, setlistId, stepNumber, setlistLength, dispatch]);
+
+		// Non-song step (a reading, a prayer, a free text): the slideshow shows
+		// the logo, the presenter shows the text so it can be read out.
+		const label =
+			stepData.texts?.title ?? (stepData.text ? "Texte libre" : "Texte");
+		dispatch({ type: "LOAD_TEXT", textTitle: label, setlistContext });
+		toast.success(label, { position: "top-center" });
+	}, [stepData, setlistId, stepNumber, totalSteps, startFromEnd, dispatch]);
 
 	// Load strophes when current song changes (via sync from localStorage)
 	// Only fetch if state has the songId but no strophes (deserialized from sync)
@@ -92,8 +124,10 @@ const PresenterPage = () => {
 
 	useEffect(() => {
 		if (currentSongData?.strophes && currentSongId) {
+			// Only filling in the words a synced payload left out — keep the slide
+			// and the setlist context we synced to.
 			dispatch({
-				type: "LOAD_SONG",
+				type: "HYDRATE_STROPHES",
 				songId: currentSongId,
 				strophes: currentSongData.strophes,
 			});
@@ -243,9 +277,45 @@ const PresenterPage = () => {
 		[handleSongSelect],
 	);
 
-	// Navigation helpers
-	const canGoNext = currentStropheIndex < strophes.length - 1;
-	const canGoPrev = currentStropheIndex > 0;
+	// Navigation: within the current song's strophes, then across setlist steps.
+	// Derived from the state machine, not from strophe bounds — a text step has no
+	// strophes at all, and would otherwise leave both buttons dead.
+	const nextAction = getSetlistNavAction(
+		"next",
+		state,
+		setlistId,
+		stepNumber,
+		totalSteps,
+	);
+	const prevAction = getSetlistNavAction(
+		"prev",
+		state,
+		setlistId,
+		stepNumber,
+		totalSteps,
+	);
+	const canGoNext = nextAction !== "none";
+	const canGoPrev = prevAction !== "none";
+
+	const handleNext = useCallback(() => {
+		if (nextAction === "dispatch") {
+			dispatch({ type: "NEXT_STROPHE" });
+		} else if (nextAction === "next_step") {
+			navigate(`/presenter/${setlistId}/${Number(stepNumber) + 1}`, {
+				replace: true,
+			});
+		}
+	}, [nextAction, setlistId, stepNumber, dispatch, navigate]);
+
+	const handlePrev = useCallback(() => {
+		if (prevAction === "dispatch") {
+			dispatch({ type: "PREV_STROPHE" });
+		} else if (prevAction === "prev_step") {
+			navigate(`/presenter/${setlistId}/${Number(stepNumber) - 1}?from=end`, {
+				replace: true,
+			});
+		}
+	}, [prevAction, setlistId, stepNumber, dispatch, navigate]);
 
 	const currentStrophe = strophes[currentStropheIndex];
 	const nextStropheData = strophes[currentStropheIndex + 1];
@@ -277,15 +347,11 @@ const PresenterPage = () => {
 
 			if (e.key === "ArrowRight") {
 				e.preventDefault();
-				if (canGoNext) {
-					dispatch({ type: "NEXT_STROPHE" });
-				}
+				handleNext();
 			}
 			if (e.key === "ArrowLeft") {
 				e.preventDefault();
-				if (canGoPrev) {
-					dispatch({ type: "PREV_STROPHE" });
-				}
+				handlePrev();
 			}
 			if (e.key === "t" || e.key === "T") {
 				e.preventDefault();
@@ -295,7 +361,7 @@ const PresenterPage = () => {
 
 		document.addEventListener("keydown", handleKey);
 		return () => document.removeEventListener("keydown", handleKey);
-	}, [canGoNext, canGoPrev, dispatch]);
+	}, [handleNext, handlePrev, dispatch]);
 
 	return (
 		<div className="bg-white dark:bg-gray-800 h-screen flex flex-col">
@@ -349,10 +415,13 @@ const PresenterPage = () => {
 
 				{/* Right Panel: Slides and Controls */}
 				<div className="flex-1 flex flex-col p-6 h-full">
-					{/* Setlist Info */}
-					{setlistId && stepNumber && (
-						<div className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
-							Chant {stepNumber}/{setlistLength}
+					{/* Setlist Info — steps are 0-based indices, shown 1-based */}
+					{setlistId && stepNumber !== undefined && totalSteps > 0 && (
+						<div
+							className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4"
+							data-testid="setlist-step-counter"
+						>
+							Étape {Number(stepNumber) + 1}/{totalSteps}
 						</div>
 					)}
 
@@ -360,8 +429,27 @@ const PresenterPage = () => {
 					<div className="flex-1 grid grid-rows-5 gap-6 min-h-0">
 						{/* Current Slide */}
 						<div className="row-span-3 flex justify-center">
-							<div className="bg-black rounded-lg flex items-center justify-center text-white relative overflow-hidden aspect-video h-full max-w-full">
-								{isLogoSlide ? (
+							<div
+								className="bg-black rounded-lg flex items-center justify-center text-white relative overflow-hidden aspect-video h-full max-w-full"
+								data-testid="current-slide"
+							>
+								{isTextSlide && stepText ? (
+									// The slideshow shows the logo on a text step; the presenter
+									// shows the text itself so it can be read out.
+									<div className="absolute inset-0 flex flex-col gap-2 p-6 text-left">
+										<div className="flex items-center gap-2 shrink-0 text-sm text-gray-400">
+											<img
+												src="/svg/Jubilate_Croix.svg"
+												alt="logo"
+												className="size-4 opacity-60"
+											/>
+											<span>{textTitle}</span>
+										</div>
+										<div className="grow overflow-y-auto whitespace-pre-wrap leading-relaxed">
+											{stepText}
+										</div>
+									</div>
+								) : isLogoSlide ? (
 									<>
 										{currentStrophe && (
 											<div className="absolute inset-0 flex items-center justify-center opacity-30">
@@ -403,7 +491,10 @@ const PresenterPage = () => {
 					{/* Progress Bar */}
 					<div className="py-4 shrink-0">
 						<div className="flex items-center justify-center gap-4">
-							<span className="text-sm text-gray-600 dark:text-gray-400">
+							<span
+								className="text-sm text-gray-600 dark:text-gray-400"
+								data-testid="strophe-counter"
+							>
 								{totalSlides > 0
 									? `${currentSlideNumber}/${totalSlides}`
 									: "Aucune diapositive"}
@@ -426,7 +517,7 @@ const PresenterPage = () => {
 						<div className="flex items-center justify-center gap-6">
 							<button
 								type="button"
-								onClick={() => dispatch({ type: "PREV_STROPHE" })}
+								onClick={handlePrev}
 								disabled={!canGoPrev}
 								data-testid="prev-strophe-btn"
 								className="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-4 rounded-full transition-colors"
@@ -454,7 +545,7 @@ const PresenterPage = () => {
 
 							<button
 								type="button"
-								onClick={() => dispatch({ type: "NEXT_STROPHE" })}
+								onClick={handleNext}
 								disabled={!canGoNext}
 								data-testid="next-strophe-btn"
 								className="bg-jubilateBlue-500 hover:bg-jubilateBlue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-4 rounded-full transition-colors"
