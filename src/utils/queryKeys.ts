@@ -10,9 +10,7 @@ export const queryKeys = {
 	setlists: {
 		list: () => ["setlists", "list"] as const,
 		detail: (id: string) => ["setlists", id] as const,
-		step: (setlistId: string, step: number) =>
-			["setlists", setlistId, "step", step] as const,
-		length: (id: string) => ["setlists", id, "length"] as const,
+		items: (id: string) => ["setlists", id, "items"] as const,
 	},
 	ordinaires: {
 		list: () => ["ordinaires", "list"] as const,

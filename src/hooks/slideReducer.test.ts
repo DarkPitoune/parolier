@@ -178,6 +178,100 @@ describe("slideReducer", () => {
 		});
 	});
 
+	describe("HYDRATE_STROPHES", () => {
+		it("fills in the strophes without moving the slide", () => {
+			const synced = songState({ stropheIndex: 2, strophes: [] });
+			const result = slideReducer(synced, {
+				type: "HYDRATE_STROPHES",
+				songId: 1,
+				strophes: strophes3,
+			});
+			expect(result).toEqual(
+				songState({ stropheIndex: 2, strophes: strophes3 }),
+			);
+		});
+
+		it("keeps logo mode and its position", () => {
+			const state: SlideState = {
+				mode: "logo",
+				songId: 1,
+				stropheIndex: 1,
+				strophes: [],
+				setlistContext: setlistCtx,
+			};
+			const result = slideReducer(state, {
+				type: "HYDRATE_STROPHES",
+				songId: 1,
+				strophes: strophes3,
+			});
+			expect(result).toEqual({ ...state, strophes: strophes3 });
+		});
+
+		it("keeps the setlist context", () => {
+			const synced = songState({ strophes: [], setlistContext: setlistCtx });
+			const result = slideReducer(synced, {
+				type: "HYDRATE_STROPHES",
+				songId: 1,
+				strophes: strophes3,
+			});
+			expect(
+				result.mode === "song" ? result.setlistContext : undefined,
+			).toEqual(setlistCtx);
+		});
+
+		it("ignores a fetch that resolves for another song", () => {
+			const state = songState({ songId: 1, stropheIndex: 1 });
+			const result = slideReducer(state, {
+				type: "HYDRATE_STROPHES",
+				songId: 99,
+				strophes: [makeVerse(["Other"])],
+			});
+			expect(result).toBe(state);
+		});
+
+		it("clamps a synced index past the end of the fetched strophes", () => {
+			const synced = songState({ stropheIndex: 5, strophes: [] });
+			const result = slideReducer(synced, {
+				type: "HYDRATE_STROPHES",
+				songId: 1,
+				strophes: strophes3,
+			});
+			expect(result.mode === "song" && result.stropheIndex).toBe(2);
+		});
+
+		it("is a no-op in text and idle modes", () => {
+			const text: SlideState = {
+				mode: "text",
+				textTitle: "Lecture",
+				setlistContext: setlistCtx,
+			};
+			const event = {
+				type: "HYDRATE_STROPHES" as const,
+				songId: 1,
+				strophes: strophes3,
+			};
+			expect(slideReducer(text, event)).toBe(text);
+			expect(slideReducer(INITIAL_STATE, event)).toBe(INITIAL_STATE);
+		});
+
+		// The bug this event exists for: LOAD_SONG here would reset the slide and,
+		// because every dispatch is broadcast, pull the other window back with it.
+		it("survives the round trip that LOAD_SONG used to break", () => {
+			const presenter = songState({ songId: 7, stropheIndex: 2 });
+			const display = slideReducer(
+				deserializeState(serializeState(presenter, "presenter")),
+				{ type: "HYDRATE_STROPHES", songId: 7, strophes: strophes3 },
+			);
+			expect(display.mode === "song" && display.stropheIndex).toBe(2);
+
+			const echoed = slideReducer(presenter, {
+				type: "SYNC",
+				payload: serializeState(display, "display"),
+			});
+			expect(echoed.mode === "song" && echoed.stropheIndex).toBe(2);
+		});
+	});
+
 	describe("NEXT_STROPHE", () => {
 		it("increments stropheIndex in song mode", () => {
 			const state = songState();
@@ -609,7 +703,9 @@ describe("deserializeState", () => {
 });
 
 describe("getSetlistNavAction", () => {
-	const setlist = { id: "sl-1", step: "2", length: 5 };
+	// step is a 0-based index into the setlist's ordered items and totalSteps is
+	// the item count, so a 5-step setlist runs 0..4 and "2" sits mid-list.
+	const setlist = { id: "sl-1", step: "2", totalSteps: 5 };
 
 	describe("next direction", () => {
 		it("dispatches NEXT_STROPHE when not at last strophe", () => {
@@ -620,7 +716,7 @@ describe("getSetlistNavAction", () => {
 					state,
 					setlist.id,
 					setlist.step,
-					setlist.length,
+					setlist.totalSteps,
 				),
 			).toBe("dispatch");
 		});
@@ -633,7 +729,7 @@ describe("getSetlistNavAction", () => {
 					state,
 					setlist.id,
 					setlist.step,
-					setlist.length,
+					setlist.totalSteps,
 				),
 			).toBe("next_step");
 		});
@@ -645,9 +741,17 @@ describe("getSetlistNavAction", () => {
 			);
 		});
 
+		it("navigates to next step at the second-to-last step", () => {
+			const state = songState({ stropheIndex: 2 });
+			expect(getSetlistNavAction("next", state, "sl-1", "3", 5)).toBe(
+				"next_step",
+			);
+		});
+
 		it("does nothing at last strophe of last setlist step", () => {
 			const state = songState({ stropheIndex: 2 });
-			expect(getSetlistNavAction("next", state, "sl-1", "5", 5)).toBe("none");
+			// totalSteps is a count, so the last step of a 5-step setlist is 4
+			expect(getSetlistNavAction("next", state, "sl-1", "4", 5)).toBe("none");
 		});
 
 		it("navigates to next step on text slide", () => {
@@ -662,7 +766,7 @@ describe("getSetlistNavAction", () => {
 					state,
 					setlist.id,
 					setlist.step,
-					setlist.length,
+					setlist.totalSteps,
 				),
 			).toBe("next_step");
 		});
@@ -685,7 +789,7 @@ describe("getSetlistNavAction", () => {
 					INITIAL_STATE,
 					setlist.id,
 					setlist.step,
-					setlist.length,
+					setlist.totalSteps,
 				),
 			).toBe("next_step");
 		});
@@ -710,7 +814,7 @@ describe("getSetlistNavAction", () => {
 					state,
 					setlist.id,
 					setlist.step,
-					setlist.length,
+					setlist.totalSteps,
 				),
 			).toBe("dispatch");
 		});
@@ -729,7 +833,7 @@ describe("getSetlistNavAction", () => {
 					state,
 					setlist.id,
 					setlist.step,
-					setlist.length,
+					setlist.totalSteps,
 				),
 			).toBe("dispatch");
 		});
@@ -744,7 +848,7 @@ describe("getSetlistNavAction", () => {
 					state,
 					setlist.id,
 					setlist.step,
-					setlist.length,
+					setlist.totalSteps,
 				),
 			).toBe("dispatch");
 		});
@@ -757,7 +861,7 @@ describe("getSetlistNavAction", () => {
 					state,
 					setlist.id,
 					setlist.step,
-					setlist.length,
+					setlist.totalSteps,
 				),
 			).toBe("prev_step");
 		});
@@ -786,7 +890,7 @@ describe("getSetlistNavAction", () => {
 					state,
 					setlist.id,
 					setlist.step,
-					setlist.length,
+					setlist.totalSteps,
 				),
 			).toBe("prev_step");
 		});
@@ -805,7 +909,7 @@ describe("getSetlistNavAction", () => {
 					state,
 					setlist.id,
 					setlist.step,
-					setlist.length,
+					setlist.totalSteps,
 				),
 			).toBe("dispatch");
 		});

@@ -6,10 +6,7 @@ import {
 	TouchScreenListener,
 	slideHelpAtom,
 } from "@/components";
-import {
-	useSetlistLength,
-	useSetlistStepCached,
-} from "@/hooks/queries/useSetlistQueries";
+import { useSetlistItemsCached } from "@/hooks/queries/useSetlistQueries";
 import { useTaggedSong } from "@/hooks/queries/useSongQueries";
 import { getSetlistNavAction } from "@/hooks/slideReducer";
 import { useMqttConnectionStatus } from "@/hooks/useMqttConnectionStatus";
@@ -55,9 +52,6 @@ const SlidePage = () => {
 	// Keep screen awake during slideshow
 	useWakeLock();
 
-	// Setlist length query
-	const { data: setlistLength = 0 } = useSetlistLength(setlistId);
-
 	// Determine which song ID to load from URL
 	const songIdFromUrl = songId ? Number(songId) : undefined;
 
@@ -69,31 +63,44 @@ const SlidePage = () => {
 		needsFetch ?? undefined,
 	);
 
-	// Load setlist step data (cache-first, prefetched above)
-	const { data: stepData } = useSetlistStepCached(
+	// The setlist's ordered items (cache-first, prefetched at app startup).
+	// A step is an index into this array — see sortSetlistItems.
+	const { data: setlistItems } = useSetlistItemsCached(
 		!songIdFromUrl ? setlistId : undefined,
-		!songIdFromUrl && stepNumber ? Number(stepNumber) : undefined,
 	);
+	const totalSteps = setlistItems?.length ?? 0;
+	const stepData =
+		setlistItems && stepNumber !== undefined
+			? setlistItems[Number(stepNumber)]
+			: undefined;
 
 	// Init from song query (URL or synced songId)
 	// location.key changes on every navigation (even to the same URL), so re-selecting
 	// the same song via SlideFinder re-dispatches LOAD_SONG (exits logo mode, resets strophe).
 	useEffect(() => {
 		if (songData?.strophes) {
-			const id = songIdFromUrl ?? currentSongId;
-			if (id) {
+			if (songIdFromUrl) {
+				// Asked for this song explicitly — start it from the top.
 				dispatch({
 					type: "LOAD_SONG",
-					songId: id,
+					songId: songIdFromUrl,
 					strophes: songData.strophes,
 					setlistContext:
 						setlistId && stepNumber
 							? {
 									setlistId,
 									stepNumber: Number(stepNumber),
-									totalSteps: setlistLength,
+									totalSteps,
 								}
 							: undefined,
+				});
+			} else if (currentSongId) {
+				// Only filling in the words the synced payload left out — stay on the
+				// slide we synced to instead of jumping back to the first one.
+				dispatch({
+					type: "HYDRATE_STROPHES",
+					songId: currentSongId,
+					strophes: songData.strophes,
 				});
 			}
 		} else if (needsFetch && songError) {
@@ -109,7 +116,7 @@ const SlidePage = () => {
 		needsFetch,
 		setlistId,
 		stepNumber,
-		setlistLength,
+		totalSteps,
 		dispatch,
 		location.key,
 	]);
@@ -126,7 +133,7 @@ const SlidePage = () => {
 					? {
 							setlistId,
 							stepNumber: Number(stepNumber),
-							totalSteps: setlistLength,
+							totalSteps,
 						}
 					: undefined,
 			});
@@ -149,7 +156,7 @@ const SlidePage = () => {
 				setlistContext: {
 					setlistId: setlistId ?? "",
 					stepNumber: Number(stepNumber),
-					totalSteps: setlistLength,
+					totalSteps,
 				},
 			});
 			toast(label, {
@@ -157,7 +164,7 @@ const SlidePage = () => {
 				style: { backgroundColor: "black", color: "white" },
 			});
 		}
-	}, [stepData, setlistId, stepNumber, setlistLength, startFromEnd, dispatch]);
+	}, [stepData, setlistId, stepNumber, totalSteps, startFromEnd, dispatch]);
 
 	const handleNextStrophe = useCallback(() => {
 		const action = getSetlistNavAction(
@@ -165,7 +172,7 @@ const SlidePage = () => {
 			state,
 			setlistId,
 			stepNumber,
-			setlistLength,
+			totalSteps,
 		);
 		switch (action) {
 			case "dispatch":
@@ -178,7 +185,7 @@ const SlidePage = () => {
 				);
 				break;
 		}
-	}, [state, setlistId, stepNumber, setlistLength, dispatch, navigate]);
+	}, [state, setlistId, stepNumber, totalSteps, dispatch, navigate]);
 
 	const handlePrevStrophe = useCallback(() => {
 		const action = getSetlistNavAction(
@@ -186,7 +193,7 @@ const SlidePage = () => {
 			state,
 			setlistId,
 			stepNumber,
-			setlistLength,
+			totalSteps,
 		);
 		switch (action) {
 			case "dispatch":
@@ -199,7 +206,7 @@ const SlidePage = () => {
 				);
 				break;
 		}
-	}, [state, setlistId, stepNumber, setlistLength, dispatch, navigate]);
+	}, [state, setlistId, stepNumber, totalSteps, dispatch, navigate]);
 
 	// Arrow + strophe navigation
 	useEffect(() => {

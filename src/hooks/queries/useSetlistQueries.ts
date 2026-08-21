@@ -1,10 +1,11 @@
 import { queryKeys } from "@/utils/queryKeys";
+import { sortSetlistItems } from "@/utils/setlistOrder";
 import {
+	type AllSetlistItems,
 	allSetlistItemsQuery,
 	allSetlistsQuery,
-	setlistLengthQuery,
+	setlistItemsQuery,
 	setlistQuery,
-	taggedSongFromSetlistStepQuery,
 } from "@/utils/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -36,47 +37,12 @@ export const useSetlist = (setlistId: string | undefined) =>
 		refetchOnReconnect: true,
 	});
 
-export const useSetlistStep = (
-	setlistId: string | undefined,
-	stepNumber: number | undefined,
-) =>
-	useQuery({
-		queryKey: queryKeys.setlists.step(
-			setlistId as string,
-			stepNumber as number,
-		),
-		queryFn: async () => {
-			const { data, error } = await taggedSongFromSetlistStepQuery(
-				setlistId as string,
-				stepNumber as number,
-			);
-			if (error) throw error;
-			return data;
-		},
-		enabled: !!setlistId && stepNumber !== undefined,
-		staleTime: 0,
-		refetchOnWindowFocus: true,
-		refetchOnReconnect: true,
-	});
-
-export const useSetlistLength = (setlistId: string | undefined) =>
-	useQuery({
-		queryKey: queryKeys.setlists.length(setlistId as string),
-		queryFn: async () => {
-			const { data, error } = await setlistLengthQuery(setlistId as string);
-			if (error) throw error;
-			return data?.[0]?.position ?? 0;
-		},
-		enabled: !!setlistId,
-		staleTime: 0,
-	});
-
 /**
- * Prefetches ALL setlist items in a single bulk query and seeds each step
- * into the TanStack Query cache. Call once at app startup.
- * After this resolves, every useSetlistStepCached call is instant (cache hit).
+ * Prefetches ALL setlist items in a single bulk query and seeds each setlist's
+ * ordered item list into the TanStack Query cache. Call once at app startup.
+ * After this resolves, every useSetlistItemsCached call is instant (cache hit).
  */
-export const usePrefetchAllSetlistSteps = () => {
+export const usePrefetchAllSetlistItems = () => {
 	const queryClient = useQueryClient();
 
 	useEffect(() => {
@@ -85,31 +51,19 @@ export const usePrefetchAllSetlistSteps = () => {
 				const { data, error } = await allSetlistItemsQuery();
 				if (error || !data) return;
 
-				// Group by setlist_id to also seed length cache
-				const bySetlist = new Map<string, number>();
-
+				const bySetlist = new Map<string, AllSetlistItems>();
 				for (const item of data) {
 					if (!item.setlist_id) continue;
 					const setlistId = String(item.setlist_id);
-
-					// Seed individual step cache (same key as useSetlistStep)
-					queryClient.setQueryData(
-						queryKeys.setlists.step(setlistId, item.position),
-						item,
-					);
-
-					// Track max position per setlist for length cache
-					const current = bySetlist.get(setlistId) ?? 0;
-					if (item.position > current) {
-						bySetlist.set(setlistId, item.position);
-					}
+					const group = bySetlist.get(setlistId);
+					if (group) group.push(item);
+					else bySetlist.set(setlistId, [item]);
 				}
 
-				// Seed length cache for each setlist
-				for (const [setlistId, maxPosition] of bySetlist) {
+				for (const [setlistId, items] of bySetlist) {
 					queryClient.setQueryData(
-						queryKeys.setlists.length(setlistId),
-						maxPosition,
+						queryKeys.setlists.items(setlistId),
+						sortSetlistItems(items),
 					);
 				}
 			} catch {
@@ -122,28 +76,20 @@ export const usePrefetchAllSetlistSteps = () => {
 };
 
 /**
- * Cache-first variant of useSetlistStep for slideshow mode.
- * Serves from cache immediately (prefetched by usePrefetchAllSetlistSteps),
+ * Cache-first ordered items of one setlist, for presentation mode. A setlist
+ * step is an index into this array (see sortSetlistItems).
+ * Serves from cache immediately (prefetched by usePrefetchAllSetlistItems),
  * won't refetch on focus/reconnect to avoid jank during presentation.
  */
-export const useSetlistStepCached = (
-	setlistId: string | undefined,
-	stepNumber: number | undefined,
-) =>
+export const useSetlistItemsCached = (setlistId: string | undefined) =>
 	useQuery({
-		queryKey: queryKeys.setlists.step(
-			setlistId as string,
-			stepNumber as number,
-		),
+		queryKey: queryKeys.setlists.items(setlistId as string),
 		queryFn: async () => {
-			const { data, error } = await taggedSongFromSetlistStepQuery(
-				setlistId as string,
-				stepNumber as number,
-			);
+			const { data, error } = await setlistItemsQuery(setlistId as string);
 			if (error) throw error;
-			return data;
+			return sortSetlistItems(data ?? []);
 		},
-		enabled: !!setlistId && stepNumber !== undefined,
+		enabled: !!setlistId,
 		staleTime: Number.POSITIVE_INFINITY,
 		refetchOnWindowFocus: false,
 		refetchOnReconnect: false,

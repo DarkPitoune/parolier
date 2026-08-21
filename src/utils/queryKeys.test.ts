@@ -26,20 +26,11 @@ describe("queryKeys", () => {
 			expect(queryKeys.setlists.detail("abc")).toEqual(["setlists", "abc"]);
 		});
 
-		it("step includes setlist id and step number", () => {
-			expect(queryKeys.setlists.step("abc", 3)).toEqual([
+		it("items includes setlist id", () => {
+			expect(queryKeys.setlists.items("abc")).toEqual([
 				"setlists",
 				"abc",
-				"step",
-				3,
-			]);
-		});
-
-		it("length includes setlist id", () => {
-			expect(queryKeys.setlists.length("abc")).toEqual([
-				"setlists",
-				"abc",
-				"length",
+				"items",
 			]);
 		});
 	});

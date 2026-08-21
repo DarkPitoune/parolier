@@ -98,29 +98,28 @@ export const setlistQuery = async (setlistId: string) =>
 		.eq("setlist_id", setlistId);
 export type Setlist = QueryData<ReturnType<typeof setlistQuery>>;
 
-export const taggedSongFromSetlistStepQuery = async (
-	setlistId: string,
-	stepNumber: number,
-) =>
+// Shared so the per-setlist and bulk queries can't drift: both feed the same
+// query cache key (queryKeys.setlists.items), and two different shapes under one
+// key would hand callers inconsistent objects.
+const setlistItemSelect =
+	"id, setlist_id, songs (*, tags (id, name, svg, color)), texts (id, title, content, created_at), text, position";
+
+export const setlistItemsQuery = async (setlistId: string) =>
 	supabase
 		.from("setlist_items")
-		.select(
-			"id, songs (*, tags (id, name, svg, color)), texts (id, title, content, created_at), text, position",
-		)
+		.select(setlistItemSelect)
 		.eq("setlist_id", setlistId)
-		.eq("position", stepNumber)
-		.single();
-export type TaggedSongFromSetlistStep = QueryData<
-	ReturnType<typeof taggedSongFromSetlistStepQuery>
->;
+		.order("position")
+		.order("id");
+export type SetlistItems = QueryData<ReturnType<typeof setlistItemsQuery>>;
+export type SetlistItem = SetlistItems[number];
 
 export const allSetlistItemsQuery = async () =>
 	supabase
 		.from("setlist_items")
-		.select(
-			"id, setlist_id, songs (*, tags (id, name, svg, color)), texts (id, title, content, created_at), text, position",
-		)
-		.order("position");
+		.select(setlistItemSelect)
+		.order("position")
+		.order("id");
 export type AllSetlistItems = QueryData<
 	ReturnType<typeof allSetlistItemsQuery>
 >;
@@ -204,15 +203,6 @@ export const setlistTextItemMutation = async (
 export type SetlistTextItemMutation = QueryData<
 	ReturnType<typeof setlistTextItemMutation>
 >;
-
-export const setlistLengthQuery = async (setlistId: string) =>
-	supabase
-		.from("setlist_items")
-		.select("position")
-		.eq("setlist_id", setlistId)
-		.order("position", { ascending: false })
-		.limit(1);
-export type SetlistLength = QueryData<ReturnType<typeof setlistLengthQuery>>;
 
 export const setlistItemAppendMutation = async (
 	position: number,

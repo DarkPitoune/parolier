@@ -7,9 +7,10 @@ import {
 	TextItem,
 	TextPicker,
 } from "@/components";
-import { useIsMobile } from "@/hooks/useIsMobile";
 import { useSetlist } from "@/hooks/queries/useSetlistQueries";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { queryKeys } from "@/utils/queryKeys";
+import { sortSetlistItems } from "@/utils/setlistOrder";
 import {
 	setlistItemAppendMutation,
 	setlistItemDeleteMutation,
@@ -18,13 +19,6 @@ import {
 	setlistNameQuery,
 	setlistTextItemMutation,
 } from "@/utils/supabase";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-	DocumentTextIcon,
-	MusicalNoteIcon,
-	PencilIcon,
-	XMarkIcon,
-} from "@heroicons/react/24/outline";
 import {
 	DndContext,
 	type DragEndEvent,
@@ -34,6 +28,7 @@ import {
 	useSensor,
 	useSensors,
 } from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
 	SortableContext,
 	arrayMove,
@@ -41,7 +36,13 @@ import {
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import {
+	DocumentTextIcon,
+	MusicalNoteIcon,
+	PencilIcon,
+	XMarkIcon,
+} from "@heroicons/react/24/outline";
+import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
@@ -128,10 +129,7 @@ const SetlistEditor = () => {
 
 	const { data: setlistData } = useSetlist(setlistId);
 	const setlist = useMemo(
-		() =>
-			setlistData
-				? [...setlistData].sort((a, b) => a.position - b.position)
-				: null,
+		() => (setlistData ? sortSetlistItems(setlistData) : null),
 		[setlistData],
 	);
 
