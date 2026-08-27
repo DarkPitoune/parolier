@@ -17,7 +17,6 @@ Parolier ("Jubilate Book") is a React + TypeScript PWA for managing and displayi
 - `pnpm test -- --run` — Run tests once (no watch mode)
 - `pnpm build && pnpm exec playwright test` — Run Playwright e2e tests
 - `pnpm extract-types` — Regenerate Supabase TypeScript types into `database-generated.types.ts`
-- `pnpm migrate` — Run database migration script
 
 ## Architecture
 
@@ -26,7 +25,7 @@ Parolier ("Jubilate Book") is a React + TypeScript PWA for managing and displayi
 **Key directories:**
 - `src/pages/` — Route-level components (List, SongPage, SongEditor, SetlistPage, PresenterPage, SlidePage, Bible, Messe, etc.)
 - `src/components/` — Reusable UI (SongViewer, Slides/, SidePanel/, Contexts/)
-- `src/hooks/` — Custom hooks (useSlideController, useIsMobile, useMqttConnectionStatus, useWakeLock)
+- `src/hooks/` — Custom hooks (useSlideStateMachine + slideReducer, useIsMobile, useMqttConnectionStatus, useWakeLock)
 - `src/hooks/queries/` — TanStack Query hooks wrapping Supabase queries (useSongQueries, useSetlistQueries)
 - `src/utils/` — Supabase queries/mutations, MQTT pub/sub, chord transposition, connectivity checks
 
@@ -37,7 +36,14 @@ Parolier ("Jubilate Book") is a React + TypeScript PWA for managing and displayi
 **Routing:** React Router v6 defined in `src/main.tsx`. Main routes: `/` (song list), `/songs/:songId`, `/setlists/:setlistId`, `/presenter/:setlistId/:stepNumber`, `/slides/:songId`, `/slides` (MQTT-controlled), `/setlists/:setlistId/steps/:stepNumber/slide`, `/bible/:book/:chapter`, `/texts/:textId`.
 
 **Real-time sync (two independent systems):**
-- **Presenter/Slideshow:** MQTT over WebSocket (`wss://192.168.8.1:9003`) + localStorage cross-window sync. Controls slide display on projector. Topics: `parolier/strophe_change`, `parolier/logo_toggle`, `parolier/song_change`. State managed by `useSlideController` hook.
+- **Presenter/Slideshow:** slide state lives in a reducer (`src/hooks/slideReducer.ts`) driven by
+  `src/hooks/useSlideStateMachine.ts`; see `src/hooks/slide-state-machine.md` for the state diagram.
+  Two transports carry it. Same-device (presenter window → slide window) goes through
+  `localStorage` under the `parolier_slide_state` key plus `storage` events, and works offline.
+  Cross-device goes through MQTT over WebSocket (`wss://192.168.8.1:9003`) — the presenter role
+  publishes, the display role subscribes, and `SYNC` events are never re-published. The live topic
+  is `parolier/slide_state`; `parolier/strophe_change`, `parolier/logo_toggle` and
+  `parolier/song_change` are a legacy fan-out kept for an external device that is not in this repo.
 - **Leader/Follower:** Supabase Realtime on `leader_position` table. Redirects followers to `/songs/:id` when leader changes song. Managed by `LeaderListener` (mounted globally) + `LeaderContext`.
 
 **Database:** Supabase (PostgreSQL). Types auto-generated in `database-generated.types.ts`, manually extended in `database.types.ts`. Query functions in `src/utils/supabase.ts`.
