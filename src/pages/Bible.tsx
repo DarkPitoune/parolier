@@ -228,6 +228,7 @@ function Bible() {
 								viewBox="0 0 24 24"
 								fill="none"
 							>
+								<title>Chargement…</title>
 								<circle
 									className="opacity-25"
 									cx="12"

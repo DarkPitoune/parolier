@@ -1,9 +1,9 @@
 import { PageHeader } from "@/components";
-import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
 import {
 	type BibleTodayReading,
 	useBibleToday,
 } from "@/hooks/queries/useBibleTodayQuery";
+import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
 import { useEffect } from "react";
 
 function ReadingSection({ reading }: { reading: BibleTodayReading }) {
@@ -66,6 +66,7 @@ function BibleToday() {
 							viewBox="0 0 24 24"
 							fill="none"
 						>
+							<title>Chargement…</title>
 							<circle
 								className="opacity-25"
 								cx="12"

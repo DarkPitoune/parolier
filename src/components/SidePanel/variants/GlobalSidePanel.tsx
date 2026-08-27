@@ -72,7 +72,6 @@ function GlobalSidePanel({
 	const prevPathname = useRef(location.pathname);
 
 	// Auto-close on route change (skip initial render)
-	// biome-ignore lint/correctness/useExhaustiveDependencies: close panel when pathname changes
 	useEffect(() => {
 		if (prevPathname.current !== location.pathname) {
 			prevPathname.current = location.pathname;

@@ -25,7 +25,6 @@ import type {
 	AllTaggedSongs,
 	TaggedSong,
 } from "@/utils/supabase";
-import type { Database } from "../../../database.types";
 import {
 	useMutation,
 	useQueries,
@@ -34,6 +33,7 @@ import {
 } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import toast from "react-hot-toast";
+import type { Database } from "../../../database.types";
 
 export const useAllSongs = () =>
 	useQuery({
@@ -266,7 +266,8 @@ export const useSetStropheNote = () => {
 			// optimistic update (or confirmed save) is the current truth, so
 			// don't roll back past it.
 			const superseded =
-				context && latestAttempt.current.get(context.attemptKey) !== context.attempt;
+				context &&
+				latestAttempt.current.get(context.attemptKey) !== context.attempt;
 
 			if (!superseded && context?.previous)
 				queryClient.setQueryData(
@@ -286,7 +287,10 @@ export const useSetStropheNote = () => {
 			// returned array is stale relative to what's already in the
 			// cache — skip patching and let the newer call's own success
 			// confirm the cache instead.
-			if (context && latestAttempt.current.get(context.attemptKey) !== context.attempt)
+			if (
+				context &&
+				latestAttempt.current.get(context.attemptKey) !== context.attempt
+			)
 				return;
 
 			// Patch, don't invalidate: the write already returned the
@@ -443,9 +447,9 @@ export const useSaveSongEdit = () => {
 			if (deleteError) throw deleteError;
 
 			if (tagIds.length > 0) {
-				const { error: insertError } = await supabase.from("song_tag").insert(
-					tagIds.map((tagId) => ({ song_id: songId, tag_id: tagId })),
-				);
+				const { error: insertError } = await supabase
+					.from("song_tag")
+					.insert(tagIds.map((tagId) => ({ song_id: songId, tag_id: tagId })));
 				if (insertError) throw insertError;
 			}
 
@@ -494,43 +498,45 @@ export const useSongsRealtimeSync = () => {
 	const queryClient = useQueryClient();
 
 	useEffect(() => {
-		const channel = supabase.channel("songs-realtime").on(
-			"postgres_changes",
-			{ schema: "public", table: "songs", event: "UPDATE" },
-			(payload) => {
-				const row = (
-					payload as unknown as {
-						new: Database["public"]["Tables"]["songs"]["Row"];
-					}
-				).new;
+		const channel = supabase
+			.channel("songs-realtime")
+			.on(
+				"postgres_changes",
+				{ schema: "public", table: "songs", event: "UPDATE" },
+				(payload) => {
+					const row = (
+						payload as unknown as {
+							new: Database["public"]["Tables"]["songs"]["Row"];
+						}
+					).new;
 
-				queryClient.setQueryData<TaggedSong>(
-					queryKeys.songs.detail(row.id),
-					(old) => (old ? { ...old, ...row } : old),
-				);
-				queryClient.setQueryData<AllTaggedSongs>(
-					queryKeys.songs.allTagged(),
-					(old) => old?.map((s) => (s.id === row.id ? { ...s, ...row } : s)),
-				);
-				const titlePatch = <T extends { id: number; title: string }>(
-					entries: T[] | undefined,
-				) =>
-					entries?.map((s) =>
-						s.id === row.id ? { ...s, title: row.title } : s,
+					queryClient.setQueryData<TaggedSong>(
+						queryKeys.songs.detail(row.id),
+						(old) => (old ? { ...old, ...row } : old),
 					);
-				queryClient.setQueryData<AllSongs>(queryKeys.songs.list(), (old) =>
-					titlePatch(old),
-				);
-				queryClient.setQueryData<AllRefrains>(
-					queryKeys.songs.refrainList(),
-					(old) => titlePatch(old),
-				);
-				queryClient.setQueryData<AllOrdinaireSongs>(
-					queryKeys.songs.ordinaireList(),
-					(old) => titlePatch(old),
-				);
-			},
-		);
+					queryClient.setQueryData<AllTaggedSongs>(
+						queryKeys.songs.allTagged(),
+						(old) => old?.map((s) => (s.id === row.id ? { ...s, ...row } : s)),
+					);
+					const titlePatch = <T extends { id: number; title: string }>(
+						entries: T[] | undefined,
+					) =>
+						entries?.map((s) =>
+							s.id === row.id ? { ...s, title: row.title } : s,
+						);
+					queryClient.setQueryData<AllSongs>(queryKeys.songs.list(), (old) =>
+						titlePatch(old),
+					);
+					queryClient.setQueryData<AllRefrains>(
+						queryKeys.songs.refrainList(),
+						(old) => titlePatch(old),
+					);
+					queryClient.setQueryData<AllOrdinaireSongs>(
+						queryKeys.songs.ordinaireList(),
+						(old) => titlePatch(old),
+					);
+				},
+			);
 		channel.subscribe();
 
 		return () => {

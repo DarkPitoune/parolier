@@ -14,13 +14,13 @@ import {
 	deleteSetlistMutation,
 	newNamedSetlistMutation,
 } from "@/utils/supabase";
-import { PencilSquareIcon, TrashIcon } from "@heroicons/react/16/solid";
 import {
 	Dialog,
 	DialogBackdrop,
 	DialogPanel,
 	DialogTitle,
 } from "@headlessui/react";
+import { PencilSquareIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
