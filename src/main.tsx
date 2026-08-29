@@ -1,19 +1,5 @@
 import { AuthContextProvider, ErrorBoundary, isDarkAtom } from "@/components";
 import { systemPrefersDarkAtom } from "@/components/Contexts/SettingsContext";
-import {
-	Analytics,
-	Bible,
-	BibleToday,
-	Index,
-	Messe,
-	PresenterPage,
-	SetlistEditor,
-	Setlists,
-	SlidePage,
-	SongPage,
-	TextEditor,
-	Tuner,
-} from "@/pages";
 import * as Sentry from "@sentry/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import clsx from "clsx";
@@ -32,13 +18,6 @@ import { CornerMenu } from "./components/CornerMenu";
 import { LeaderListener } from "./components/LeaderListener";
 import { OfflineBanner } from "./components/OfflineBanner";
 import { GlobalSidePanel } from "./components/SidePanel/variants/GlobalSidePanel";
-import { CachePage } from "./pages/CachePage";
-import { CertificatePage } from "./pages/CertificatePage";
-import { OrdinairePage } from "./pages/OrdinairePage";
-import { Ordinaires } from "./pages/Ordinaires";
-import { Refrains } from "./pages/Refrains";
-import { TextPage } from "./pages/TextPage";
-import { Texts } from "./pages/Texts";
 import "./index.css";
 import { useState } from "react";
 import { usePrefetchAllSetlistItems } from "./hooks/queries/useSetlistQueries";
@@ -47,8 +26,7 @@ import {
 	useSongsRealtimeSync,
 } from "./hooks/queries/useSongQueries";
 import { usePrefetchAllTexts } from "./hooks/queries/useTextQueries";
-import { SetlistPage } from "./pages/SetlistPage";
-import SongEditor from "./pages/SongEditor";
+import { appRoutes } from "./routes";
 import { queryClient } from "./utils/queryClient";
 
 Sentry.init({
@@ -74,116 +52,7 @@ const Layout = () => {
 const router = createBrowserRouter([
 	{
 		element: <Layout />,
-		children: [
-			{
-				path: "/",
-				element: <Index />,
-			},
-			{
-				path: "/refrains",
-				element: <Refrains />,
-			},
-			{
-				path: "/ordinaires",
-				element: <Ordinaires />,
-			},
-			{
-				path: "/ordinaires/:ordinaireId",
-				element: <OrdinairePage />,
-			},
-			{
-				path: "/texts",
-				element: <Texts />,
-			},
-			{
-				path: "/texts/:textId",
-				element: <TextPage />,
-			},
-			{
-				path: "/texts/:textId/edit",
-				element: <TextEditor />,
-			},
-			{
-				path: "/bible",
-				element: <Bible />,
-			},
-			{
-				path: "/bible/today",
-				element: <BibleToday />,
-			},
-			{
-				path: "/bible/:book",
-				element: <Bible />,
-			},
-			{
-				path: "/bible/:book/:chapter",
-				element: <Bible />,
-			},
-			{
-				path: "/messe",
-				element: <Messe />,
-			},
-			{
-				path: "/tuner",
-				element: <Tuner />,
-			},
-			{
-				path: "/setlists",
-				element: <Setlists />,
-			},
-			{
-				path: "/setlists/:setlistId/edit",
-				element: <SetlistEditor />,
-			},
-			{
-				path: "/setlists/:setlistId",
-				element: <SetlistPage />,
-			},
-			{
-				path: "/setlists/:setlistId/steps/:stepNumber/slide",
-				element: <SlidePage />,
-			},
-			{
-				path: "/songs/:songId",
-				element: <SongPage />,
-			},
-			{
-				path: "/songs/:songId/edit",
-				element: <SongEditor />,
-			},
-			{
-				path: "/slides",
-				element: <SlidePage />,
-			},
-			{
-				path: "/slides/:songId",
-				element: <SlidePage />,
-			},
-			{
-				path: "/analytics",
-				element: <Analytics />,
-			},
-			{
-				path: "/presenter",
-				element: <PresenterPage />,
-			},
-			{
-				path: "/presenter/:setlistId/:stepNumber",
-				element: <PresenterPage />,
-			},
-			{
-				path: "/cache",
-				element: <CachePage />,
-			},
-			{
-				path: "/certificate",
-				element: <CertificatePage />,
-			},
-			{
-				path: "*",
-				element: <img src="https://http.dog/404.jpg" alt="404" />,
-			},
-		],
+		children: appRoutes,
 	},
 ]);
 
