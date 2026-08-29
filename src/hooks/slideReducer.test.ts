@@ -941,3 +941,143 @@ describe("serializeState — performance notes", () => {
 		expect(JSON.stringify(payload)).not.toContain("on envoie");
 	});
 });
+
+// --- PLAN-01 1.6b: assertions that must survive the transport swap ---
+
+describe("SYNC idempotence", () => {
+	// Delivering the same payload twice has to be a no-op the second time. This
+	// is what makes double delivery safe, and double delivery is not
+	// hypothetical: the same state travels by localStorage *and* by the network
+	// transport, so a display window can legitimately receive both copies. The
+	// reducer is written for this at slideReducer.ts:203-211 and nothing asserted
+	// it. Phase 3 swaps the network leg — these assertions must still hold after.
+	const applyTwice = (state: SlideState, payload: SyncPayload) => {
+		const once = slideReducer(state, { type: "SYNC", payload });
+		const twice = slideReducer(once, { type: "SYNC", payload });
+		return { once, twice };
+	};
+
+	it("is idempotent when the sync names the song already loaded", () => {
+		// The branch that preserves strophes: applying it again must not drop
+		// them, which would blank the projector mid-song.
+		const state = songState({ songId: 7, stropheIndex: 0 });
+		const payload = serializeState(
+			songState({ songId: 7, stropheIndex: 2 }),
+			"presenter",
+		);
+
+		const { once, twice } = applyTwice(state, payload);
+
+		expect(twice).toEqual(once);
+		expect(once).toMatchObject({ mode: "song", songId: 7, stropheIndex: 2 });
+		// and the strophes we already had are still there
+		expect((once as Extract<SlideState, { mode: "song" }>).strophes).toEqual(
+			strophes3,
+		);
+	});
+
+	it("is idempotent when the sync names a different song", () => {
+		// The other branch: strophes are cleared for the consumer to re-fetch.
+		const state = songState({ songId: 7 });
+		const payload = serializeState(
+			songState({ songId: 99, stropheIndex: 1 }),
+			"presenter",
+		);
+
+		const { once, twice } = applyTwice(state, payload);
+
+		expect(twice).toEqual(once);
+		expect((once as Extract<SlideState, { mode: "song" }>).strophes).toEqual(
+			[],
+		);
+	});
+
+	it("is idempotent for logo and text payloads", () => {
+		const logoPayload = serializeState(
+			{
+				mode: "logo",
+				songId: 7,
+				stropheIndex: 1,
+				strophes: strophes3,
+				setlistContext: null,
+			},
+			"presenter",
+		);
+		const logo = applyTwice(songState({ songId: 7 }), logoPayload);
+		expect(logo.twice).toEqual(logo.once);
+
+		const textPayload = serializeState(
+			{ mode: "text", textTitle: "Prière", setlistContext: setlistCtx },
+			"presenter",
+		);
+		const text = applyTwice(songState(), textPayload);
+		expect(text.twice).toEqual(text.once);
+		expect(text.once).toMatchObject({ mode: "text", textTitle: "Prière" });
+	});
+
+	it("is idempotent from idle", () => {
+		const payload = serializeState(songState({ songId: 3 }), "presenter");
+		const { once, twice } = applyTwice(INITIAL_STATE, payload);
+		expect(twice).toEqual(once);
+	});
+});
+
+describe("no musician-only note reaches the wire", () => {
+	// The projector shows the congregation lyrics and nothing else. A note is
+	// for the band. The existing guard above checks the `stropheContent` field
+	// by name; this one inspects the whole payload instead, so it keeps its
+	// meaning when Phase 3.2 removes that field.
+	const noted: Strophe = {
+		type: "chorus",
+		repetition: false,
+		content: [makeLine("Gloire à toi Seigneur")],
+		note: { who: ["🥁", "🎤"], how: ["🔥"], text: "on envoie, batterie seule" },
+	};
+
+	const collectKeys = (value: unknown, found: string[] = []): string[] => {
+		if (Array.isArray(value)) {
+			for (const item of value) collectKeys(item, found);
+		} else if (value && typeof value === "object") {
+			for (const [key, child] of Object.entries(value)) {
+				found.push(key);
+				collectKeys(child, found);
+			}
+		}
+		return found;
+	};
+
+	it("carries no `note` key anywhere in the payload", () => {
+		const payload = serializeState(
+			{
+				mode: "song",
+				songId: 104,
+				strophes: [noted, noted],
+				stropheIndex: 0,
+				setlistContext: null,
+			},
+			"presenter",
+		);
+
+		expect(collectKeys(payload)).not.toContain("note");
+	});
+
+	it("carries none of the note's content, whatever shape the payload takes", () => {
+		const payload = serializeState(
+			{
+				mode: "song",
+				songId: 104,
+				strophes: [noted],
+				stropheIndex: 0,
+				setlistContext: null,
+			},
+			"presenter",
+		);
+		const wire = JSON.stringify(payload);
+
+		for (const secret of ["🥁", "🎤", "🔥", "on envoie", "batterie seule"]) {
+			expect(wire).not.toContain(secret);
+		}
+		// ...while the lyrics themselves still travel.
+		expect(wire).toContain("Gloire à toi Seigneur");
+	});
+});
