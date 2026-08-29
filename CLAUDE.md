@@ -14,9 +14,15 @@ Parolier ("Jubilate Book") is a React + TypeScript PWA for managing and displayi
 - `pnpm format` — Auto-format with Biome
 - `pnpm preview` — Preview production build
 - `pnpm test` — Run Vitest unit/integration tests
-- `pnpm test -- --run` — Run tests once (no watch mode)
-- `pnpm build && pnpm exec playwright test` — Run Playwright e2e tests
+- `pnpm test:run` — Run Vitest once (no watch mode)
+- `pnpm test:e2e` — Build with `--mode e2e` and run Playwright (needs the local stack up)
 - `pnpm extract-types` — Regenerate Supabase TypeScript types into `database-generated.types.ts`
+
+Local database (Docker must be running — see README for detail):
+
+- `pnpm supabase:start` / `pnpm supabase:stop` — Boot or stop the local stack
+- `pnpm db:reset` — Re-apply the baseline migration and re-seed `supabase/seed.sql`
+- `pnpm dev:local` — Run the dev server against the local stack instead of production
 
 ## Architecture
 
@@ -56,7 +62,14 @@ Parolier ("Jubilate Book") is a React + TypeScript PWA for managing and displayi
 
 **Unit/Integration:** Vitest + `@testing-library/react`. Config in `vitest.config.ts`, setup in `src/test/setup.ts`. Tests live alongside source files as `*.test.ts(x)`.
 
-**E2e:** Playwright. Config in `playwright.config.ts`, tests in `e2e/`. Runs against `pnpm preview` on port 4173. Sentry is disabled in e2e builds.
+**E2e:** Playwright. Config in `playwright.config.ts`, tests in `e2e/`, run against `pnpm preview`
+on port 4173. The build under test uses `--mode e2e`, so it loads `.env.e2e` and points at the
+**local** Supabase stack — start it first, or the run fails against nothing. That mode also
+disables Sentry and the analytics insert (which is gated on `MODE === "production"`).
+
+Tests address seeded rows through `e2e/fixtures.ts` by id and title rather than `.first()`, and
+the fixtures themselves live in `supabase/seed.sql`. `e2e/manual/` is excluded from the run: it
+holds specs a human drives by hand, which pause and ask you to physically switch the network.
 
 ## Style Conventions
 
