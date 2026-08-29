@@ -1,4 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { SETLISTS, SONGS } from "./fixtures";
+
+const setlist = SETLISTS.sunday;
 
 test.describe("Presenter flow", () => {
 	test("presenter page loads", async ({ page }) => {
@@ -38,33 +41,25 @@ test.describe("Presenter flow", () => {
 	}) => {
 		// The presenter link only renders on desktop
 		await page.setViewportSize({ width: 1280, height: 720 });
-		await page.goto("/setlists");
-
-		const firstSetlist = page
-			.locator('a[href^="/setlists/"]:not([href$="/edit"])')
-			.first();
-		await expect(firstSetlist).toBeVisible();
-		await firstSetlist.click();
-		await expect(page).toHaveURL(/\/setlists\/\d+$/);
+		await page.goto(`/setlists/${setlist.id}`);
+		await expect(page.getByText(setlist.name)).toBeVisible();
 
 		await page.getByTestId("open-presenter-btn").click();
 
 		// A step is a 0-based index into the setlist, so the first tab is step 0 —
 		// this is what the `activeTab + 1` off-by-one used to get wrong (and on the
 		// last tab it addressed a step that doesn't exist at all).
-		await expect(page).toHaveURL(/\/presenter\/\d+\/0$/);
+		await expect(page).toHaveURL(
+			new RegExp(`/presenter/${setlist.id}/0$`),
+		);
 
 		const counter = page.getByTestId("setlist-step-counter");
-		await expect(counter).toContainText("Étape 1/");
+		// The fixture has a known length, so assert it rather than reading it back.
+		await expect(counter).toContainText(`Étape 1/${setlist.steps}`);
 
 		// Steps can be texts, which have no strophes: navigation has to come from
 		// the setlist, not from strophe bounds, or the buttons are dead here.
 		await expect(page.getByTestId("next-strophe-btn")).toBeEnabled();
-
-		const total = Number(
-			((await counter.textContent()) ?? "").split("/")[1]?.trim(),
-		);
-		test.skip(!total || total < 2, "setlist has fewer than 2 steps");
 
 		// Walk the first step's strophes to their end, where "next" has to cross
 		// into the second step instead of going dead. The bound just has to exceed
@@ -73,8 +68,8 @@ test.describe("Presenter flow", () => {
 			if (((await counter.textContent()) ?? "").startsWith("Étape 2/")) break;
 			await page.keyboard.press("ArrowRight");
 		}
-		await expect(counter).toContainText("Étape 2/");
-		await expect(page).toHaveURL(/\/presenter\/\d+\/1$/);
+		await expect(counter).toContainText(`Étape 2/${setlist.steps}`);
+		await expect(page).toHaveURL(new RegExp(`/presenter/${setlist.id}/1$`));
 	});
 
 	test("opening the slideshow mid-song does not reset the slide", async ({
@@ -86,18 +81,15 @@ test.describe("Presenter flow", () => {
 		// echo, dragged the presenter back with it.
 		const presenter = await context.newPage();
 		await presenter.setViewportSize({ width: 1280, height: 720 });
-		await presenter.goto("/setlists");
-		await presenter
-			.locator('a[href^="/setlists/"]:not([href$="/edit"])')
-			.first()
-			.click();
-		await expect(presenter).toHaveURL(/\/setlists\/\d+$/);
+		await presenter.goto(`/setlists/${setlist.id}`);
 		await presenter.getByTestId("open-presenter-btn").click();
 
 		const strophes = presenter.getByTestId("strophe-counter");
 		await expect(strophes).toContainText("1/");
+		// Fixture song 601 carries enough strophes to reach slide 3, so this no
+		// longer skips itself out of existence on thin data.
 		const total = Number(((await strophes.textContent()) ?? "").split("/")[1]);
-		test.skip(!total || total < 3, "opening step has fewer than 3 slides");
+		expect(total).toBeGreaterThanOrEqual(3);
 
 		await presenter.keyboard.press("ArrowRight");
 		await presenter.keyboard.press("ArrowRight");
@@ -130,18 +122,13 @@ test.describe("Presenter flow", () => {
 		// presenter reloaded onto a song already in progress has to fetch the lyrics,
 		// and that fetch must not restart the song.
 		await page.setViewportSize({ width: 1280, height: 720 });
-		await page.goto("/setlists");
-		await page
-			.locator('a[href^="/setlists/"]:not([href$="/edit"])')
-			.first()
-			.click();
-		await expect(page).toHaveURL(/\/setlists\/\d+$/);
+		await page.goto(`/setlists/${setlist.id}`);
 		await page.getByTestId("open-presenter-btn").click();
 
 		const strophes = page.getByTestId("strophe-counter");
 		await expect(strophes).toContainText("1/");
 		const total = Number(((await strophes.textContent()) ?? "").split("/")[1]);
-		test.skip(!total || total < 3, "opening step has fewer than 3 slides");
+		expect(total).toBeGreaterThanOrEqual(3);
 
 		await page.keyboard.press("ArrowRight");
 		await page.keyboard.press("ArrowRight");
@@ -162,18 +149,20 @@ test.describe("Presenter flow", () => {
 		await page.goto("/presenter");
 
 		// Set up a song in localStorage using new SyncPayload shape
-		await page.evaluate(() => {
+		// The fixture id has to be passed in: page.evaluate runs in the browser,
+		// where this module's imports do not exist.
+		await page.evaluate((songId) => {
 			localStorage.setItem(
 				"parolier_slide_state",
 				JSON.stringify({
 					mode: "song",
-					songId: 1,
+					songId,
 					stropheIndex: 0,
 					timestamp: Date.now(),
 					source: "presenter",
 				}),
 			);
-		});
+		}, SONGS.withChords.id);
 
 		// Press right arrow
 		await page.keyboard.press("ArrowRight");

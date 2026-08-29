@@ -27,12 +27,17 @@ insert into public.ordinaires (id, name, sheet_music_url) values
 
 -- ---------------------------------------------------------------- songs
 -- 601 carries chords, 602 carries a performance note, 603 is a refrain,
--- 604 is an ordinaire part, 605 has a section strophe, 606 is search-only.
+-- 604 is an ordinaire part, 605 has a section strophe, 606 is search-only,
+-- 607 is tall enough to scroll.
 
 insert into public.songs (id, title, type, ordinaire_id, ordinaire_role, sheet_music_url, strophes) values
+  -- Four strophes on purpose: the presenter specs walk to slide 3, and a shorter
+  -- opening song makes them skip themselves instead of asserting anything.
   (601, 'Tu es là', 'song', null, null, null, array[
     '{"type":"verse","repetition":false,"content":[{"text":"Tu es là présent livré pour nous","chords":"Em"},{"text":"Toi le tout petit le serviteur","chords":"C"}]}',
-    '{"type":"chorus","repetition":true,"content":[{"text":"Gloire à toi Seigneur","chords":"G"},{"text":"Gloire à toi","chords":"D"}]}'
+    '{"type":"chorus","repetition":true,"content":[{"text":"Gloire à toi Seigneur","chords":"G"},{"text":"Gloire à toi","chords":"D"}]}',
+    '{"type":"verse","repetition":false,"content":[{"text":"Tu es là présent donné pour nous","chords":"Em"},{"text":"Toi le seul Seigneur le tout puissant","chords":"C"}]}',
+    '{"type":"verse","repetition":false,"content":[{"text":"Tu es là présent caché dans le pain","chords":"Am"},{"text":"Toi qui nous rassembles en un seul corps","chords":"G"}]}'
   ]::jsonb[]),
 
   (602, 'Je vous salue Marie', 'song', null, null, null, array[
@@ -55,6 +60,26 @@ insert into public.songs (id, title, type, ordinaire_id, ordinaire_role, sheet_m
 
   (606, 'Souffle imprévisible', 'song', null, null, null, array[
     '{"type":"verse","repetition":false,"content":[{"text":"Souffle imprévisible Esprit de Dieu","chords":"Am"}]}'
+  ]::jsonb[]),
+
+  -- Deliberately tall: the scroll-restore spec needs a page longer than the
+  -- viewport, and every other fixture song fits on one screen.
+  (607, 'Litanie des saints', 'song', null, null, null, array[
+    '{"type":"verse","repetition":false,"content":[{"text":"Seigneur, prends pitié de nous","chords":"D"},{"text":"Ô Christ, prends pitié de nous","chords":"A"}]}',
+    '{"type":"verse","repetition":false,"content":[{"text":"Sainte Marie, Mère de Dieu","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}',
+    '{"type":"verse","repetition":false,"content":[{"text":"Saint Michel, saint Gabriel","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}',
+    '{"type":"verse","repetition":false,"content":[{"text":"Saint Jean-Baptiste, saint Joseph","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}',
+    '{"type":"verse","repetition":false,"content":[{"text":"Saint Pierre et saint Paul","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}',
+    '{"type":"verse","repetition":false,"content":[{"text":"Saint André, saint Jean","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}',
+    '{"type":"verse","repetition":false,"content":[{"text":"Sainte Marie-Madeleine, saint Étienne","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}',
+    '{"type":"verse","repetition":false,"content":[{"text":"Saint Ignace d''Antioche, saint Laurent","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}',
+    '{"type":"verse","repetition":false,"content":[{"text":"Sainte Perpétue, sainte Félicité","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}',
+    '{"type":"verse","repetition":false,"content":[{"text":"Sainte Agnès, saint Grégoire","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}',
+    '{"type":"verse","repetition":false,"content":[{"text":"Saint Augustin, saint Athanase","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}',
+    '{"type":"verse","repetition":false,"content":[{"text":"Saint Basile, saint Martin","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}',
+    '{"type":"verse","repetition":false,"content":[{"text":"Saint Benoît, saint François","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}',
+    '{"type":"verse","repetition":false,"content":[{"text":"Saint Dominique, saint Thomas d''Aquin","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}',
+    '{"type":"verse","repetition":false,"content":[{"text":"Tous les saints et saintes de Dieu","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}'
   ]::jsonb[]);
 
 insert into public.song_tag (song_id, tag_id) values
