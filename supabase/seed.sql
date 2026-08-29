@@ -80,6 +80,13 @@ insert into public.songs (id, title, type, ordinaire_id, ordinaire_role, sheet_m
     '{"type":"verse","repetition":false,"content":[{"text":"Saint Benoît, saint François","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}',
     '{"type":"verse","repetition":false,"content":[{"text":"Saint Dominique, saint Thomas d''Aquin","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}',
     '{"type":"verse","repetition":false,"content":[{"text":"Tous les saints et saintes de Dieu","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}'
+  ]::jsonb[]),
+
+  -- Reserved for the editor round-trip spec, which saves to it. Nothing else
+  -- asserts its contents, so that mutation cannot race another test — the
+  -- Playwright suite runs fullyParallel.
+  (608, 'Brouillon', 'song', null, null, null, array[
+    '{"type":"verse","repetition":false,"content":[{"text":"Ligne de brouillon","chords":"C"}]}'
   ]::jsonb[]);
 
 insert into public.song_tag (song_id, tag_id) values

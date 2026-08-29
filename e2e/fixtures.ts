@@ -22,6 +22,12 @@ export const SONGS = {
 	searchOnly: { id: 606, title: "Souffle imprévisible" },
 	/** Taller than the viewport, so scroll position has somewhere to go. */
 	long: { id: 607, title: "Litanie des saints" },
+	/**
+	 * Reserved for the editor round-trip, which writes to it. Nothing else
+	 * asserts its contents — the Playwright suite runs fullyParallel, so a spec
+	 * that saves must not share a song with a spec that reads.
+	 */
+	editable: { id: 608, title: "Brouillon", firstLine: "Ligne de brouillon" },
 } as const;
 
 export const TEXTS = {
