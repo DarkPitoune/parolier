@@ -1,10 +1,32 @@
-import { defineConfig } from "vite";
+import { type ConfigEnv, defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA, type VitePWAOptions } from "vite-plugin-pwa";
 import path from "node:path";
 import packageJson from "./package.json";
 
-const manifest: Partial<VitePWAOptions> = {
+// Supabase rejects a request with no Apikey header, and the service worker
+// refetches outside the client that would otherwise add one, so the key has to
+// be inlined into the generated worker at build time. That much is unavoidable
+// and harmless — it is the same public key the bundle already carries.
+//
+// It has to be inlined as a *literal*, though: workbox serialises these plugins
+// by calling toString() on the function, which keeps the source text and drops
+// the scope around it. A captured variable therefore reaches the worker as an
+// undefined free name and throws on the first cached request, with a build that
+// reported success. Building the source here is what keeps the value in the
+// body while still reading it from one place.
+const supabaseApikeyHeader = (supabaseAnonKey: string) => ({
+  requestWillFetch: new Function(
+    "{ request }",
+    [
+      "const withApikey = new Request(request);",
+      `withApikey.headers.set("Apikey", ${JSON.stringify(supabaseAnonKey)});`,
+      "return withApikey;",
+    ].join("\n"),
+  ) as ({ request }: { request: Request }) => Promise<Request>,
+});
+
+const pwaOptions = (supabaseAnonKey: string): Partial<VitePWAOptions> => ({
   manifest: {
     name: "Chants Jubilate",
     short_name: "Jubilate",
@@ -145,18 +167,7 @@ const manifest: Partial<VitePWAOptions> = {
             maxAgeSeconds: 365 * 24 * 60 * 60,
           },
           cacheableResponse: { statuses: [200] },
-          plugins: [
-            {
-              requestWillFetch: async ({ request }: { request: Request }) => {
-                const modifiedRequest = new Request(request);
-                modifiedRequest.headers.set(
-                  "Apikey",
-                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHBiY3RsZWpyempqdmttY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjIwMDU0ODksImV4cCI6MjAzNzU4MTQ4OX0.aOrgMlTl_1Odj5Z0ssCsa0879UaSDrtUTIpNbXbaaOg",
-                );
-                return modifiedRequest;
-              },
-            },
-          ],
+          plugins: [supabaseApikeyHeader(supabaseAnonKey)],
         },
       },
       // Setlists: must be fresh, NetworkFirst with 3s timeout fallback
@@ -173,18 +184,7 @@ const manifest: Partial<VitePWAOptions> = {
             maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
           },
           cacheableResponse: { statuses: [200] },
-          plugins: [
-            {
-              requestWillFetch: async ({ request }: { request: Request }) => {
-                const modifiedRequest = new Request(request);
-                modifiedRequest.headers.set(
-                  "Apikey",
-                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHBiY3RsZWpyempqdmttY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjIwMDU0ODksImV4cCI6MjAzNzU4MTQ4OX0.aOrgMlTl_1Odj5Z0ssCsa0879UaSDrtUTIpNbXbaaOg",
-                );
-                return modifiedRequest;
-              },
-            },
-          ],
+          plugins: [supabaseApikeyHeader(supabaseAnonKey)],
         },
       },
       // Texts: rarely change, StaleWhileRevalidate
@@ -198,18 +198,7 @@ const manifest: Partial<VitePWAOptions> = {
             maxAgeSeconds: 365 * 24 * 60 * 60,
           },
           cacheableResponse: { statuses: [200] },
-          plugins: [
-            {
-              requestWillFetch: async ({ request }: { request: Request }) => {
-                const modifiedRequest = new Request(request);
-                modifiedRequest.headers.set(
-                  "Apikey",
-                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHBiY3RsZWpyempqdmttY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjIwMDU0ODksImV4cCI6MjAzNzU4MTQ4OX0.aOrgMlTl_1Odj5Z0ssCsa0879UaSDrtUTIpNbXbaaOg",
-                );
-                return modifiedRequest;
-              },
-            },
-          ],
+          plugins: [supabaseApikeyHeader(supabaseAnonKey)],
         },
       },
       // Catch-all for other Supabase API calls (excluding analytics)
@@ -230,18 +219,7 @@ const manifest: Partial<VitePWAOptions> = {
             maxAgeSeconds: 365 * 24 * 60 * 60,
           },
           cacheableResponse: { statuses: [200] },
-          plugins: [
-            {
-              requestWillFetch: async ({ request }: { request: Request }) => {
-                const modifiedRequest = new Request(request);
-                modifiedRequest.headers.set(
-                  "Apikey",
-                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHBiY3RsZWpyempqdmttY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjIwMDU0ODksImV4cCI6MjAzNzU4MTQ4OX0.aOrgMlTl_1Odj5Z0ssCsa0879UaSDrtUTIpNbXbaaOg",
-                );
-                return modifiedRequest;
-              },
-            },
-          ],
+          plugins: [supabaseApikeyHeader(supabaseAnonKey)],
         },
       },
       // Bible API: static content, CacheFirst
@@ -259,10 +237,23 @@ const manifest: Partial<VitePWAOptions> = {
       },
     ],
   },
-};
+});
 
 // https://vitejs.dev/config/
-export default () => {
+export default ({ command, mode }: ConfigEnv) => {
+  const { VITE_SUPABASE_ANON_KEY } = loadEnv(mode, __dirname, "VITE_");
+  // Only a build writes the key into a service worker. `vite preview` and the
+  // dev server resolve this config too, in production mode and without ever
+  // generating a worker, so requiring it there would break `pnpm preview` on
+  // any checkout with no .env.
+  if (command === "build" && !VITE_SUPABASE_ANON_KEY) {
+    throw new Error(
+      `VITE_SUPABASE_ANON_KEY is not set for mode "${mode}". Without it the ` +
+        "service worker would ship an empty Apikey header and 401 every " +
+        "request it serves from cache. Add it to the matching .env file.",
+    );
+  }
+
   return defineConfig({
     define: {
       __APP_VERSION__: JSON.stringify(packageJson.version),
@@ -272,7 +263,7 @@ export default () => {
     },
     plugins: [
       react(),
-      VitePWA(manifest),
+      VitePWA(pwaOptions(VITE_SUPABASE_ANON_KEY ?? "")),
     ],
     resolve: {
       alias: {
