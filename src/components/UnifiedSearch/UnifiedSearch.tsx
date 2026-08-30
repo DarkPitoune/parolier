@@ -74,15 +74,6 @@ export function UnifiedSearchInput({
 			setSelectedIndex(null);
 			inputRef.current?.blur();
 			navigate(href);
-			const hashIndex = href.indexOf("#");
-			if (hashIndex !== -1) {
-				const id = href.slice(hashIndex + 1);
-				setTimeout(() => {
-					document
-						.getElementById(id)
-						?.scrollIntoView({ block: "center", behavior: "smooth" });
-				}, 150);
-			}
 		},
 		[navigate, setQuery, setSelectedIndex, recordHit],
 	);
@@ -187,15 +178,6 @@ export function UnifiedSearchResults({
 			if (hit) recordHit(hit);
 			setQuery("");
 			navigate(href);
-			const hashIndex = href.indexOf("#");
-			if (hashIndex !== -1) {
-				const id = href.slice(hashIndex + 1);
-				setTimeout(() => {
-					document
-						.getElementById(id)
-						?.scrollIntoView({ block: "center", behavior: "smooth" });
-				}, 150);
-			}
 		},
 		[navigate, setQuery, recordHit],
 	);
@@ -295,6 +277,7 @@ export function UnifiedSearchResults({
 								<Link
 									key={key}
 									to={`/songs/${song.id}`}
+									data-testid={`song-link-${song.id}`}
 									onClick={(e) => {
 										e.preventDefault();
 										goTo(`/songs/${song.id}`, {

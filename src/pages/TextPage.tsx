@@ -1,5 +1,4 @@
 import { PageHeader } from "@/components";
-import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
 import { type Text, textQuery } from "@/utils/supabase";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -15,17 +14,6 @@ function TextPage() {
 	const rightClickMenuRef = useRef<HTMLDivElement>(null);
 	const [rightClickMenuPosition, setRightClickMenuPosition] =
 		useState<RightClickMenuPosition | null>(null);
-
-	useRecordVisit(
-		text
-			? {
-					path: `/texts/${textId}`,
-					title: `${text.id}. ${text.title}`,
-					type: "text",
-				}
-			: null,
-	);
-	useRestoreScroll();
 
 	const handleOnContextMenu: React.MouseEventHandler<HTMLDivElement> = (e) => {
 		e.preventDefault();

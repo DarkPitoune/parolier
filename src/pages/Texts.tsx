@@ -1,129 +1,23 @@
 import { PageHeader, useLeader } from "@/components";
-import { globalSearchEnabledAtom } from "@/components/Contexts/SettingsContext";
-import { TextItem, getTextItemId } from "@/components/TextItem";
+import { TextItem } from "@/components/TextItem";
 import {
 	UnifiedSearchInput,
 	UnifiedSearchResults,
 } from "@/components/UnifiedSearch/UnifiedSearch";
 import { useUnifiedSearch } from "@/components/UnifiedSearch/useUnifiedSearch";
 import { useAllTexts } from "@/hooks/queries/useTextQueries";
-import { normalize } from "@/utils/normalize";
 import { type AllTexts, newTextMutation } from "@/utils/supabase";
-import { MagnifyingGlassIcon } from "@heroicons/react/16/solid";
 import clsx from "clsx";
-import Fuse from "fuse.js";
-import { useAtomValue } from "jotai";
-import {
-	type ChangeEventHandler,
-	useCallback,
-	useEffect,
-	useMemo,
-	useState,
-} from "react";
+import { useMemo } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 
 function Texts() {
 	const { data: textsData } = useAllTexts();
 	const texts = useMemo<AllTexts>(() => textsData ?? [], [textsData]);
-	const [searchResults, setSearchResults] = useState<AllTexts | null>(null);
-	const globalSearchEnabled = useAtomValue(globalSearchEnabledAtom);
 	const unifiedSearch = useUnifiedSearch("texts");
-	const filteredTexts = searchResults ?? texts;
 	const navigate = useNavigate();
-	const [selectedTextIndex, setSelectedTextIndex] = useState<number | null>(
-		null,
-	);
-	const fuse = useMemo(
-		() =>
-			new Fuse(texts, {
-				keys: ["title", "content"],
-				threshold: 0.3,
-				getFn: (obj, path) => {
-					const k = Array.isArray(path) ? path[0] : path;
-					const v = (obj as Record<string, unknown>)[k];
-					return typeof v === "string" ? normalize(v) : "";
-				},
-			}),
-		[texts],
-	);
 	const { leader } = useLeader();
-
-	const scrollToSelectedText = useCallback(() => {
-		if (selectedTextIndex !== null) {
-			const selectedTextId = filteredTexts[selectedTextIndex].id;
-			const element = document.getElementById(getTextItemId(selectedTextId));
-			if (element)
-				element.scrollIntoView({ behavior: "smooth", block: "center" });
-		}
-	}, [selectedTextIndex, filteredTexts]);
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: we want to trigger the function when selectedTextId changes
-	useEffect(scrollToSelectedText, [scrollToSelectedText]);
-
-	useEffect(() => {
-		if (globalSearchEnabled) return;
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (selectedTextIndex !== null && event.key === "ArrowUp") {
-				event.preventDefault();
-				setSelectedTextIndex(Math.max(0, selectedTextIndex - 1));
-			}
-			if (event.key === "ArrowDown") {
-				event.preventDefault();
-				if (selectedTextIndex === null) setSelectedTextIndex(0);
-				else
-					setSelectedTextIndex(
-						Math.min(filteredTexts.length - 1, selectedTextIndex + 1),
-					);
-			}
-			if (event.key === "Enter") {
-				if (selectedTextIndex !== null) {
-					navigate(`/texts/${filteredTexts[selectedTextIndex].id}`);
-				}
-			}
-			// Catch any letter input (a-z, A-Z) and focus the search input
-			if (event.key.length === 1 && /[a-zA-Z]/.test(event.key)) {
-				const searchInput = document.querySelector(
-					'input[type="search"]',
-				) as HTMLInputElement | null;
-				if (searchInput) {
-					searchInput.focus();
-					if (document.activeElement !== searchInput) {
-						searchInput.value += event.key;
-						const inputEvent = new Event("input", { bubbles: true });
-						searchInput.dispatchEvent(inputEvent);
-					}
-				}
-			}
-		};
-		window.addEventListener("keydown", handleKeyDown);
-		return () => {
-			window.removeEventListener("keydown", handleKeyDown);
-		};
-	}, [globalSearchEnabled, selectedTextIndex, filteredTexts, navigate]);
-
-	const [searchValue, setSearchValue] = useState("");
-
-	const search: ChangeEventHandler<HTMLInputElement> = useCallback(
-		(event) => {
-			setSearchValue(event.target.value);
-			if (event.target.value.length === 0) setSearchResults(null);
-			else {
-				window.scrollTo(0, 0);
-				if (!Number.isNaN(Number(event.target.value))) {
-					const text = texts.find((t) => t.id === Number(event.target.value));
-					setSearchResults(text ? [text] : []);
-					setSelectedTextIndex(0);
-				} else {
-					setSearchResults(
-						fuse.search(normalize(event.target.value)).map((hit) => hit.item),
-					);
-					setSelectedTextIndex(null);
-				}
-			}
-		},
-		[fuse, texts],
-	);
 
 	const createNewText = async () => {
 		const title = prompt("Titre du texte");
@@ -149,26 +43,14 @@ function Texts() {
 				<PageHeader
 					variant="list"
 					left={
-						globalSearchEnabled ? (
-							<UnifiedSearchInput
-								search={unifiedSearch}
-								placeholder="Rechercher un texte..."
-							/>
-						) : (
-							<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
-								<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
-								<input
-									className="w-full h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
-									type="search"
-									onChange={search}
-									placeholder="Rechercher un texte..."
-								/>
-							</div>
-						)
+						<UnifiedSearchInput
+							search={unifiedSearch}
+							placeholder="Rechercher un texte..."
+						/>
 					}
 				/>
 			</div>
-			{globalSearchEnabled && unifiedSearch.showResults ? (
+			{unifiedSearch.showResults ? (
 				<UnifiedSearchResults search={unifiedSearch} />
 			) : (
 				<>
@@ -187,25 +69,11 @@ function Texts() {
 						</div>
 					</div>
 					<div className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300 dark:bg-gray-800 print:block print:p-0">
-						{filteredTexts.map((text, index) => (
-							<Link
-								key={text.id}
-								to={`/texts/${text.id}`}
-								className={
-									index === selectedTextIndex
-										? "bg-gray-300 dark:bg-slate-700"
-										: ""
-								}
-							>
+						{texts.map((text) => (
+							<Link key={text.id} to={`/texts/${text.id}`}>
 								<TextItem text={text} />
 							</Link>
 						))}
-
-						{filteredTexts.length === 0 && searchValue && (
-							<div className="px-2 py-8 text-center text-gray-500 dark:text-gray-400">
-								Aucun texte trouvé pour "{searchValue}"
-							</div>
-						)}
 					</div>
 				</>
 			)}

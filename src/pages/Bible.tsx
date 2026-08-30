@@ -1,58 +1,34 @@
 import { PageHeader, useLeader } from "@/components";
-import { globalSearchEnabledAtom } from "@/components/Contexts/SettingsContext";
 import {
 	UnifiedSearchInput,
 	UnifiedSearchResults,
 } from "@/components/UnifiedSearch/UnifiedSearch";
 import { useUnifiedSearch } from "@/components/UnifiedSearch/useUnifiedSearch";
-import {
-	type BibleBookEntry,
-	type BibleVerse,
-	useBible,
-} from "@/hooks/queries/useBibleQueries";
-import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
-import { MagnifyingGlassIcon } from "@heroicons/react/16/solid";
+import { type BibleVerse, useBible } from "@/hooks/queries/useBibleQueries";
 import clsx from "clsx";
-import { useAtomValue } from "jotai";
-import {
-	type ChangeEventHandler,
-	useCallback,
-	useEffect,
-	useMemo,
-	useState,
-} from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 function Bible() {
 	const { data: bible = [], isLoading } = useBible();
 	const [verses, setVerses] = useState<BibleVerse[]>([]);
-	const [searchValue, setSearchValue] = useState("");
-	const [filteredBooks, setFilteredBooks] = useState<BibleBookEntry[] | null>(
-		null,
-	);
-	const [searchResults, setSearchResults] = useState<BibleVerse[]>([]);
-	const globalSearchEnabled = useAtomValue(globalSearchEnabledAtom);
 	const unifiedSearch = useUnifiedSearch("bible");
 	const { leader } = useLeader();
 	const { book: selectedBook, chapter: selectedChapter } = useParams();
 	const navigate = useNavigate();
+	const { hash } = useLocation();
+
+	// :target is no help here — the verses mount well after the document does,
+	// and in-app navigation is pushState, which never retargets.
+	const targetVerse = hash.startsWith("#verse-")
+		? hash.slice("#verse-".length)
+		: null;
 
 	const selectedBookEntry = useMemo(
 		() => bible.find((b) => b.abbr === selectedBook),
 		[bible, selectedBook],
 	);
 	const bookName = selectedBookEntry?.name;
-
-	useRecordVisit(
-		selectedBook && selectedChapter && bookName
-			? {
-					path: `/bible/${selectedBook}/${selectedChapter}`,
-					title: `${bookName} ${selectedChapter}`,
-					type: "bible",
-				}
-			: null,
-	);
-	useRestoreScroll();
 
 	const chapters = useMemo(
 		() => (selectedBookEntry ? Object.keys(selectedBookEntry.chapters) : []),
@@ -87,51 +63,12 @@ function Bible() {
 		}
 	}, [selectedBook, selectedChapter, selectedBookEntry]);
 
-	const search: ChangeEventHandler<HTMLInputElement> = useCallback(
-		(event) => {
-			setSearchValue(event.target.value);
-			const query = event.target.value.toLowerCase();
-
-			// Navigate back to main Bible page when typing
-			if (selectedBook || selectedChapter) {
-				navigate("/bible");
-			}
-
-			if (query.length === 0) {
-				setFilteredBooks(null);
-				setSearchResults([]);
-			} else if (query.length < 3) {
-				// For short queries, only search book names
-				setFilteredBooks(
-					bible.filter((b) => b.name.toLowerCase().includes(query)),
-				);
-				setSearchResults([]);
-			} else {
-				// For longer queries, search through all verses
-				const results: BibleVerse[] = [];
-				for (const book of bible) {
-					for (const [chapter, verses] of Object.entries(book.chapters)) {
-						for (const [verseNum, text] of Object.entries(verses)) {
-							if (text.toLowerCase().includes(query)) {
-								results.push({
-									bookAbbr: book.abbr,
-									bookName: book.name,
-									chapter,
-									verse: verseNum,
-									text,
-								});
-							}
-						}
-					}
-				}
-				setSearchResults(results.slice(0, 50)); // Limit to 50 results
-				setFilteredBooks(
-					bible.filter((b) => b.name.toLowerCase().includes(query)),
-				);
-			}
-		},
-		[bible, selectedBook, selectedChapter, navigate],
-	);
+	useEffect(() => {
+		if (!targetVerse || verses.length === 0) return;
+		document
+			.getElementById(`verse-${targetVerse}`)
+			?.scrollIntoView({ block: "center", behavior: "smooth" });
+	}, [targetVerse, verses]);
 
 	const selectBook = (abbr: string) => {
 		navigate(`/bible/${encodeURIComponent(abbr)}`);
@@ -164,28 +101,15 @@ function Bible() {
 				<PageHeader
 					variant="list"
 					left={
-						globalSearchEnabled ? (
-							<UnifiedSearchInput
-								search={unifiedSearch}
-								placeholder="Rechercher un livre ou un texte..."
-							/>
-						) : (
-							<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
-								<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
-								<input
-									className="w-full h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
-									type="search"
-									onChange={search}
-									value={searchValue}
-									placeholder="Rechercher un livre ou un texte..."
-								/>
-							</div>
-						)
+						<UnifiedSearchInput
+							search={unifiedSearch}
+							placeholder="Rechercher un livre ou un texte..."
+						/>
 					}
 				/>
 			</div>
 
-			{globalSearchEnabled && unifiedSearch.showResults ? (
+			{unifiedSearch.showResults ? (
 				<UnifiedSearchResults search={unifiedSearch} />
 			) : (
 				<div className="p-6">
@@ -239,7 +163,7 @@ function Bible() {
 							{/* Book selection */}
 							{!selectedBook && (
 								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-									{(filteredBooks ?? bible).map((book) => (
+									{bible.map((book) => (
 										<button
 											key={book.abbr}
 											onClick={() => selectBook(book.abbr)}
@@ -280,7 +204,12 @@ function Bible() {
 											<span
 												key={`${verse.verse}`}
 												id={`verse-${verse.verse}`}
-												className="hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-200 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 scroll-mt-24"
+												className={clsx(
+													"transition-colors duration-200 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 scroll-mt-24",
+													verse.verse === targetVerse
+														? "bg-jubilateBlue-200 dark:bg-jubilateBlue-400/30"
+														: "hover:bg-gray-100/50 dark:hover:bg-gray-700/50",
+												)}
 											>
 												<span className="text-sm font-medium text-red-700 dark:text-jubilateBlue-400 mr-1">
 													{Number(verse.verse)}
@@ -332,39 +261,6 @@ function Bible() {
 									</div>
 								</>
 							)}
-
-							{/* Search results */}
-							{searchResults.length > 0 && (
-								<div className="space-y-4">
-									<h2 className="text-xl font-bold text-black dark:text-white">
-										Résultats de recherche ({searchResults.length})
-									</h2>
-									{searchResults.map((verse) => (
-										<a
-											key={`${verse.bookAbbr}-${verse.chapter}-${verse.verse}`}
-											href={`/bible/${encodeURIComponent(verse.bookAbbr)}/${encodeURIComponent(verse.chapter)}#verse-${verse.verse}`}
-											className="block p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition"
-										>
-											<div className="flex justify-between items-start mb-2">
-												<span className="text-sm font-medium text-jubilateBlue-600 dark:text-jubilateBlue-400">
-													{verse.bookName} {verse.chapter}:{verse.verse}
-												</span>
-											</div>
-											<p className="text-gray-800 dark:text-gray-200">
-												{verse.text}
-											</p>
-										</a>
-									))}
-								</div>
-							)}
-
-							{(filteredBooks ?? bible).length === 0 &&
-								searchValue &&
-								searchResults.length === 0 && (
-									<div className="px-2 py-8 text-center text-gray-500 dark:text-gray-400">
-										Aucun résultat trouvé pour "{searchValue}"
-									</div>
-								)}
 						</>
 					)}
 				</div>
