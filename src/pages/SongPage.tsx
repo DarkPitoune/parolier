@@ -6,7 +6,6 @@ import {
 	useSetStropheNote,
 	useTaggedSong,
 } from "@/hooks/queries/useSongQueries";
-import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { getStropheNote, stropheFingerprint } from "@/utils/stropheNotes";
 import { analyticsSong } from "@/utils/supabase";
@@ -63,17 +62,6 @@ function SongPage() {
 			tapCount.current = 0;
 		}, 500);
 	};
-
-	useRecordVisit(
-		song
-			? {
-					path: `/songs/${songId}`,
-					title: `${song.id}. ${song.title}`,
-					type: "song",
-				}
-			: null,
-	);
-	useRestoreScroll();
 
 	// Keep screen awake while viewing song
 	useWakeLock();

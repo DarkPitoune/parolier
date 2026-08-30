@@ -14,10 +14,6 @@ export const showPerformanceNotesAtom = atomWithStorage(
 	createJSONStorage(() => localStorage),
 	{ getOnInit: true },
 );
-export const globalSearchEnabledAtom = atomWithStorage(
-	"globalSearchEnabled",
-	false,
-);
 export type ThemeMode = "system" | "dark" | "light";
 export const themeModeAtom = atomWithStorage<ThemeMode>(
 	"settings.themeMode",

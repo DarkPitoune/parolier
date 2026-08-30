@@ -8,14 +8,9 @@ import {
 import { leaderAtom, useLeader } from "@/components/Contexts/LeaderContext";
 import type { ThemeMode } from "@/components/Contexts/SettingsContext";
 import {
-	globalSearchEnabledAtom,
 	showPerformanceNotesAtom,
 	tonalityAtom,
 } from "@/components/Contexts/SettingsContext";
-import {
-	CONTENT_TYPE_ICONS,
-	navigationHistoryAtom,
-} from "@/hooks/useNavigationHistory";
 import { queryKeys } from "@/utils/queryKeys";
 import {
 	type LeaderPositions,
@@ -24,7 +19,6 @@ import {
 } from "@/utils/supabase";
 import { startTunerCapture } from "@/utils/tunerAudio";
 import {
-	BeakerIcon,
 	BookOpenIcon,
 	CalendarDaysIcon,
 	ChartBarIcon,
@@ -46,7 +40,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -106,19 +100,14 @@ function GlobalSidePanel({
 
 	return (
 		<SidePanel open={open} onClose={onClose} header={header}>
-			{activeTab === "navigation" ? (
-				<NavigationContent onClose={onClose} />
-			) : (
-				<SettingsContent />
-			)}
+			{activeTab === "navigation" ? <NavigationContent /> : <SettingsContent />}
 		</SidePanel>
 	);
 }
 
-function NavigationContent({ onClose }: { onClose: () => void }) {
+function NavigationContent() {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
-	const history = useAtomValue(navigationHistoryAtom);
 
 	const createNewSong = async () => {
 		const title = prompt("Titre de la chanson");
@@ -134,118 +123,87 @@ function NavigationContent({ onClose }: { onClose: () => void }) {
 	};
 
 	return (
-		<>
-			<div className="flex flex-col gap-1">
-				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-					to="/"
-				>
-					<MusicalNoteIcon className="w-4 h-4" />
-					Liste des chants
-				</Link>
-				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-					to="/setlists"
-				>
-					<QueueListIcon className="w-4 h-4" />
-					Setlists
-				</Link>
-				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-					to="/refrains"
-				>
-					<FireIcon className="w-4 h-4" />
-					Refrains
-				</Link>
-				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-					to="/ordinaires"
-				>
-					<RectangleGroupIcon className="w-4 h-4" />
-					Ordinaires de messe
-				</Link>
-				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-					to="/texts"
-				>
-					<DocumentTextIcon className="w-4 h-4" />
-					Textes
-				</Link>
-				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-					to="/bible"
-				>
-					<BookOpenIcon className="w-4 h-4" />
-					Bible
-				</Link>
-				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-					to="/messe"
-				>
-					<CalendarDaysIcon className="w-4 h-4" />
-					Messe
-				</Link>
-				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-					to="/tuner"
-					onClick={() => startTunerCapture()}
-				>
-					<SpeakerWaveIcon className="w-4 h-4" />
-					Accordeur
-				</Link>
-				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-					to="/analytics"
-				>
-					<ChartBarIcon className="w-4 h-4" />
-					Statistiques
-				</Link>
-				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-					to="/presenter"
-				>
-					<PresentationChartLineIcon className="w-4 h-4" />
-					Mode Présentateur
-				</Link>
-				<button
-					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-					type="button"
-					onClick={createNewSong}
-				>
-					<PlusIcon className="w-4 h-4" />
-					Nouvelle chanson
-				</button>
-			</div>
-			{history.length > 0 && (
-				<>
-					<hr className="border-gray-200 dark:border-gray-600 my-2" />
-					<h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-3 py-1 uppercase tracking-wide">
-						Récents
-					</h3>
-					<div className="flex flex-col border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden mx-1">
-						{history.map((entry) => {
-							const Icon = CONTENT_TYPE_ICONS[entry.type];
-							return (
-								<button
-									key={entry.path}
-									type="button"
-									onClick={() => {
-										navigate(entry.path, {
-											state: { restoreScrollY: entry.scrollY },
-										});
-										onClose();
-									}}
-									className="flex items-center gap-2 px-3 py-1.5 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition text-left w-full min-w-0"
-								>
-									<Icon className="w-4 h-4 shrink-0" />
-									<span className="truncate">{entry.title}</span>
-								</button>
-							);
-						})}
-					</div>
-				</>
-			)}
-		</>
+		<div className="flex flex-col gap-1">
+			<Link
+				className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/"
+			>
+				<MusicalNoteIcon className="w-4 h-4" />
+				Liste des chants
+			</Link>
+			<Link
+				className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/setlists"
+			>
+				<QueueListIcon className="w-4 h-4" />
+				Setlists
+			</Link>
+			<Link
+				className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/refrains"
+			>
+				<FireIcon className="w-4 h-4" />
+				Refrains
+			</Link>
+			<Link
+				className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/ordinaires"
+			>
+				<RectangleGroupIcon className="w-4 h-4" />
+				Ordinaires de messe
+			</Link>
+			<Link
+				className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/texts"
+			>
+				<DocumentTextIcon className="w-4 h-4" />
+				Textes
+			</Link>
+			<Link
+				className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/bible"
+			>
+				<BookOpenIcon className="w-4 h-4" />
+				Bible
+			</Link>
+			<Link
+				className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/messe"
+			>
+				<CalendarDaysIcon className="w-4 h-4" />
+				Messe
+			</Link>
+			<Link
+				className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/tuner"
+				onClick={() => startTunerCapture()}
+			>
+				<SpeakerWaveIcon className="w-4 h-4" />
+				Accordeur
+			</Link>
+			<Link
+				className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/analytics"
+			>
+				<ChartBarIcon className="w-4 h-4" />
+				Statistiques
+			</Link>
+			<Link
+				className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				to="/presenter"
+			>
+				<PresentationChartLineIcon className="w-4 h-4" />
+				Mode Présentateur
+			</Link>
+			<button
+				className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
+				type="button"
+				onClick={createNewSong}
+			>
+				<PlusIcon className="w-4 h-4" />
+				Nouvelle chanson
+			</button>
+		</div>
 	);
 }
 
@@ -253,9 +211,6 @@ function SettingsContent() {
 	const setFontSize = useSetAtom(fontSizeAtom);
 	const [themeMode, setThemeMode] = useAtom(themeModeAtom);
 	const [showChords, setShowChords] = useAtom(showChordsAtom);
-	const [globalSearchEnabled, setGlobalSearchEnabled] = useAtom(
-		globalSearchEnabledAtom,
-	);
 	const [isLeaderPanelOpen, setIsLeaderPanelOpenInternal] = useState(true);
 	const [addChorus, setAddChorus] = useAtom(addChorusAtom);
 	const [showPerformanceNotes, setShowPerformanceNotes] = useAtom(
@@ -559,40 +514,19 @@ function SettingsContent() {
 				)}
 			</div>
 
-			<div
-				className="flex justify-between gap-4 items-center"
-				aria-label="global search choice"
-			>
-				<div className="flex items-center gap-2">
-					<h1 className="font-flame text-2xl text-jubilateBlue-500 dark:text-jubilateBlue-400">
-						Recherche globale
-					</h1>
-					<BeakerIcon
-						className="w-5 fill-jubilateBlue-500 dark:fill-jubilateBlue-400"
-						aria-label="Fonctionnalité expérimentale"
-					/>
-				</div>
+			<div className="h-10 shrink-0" />
 
-				<input
-					id="globalSearchCheckbox"
-					type="checkbox"
-					checked={globalSearchEnabled}
-					onChange={(e) => {
-						setGlobalSearchEnabled(e.target.checked);
-					}}
-					className="w-5 h-5 accent-jubilateBlue-500 dark:accent-jubilateBlue-400 rounded-2xl"
-				/>
-			</div>
 			<button
 				type="button"
 				onClick={refreshApp}
 				disabled={refreshing}
-				className="flex items-center justify-center gap-2 px-3 py-2 rounded-full border border-jubilateBlue-300 text-jubilateBlue-500 dark:text-jubilateBlue-400 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition disabled:opacity-50"
+				aria-label="Rafraîchir l'app"
+				title="Rafraîchir l'app"
+				className="absolute bottom-6 right-4 sm:right-6 p-2 rounded-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 hover:text-jubilateBlue-500 dark:hover:text-jubilateBlue-400 transition disabled:opacity-50"
 			>
 				<ArrowPathIcon
 					className={clsx("w-4 h-4", refreshing && "animate-spin")}
 				/>
-				Rafraîchir l'app
 			</button>
 		</>
 	);

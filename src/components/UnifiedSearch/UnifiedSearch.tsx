@@ -295,6 +295,7 @@ export function UnifiedSearchResults({
 								<Link
 									key={key}
 									to={`/songs/${song.id}`}
+									data-testid={`song-link-${song.id}`}
 									onClick={(e) => {
 										e.preventDefault();
 										goTo(`/songs/${song.id}`, {
