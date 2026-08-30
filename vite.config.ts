@@ -30,8 +30,7 @@ const pwaOptions = (supabaseAnonKey: string): Partial<VitePWAOptions> => ({
   manifest: {
     name: "Chants Jubilate",
     short_name: "Jubilate",
-    description:
-      "Chants, textes et diaporamas pour les célébrations de la communauté Jubilate.",
+    description: "L'application de carnet des chants de Jubilate",
     id: "/",
     lang: "fr",
     theme_color: "#002e5d",
@@ -261,10 +260,7 @@ export default ({ command, mode }: ConfigEnv) => {
     build: {
       sourcemap: true,
     },
-    plugins: [
-      react(),
-      VitePWA(pwaOptions(VITE_SUPABASE_ANON_KEY ?? "")),
-    ],
+    plugins: [react(), VitePWA(pwaOptions(VITE_SUPABASE_ANON_KEY ?? ""))],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "src"),
