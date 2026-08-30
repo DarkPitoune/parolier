@@ -1,7 +1,7 @@
 /**
  * Seeds assembly responses of the Mass into the `songs` table as type="response".
  *
- * Run with: pnpm tsx src/scripts/seedResponses.ts
+ * Run with: pnpm tsx scripts/seedResponses.ts
  *
  * Reads VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY from .env and inserts via
  * the anon key — the same path the app uses client-side, so RLS applies.
@@ -19,7 +19,7 @@ import { RESPONSES } from "./responsesData";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function loadEnv(): Record<string, string> {
-	const envPath = resolve(__dirname, "../../.env");
+	const envPath = resolve(__dirname, "../.env");
 	const out: Record<string, string> = {};
 	for (const raw of readFileSync(envPath, "utf8").split("\n")) {
 		const l = raw.trim();
