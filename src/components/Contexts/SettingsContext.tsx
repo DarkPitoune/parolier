@@ -1,7 +1,12 @@
 import { atom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 
-export const fontSizeAtom = atomWithStorage("settings.fontSize", 2);
+export const DEFAULT_FONT_SIZE = 2;
+export const MAX_FONT_SIZE = 9;
+export const fontSizeAtom = atomWithStorage(
+	"settings.fontSize",
+	DEFAULT_FONT_SIZE,
+);
 export const showChordsAtom = atomWithStorage("settings.showChords", true);
 export const addChorusAtom = atomWithStorage("settings.addChorus", false);
 
