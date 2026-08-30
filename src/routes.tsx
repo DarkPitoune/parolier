@@ -23,15 +23,6 @@ import SongEditor from "./pages/SongEditor";
 import { TextPage } from "./pages/TextPage";
 import { Texts } from "./pages/Texts";
 
-/**
- * Every route the app exposes, as data.
- *
- * Extracted from main.tsx so it can be imported without booting the app —
- * main.tsx calls Sentry.init and createRoot at module scope. src/routes.test.ts
- * asserts this list exactly, so a route cannot appear or disappear unnoticed.
- * PLAN-02 adds a per-tenant filter over these, and that assertion is what stops
- * the filter from silently dropping a route for Jubilate.
- */
 export const appRoutes: RouteObject[] = [
 	{
 		path: "/",

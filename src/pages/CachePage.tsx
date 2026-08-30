@@ -81,10 +81,7 @@ const CachePage = () => {
 		return unsubscribe;
 	}, []);
 
-	// getCacheEntries() reads the query cache imperatively, so `version` is the only thing
-	// that can recompute it. Without it the memo runs once and this debug page shows the
-	// cache as it was on first render.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: `version` is the recompute trigger
+	// biome-ignore lint/correctness/useExhaustiveDependencies: getCacheEntries() reads the cache imperatively, so `version` is the only recompute trigger
 	const groups = useMemo(() => getCacheEntries(), [version]);
 
 	const totalEntries = Array.from(groups.values()).reduce(

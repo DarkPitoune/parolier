@@ -144,9 +144,7 @@ function SongPage() {
 			<PageHeader
 				variant="detail"
 				title={
-					// A key handler here would make the page title announce as a button and put
-					// edit mode one keystroke away; the editor gets a gated entry point in PLAN-02.
-					// biome-ignore lint/a11y/useKeyWithClickEvents: deliberately obscure triple-tap shortcut
+					// biome-ignore lint/a11y/useKeyWithClickEvents: hidden triple-tap shortcut; a key handler would announce the title as a button
 					<h1
 						className="font-flame text-xl lg:text-3xl text-jubilateBlue-500 dark:text-jubilateBlue-400 select-none"
 						onClick={handleTitleTap}

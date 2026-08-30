@@ -942,15 +942,9 @@ describe("serializeState — performance notes", () => {
 	});
 });
 
-// --- PLAN-01 1.6b: assertions that must survive the transport swap ---
-
 describe("SYNC idempotence", () => {
-	// Delivering the same payload twice has to be a no-op the second time. This
-	// is what makes double delivery safe, and double delivery is not
-	// hypothetical: the same state travels by localStorage *and* by the network
-	// transport, so a display window can legitimately receive both copies. The
-	// reducer is written for this at slideReducer.ts:203-211 and nothing asserted
-	// it. Phase 3 swaps the network leg — these assertions must still hold after.
+	// The same state reaches a display window over localStorage and over the
+	// network transport, so it legitimately arrives twice.
 	const applyTwice = (state: SlideState, payload: SyncPayload) => {
 		const once = slideReducer(state, { type: "SYNC", payload });
 		const twice = slideReducer(once, { type: "SYNC", payload });
@@ -958,8 +952,7 @@ describe("SYNC idempotence", () => {
 	};
 
 	it("is idempotent when the sync names the song already loaded", () => {
-		// The branch that preserves strophes: applying it again must not drop
-		// them, which would blank the projector mid-song.
+		// Dropping the preserved strophes on a second apply blanks the projector.
 		const state = songState({ songId: 7, stropheIndex: 0 });
 		const payload = serializeState(
 			songState({ songId: 7, stropheIndex: 2 }),
@@ -977,7 +970,6 @@ describe("SYNC idempotence", () => {
 	});
 
 	it("is idempotent when the sync names a different song", () => {
-		// The other branch: strophes are cleared for the consumer to re-fetch.
 		const state = songState({ songId: 7 });
 		const payload = serializeState(
 			songState({ songId: 99, stropheIndex: 1 }),
@@ -1023,10 +1015,8 @@ describe("SYNC idempotence", () => {
 });
 
 describe("no musician-only note reaches the wire", () => {
-	// The projector shows the congregation lyrics and nothing else. A note is
-	// for the band. The existing guard above checks the `stropheContent` field
-	// by name; this one inspects the whole payload instead, so it keeps its
-	// meaning when Phase 3.2 removes that field.
+	// Notes are for the band; the projector shows lyrics only. Inspects the whole
+	// payload rather than a named field, so it survives payload changes.
 	const noted: Strophe = {
 		type: "chorus",
 		repetition: false,
@@ -1077,7 +1067,6 @@ describe("no musician-only note reaches the wire", () => {
 		for (const secret of ["🥁", "🎤", "🔥", "on envoie", "batterie seule"]) {
 			expect(wire).not.toContain(secret);
 		}
-		// ...while the lyrics themselves still travel.
 		expect(wire).toContain("Gloire à toi Seigneur");
 	});
 });

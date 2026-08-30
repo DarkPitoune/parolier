@@ -1,17 +1,5 @@
 import { appRoutes } from "./routes";
 
-/**
- * PLAN-01 1.6c — the route inventory.
- *
- * This asserts the *exact* set of paths, not a subset, and that is the whole
- * point: a route cannot appear or disappear without this test failing, so every
- * intentional deletion has to edit the list here in the same commit. Phase 2
- * removes /tuner and /bible/today, Phase 3 removes /certificate — each of those
- * is expected to turn this red exactly once.
- *
- * PLAN-02 adds a per-tenant feature-flag filter over `appRoutes`. This is then
- * what stops the filter from silently dropping a route for Jubilate.
- */
 const EXPECTED_PATHS = [
 	"/",
 	"/analytics",
@@ -60,7 +48,6 @@ describe("route inventory", () => {
 	});
 
 	it("still serves a catch-all", () => {
-		// Without this a mistyped URL renders blank rather than the 404.
 		expect(actual).toContain("*");
 	});
 });

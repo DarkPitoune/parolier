@@ -2,14 +2,12 @@ import { expect, test } from "@playwright/test";
 import { SONGS } from "./fixtures";
 
 const song = SONGS.withChords;
-// Scroll restore needs a page taller than the viewport.
 const longSong = SONGS.long;
 
 test.describe("Navigation history", () => {
 	test("visited song appears in navigation panel recents", async ({
 		page,
 	}) => {
-		// 1. Go to homepage, open a named fixture song
 		await page.goto("/");
 		await page.getByTestId(`song-link-${song.id}`).click();
 		await expect(page.getByTestId("song-page")).toBeVisible();
@@ -20,7 +18,6 @@ test.describe("Navigation history", () => {
 		);
 		expect(historyAfterVisit.length).toBe(1);
 		const entryTitle = historyAfterVisit[0].title;
-		// The fixture makes this checkable: history stored the song we opened.
 		expect(entryTitle).toContain(song.title);
 
 		// 3. Go back to homepage via browser back
@@ -43,33 +40,18 @@ test.describe("Navigation history", () => {
 		await expect(page.getByTestId("song-page")).toBeVisible();
 	});
 
-	// KNOWN BROKEN — the assertions below are correct and are left intact; the
-	// feature is what does not work. useNavigationHistory saves the scroll offset
-	// in an effect cleanup (useNavigationHistory.ts:63), which React runs after the
-	// outgoing page's DOM is already gone: measured at that moment,
-	// document.scrollHeight has collapsed to the viewport height and the browser has
-	// already clamped window.scrollY to 0. So every entry is stored with scrollY: 0
-	// and "Récents" always returns you to the top.
-	//
-	// Not caused by the fixtures: the test asserts the page really scrolled to 300
-	// before navigating, and that assertion passes. Not caused by React Router's
-	// <ScrollRestoration /> either — removing it changes nothing. The likely fix is
-	// to track the offset as it changes (a scroll listener into a ref) and save the
-	// last known value, rather than reading it during teardown.
-	//
-	// Found by pointing this spec at a deterministic fixture; it went unnoticed
-	// because nothing has ever run the e2e suite (PLAN-00 §3, "no CI").
+	// KNOWN BROKEN, assertions left intact. useNavigationHistory saves the offset
+	// in an effect cleanup, which runs after the outgoing page's DOM is gone — by
+	// then the document has collapsed to viewport height and the browser has
+	// clamped window.scrollY to 0, so every entry is stored with scrollY: 0.
 	test.fixme("scroll position is saved and restored via recents", async ({
 		page,
 	}) => {
-		// 1. Navigate to the tall fixture song
 		await page.goto("/");
 		await page.getByTestId(`song-link-${longSong.id}`).click();
 		await expect(page.getByTestId("song-page")).toBeVisible();
 
-		// 2. Scroll down on the song page. Assert it actually moved: on a page
-		// shorter than the viewport scrollTo is a no-op, and the restore assertion
-		// below would then be checking nothing.
+		// Assert it moved: on a page shorter than the viewport scrollTo is a no-op.
 		await page.evaluate(() => window.scrollTo(0, 300));
 		await page.waitForTimeout(100);
 		expect(await page.evaluate(() => window.scrollY)).toBeGreaterThanOrEqual(200);

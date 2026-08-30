@@ -1,14 +1,6 @@
--- Deterministic fixtures for local development and the e2e suite.
---
--- Every id here is fixed and every row is something a test names. Tests address
--- rows by id and title — never by `.first()`, which passes for the wrong reasons.
--- Keep this file short enough to read in one screen: if a test needs a row that
--- is not here, add it here rather than creating it from the test.
---
--- Applied automatically by `supabase db reset` (see [db.seed] in config.toml).
-
--- Ids are explicit, so the identity sequences must be moved past them at the end
--- of this file or the app's own inserts collide with the fixtures.
+-- Deterministic fixtures for local development and the e2e suite, applied by
+-- `supabase db reset`. Ids are fixed so tests can name the rows they assert on;
+-- add a row here rather than creating one from a test.
 
 -- ---------------------------------------------------------------- tags
 insert into public.tags (id, name, color, svg) values
@@ -26,13 +18,7 @@ insert into public.ordinaires (id, name, sheet_music_url) values
   (701, 'Messe de Saint-Jean', null);
 
 -- ---------------------------------------------------------------- songs
--- 601 carries chords, 602 carries a performance note, 603 is a refrain,
--- 604 is an ordinaire part, 605 has a section strophe, 606 is search-only,
--- 607 is tall enough to scroll.
-
 insert into public.songs (id, title, type, ordinaire_id, ordinaire_role, sheet_music_url, strophes) values
-  -- Four strophes on purpose: the presenter specs walk to slide 3, and a shorter
-  -- opening song makes them skip themselves instead of asserting anything.
   (601, 'Tu es là', 'song', null, null, null, array[
     '{"type":"verse","repetition":false,"content":[{"text":"Tu es là présent livré pour nous","chords":"Em"},{"text":"Toi le tout petit le serviteur","chords":"C"}]}',
     '{"type":"chorus","repetition":true,"content":[{"text":"Gloire à toi Seigneur","chords":"G"},{"text":"Gloire à toi","chords":"D"}]}',
@@ -62,8 +48,7 @@ insert into public.songs (id, title, type, ordinaire_id, ordinaire_role, sheet_m
     '{"type":"verse","repetition":false,"content":[{"text":"Souffle imprévisible Esprit de Dieu","chords":"Am"}]}'
   ]::jsonb[]),
 
-  -- Deliberately tall: the scroll-restore spec needs a page longer than the
-  -- viewport, and every other fixture song fits on one screen.
+  -- Taller than the viewport.
   (607, 'Litanie des saints', 'song', null, null, null, array[
     '{"type":"verse","repetition":false,"content":[{"text":"Seigneur, prends pitié de nous","chords":"D"},{"text":"Ô Christ, prends pitié de nous","chords":"A"}]}',
     '{"type":"verse","repetition":false,"content":[{"text":"Sainte Marie, Mère de Dieu","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}',
@@ -82,9 +67,7 @@ insert into public.songs (id, title, type, ordinaire_id, ordinaire_role, sheet_m
     '{"type":"verse","repetition":false,"content":[{"text":"Tous les saints et saintes de Dieu","chords":"D"},{"text":"Priez pour nous","chords":"G"}]}'
   ]::jsonb[]),
 
-  -- Reserved for the editor round-trip spec, which saves to it. Nothing else
-  -- asserts its contents, so that mutation cannot race another test — the
-  -- Playwright suite runs fullyParallel.
+  -- Written to by the editor spec; nothing else may assert its contents.
   (608, 'Brouillon', 'song', null, null, null, array[
     '{"type":"verse","repetition":false,"content":[{"text":"Ligne de brouillon","chords":"C"}]}'
   ]::jsonb[]);
@@ -93,7 +76,6 @@ insert into public.song_tag (song_id, tag_id) values
   (601, 901), (601, 902), (602, 903), (605, 901);
 
 -- ---------------------------------------------------------------- setlists
--- 501 walks four steps including a text step; 502 is the short one.
 insert into public.setlists (id, name) values
   (501, 'Messe du dimanche'),
   (502, 'Répétition');
@@ -107,8 +89,7 @@ insert into public.setlist_items (id, setlist_id, position, song_id, text_id, te
   (406, 502, 1, 606,  null, null);
 
 -- ---------------------------------------------------------------- sequences
--- Fixed ids above bypass the identity sequences; move them clear of the fixtures
--- so an insert from the running app does not collide.
+-- Explicit ids bypass the identity sequences; move them clear of the fixtures.
 select setval(pg_get_serial_sequence('public.tags',          'id'), 1000, false);
 select setval(pg_get_serial_sequence('public.texts',         'id'), 1000, false);
 select setval(pg_get_serial_sequence('public.ordinaires',    'id'), 1000, false);

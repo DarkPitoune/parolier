@@ -18,11 +18,10 @@ pnpm build
 pnpm exec playwright test e2e/manual/wifi-no-internet-diagnostic.spec.ts --headed
 ```
 
-Note it runs against **production** (the Supabase host is hardcoded in the spec)
-and against a normal `pnpm build`, not `build:e2e` — it is diagnosing the real
-deployed app's behaviour on a real network, so pointing it at a local stack would
-defeat its purpose. The file's own header comment still names its pre-move path;
-it is kept byte-for-byte as written.
+It runs against **production** (the Supabase host is hardcoded in the spec) and
+against a normal `pnpm build`, not `build:e2e`: it diagnoses the deployed app on
+a real network, so a local stack would defeat the purpose. The file's header
+comment still names its old path — it is kept byte-for-byte as written.
 
 When Playwright pauses, switch the machine's WiFi as the console prompts, then
 resume from the Inspector.

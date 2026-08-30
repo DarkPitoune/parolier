@@ -2,9 +2,9 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { SETLISTS, SONGS } from "./fixtures";
 
 /**
- * Find a form input by the value it is currently showing. These are React
- * controlled inputs, so the value lives on the property and not on a `value`
- * attribute — a CSS attribute selector finds nothing.
+ * Editor inputs are React-controlled, so their value lives on the property and
+ * no attribute selector matches them. Polls because the form is populated by a
+ * query, not by the document.
  */
 async function inputMatching(
 	page: Page,
@@ -13,8 +13,6 @@ async function inputMatching(
 ): Promise<Locator> {
 	const inputs = page.locator("input");
 	let index = -1;
-	// Polls rather than scanning once: the editor form arrives with the query, so
-	// a single pass straight after navigation reads a page of empty inputs.
 	await expect
 		.poll(
 			async () => {
@@ -36,14 +34,6 @@ async function inputMatching(
 const inputShowing = (page: Page, value: string) =>
 	inputMatching(page, (v) => v === value, `showing ${JSON.stringify(value)}`);
 
-/**
- * PLAN-01 1.6d — the flows a cleanup could plausibly break.
- *
- * Phases 2 and 3 delete pages, dependencies, service-worker cache entries and a
- * whole transport. None of that is supposed to touch these, which is exactly
- * why they need to be observable before the deleting starts.
- */
-
 const song = SONGS.withChords;
 
 test.describe("song list and back", () => {
@@ -57,15 +47,11 @@ test.describe("song list and back", () => {
 
 		await page.goBack();
 		await expect(page.getByTestId("song-list")).toBeVisible();
-		// The list is still populated, not an empty shell served from a stale cache.
 		await expect(page.getByTestId(`song-link-${song.id}`)).toBeVisible();
 	});
 });
 
 test.describe("chord transposition", () => {
-	// The fixture's first line carries Em. Transposing has to move it and come
-	// back to exactly Em — "changed" alone would pass for a control that mangles
-	// the chord, and the reset button is the part people actually rely on.
 	const chordCell = (page: Page) =>
 		page.getByTestId("song-page").getByText("Em", { exact: true }).first();
 
@@ -75,7 +61,7 @@ test.describe("chord transposition", () => {
 		await expect(chordCell(page)).toBeVisible();
 
 		await page.locator('img[alt="Menu"]').click();
-		// Transposition lives in the panel's settings tab; it opens on Navigation.
+		// Transposition lives in the settings tab; the panel opens on Navigation.
 		await page.getByRole("button", { name: "Préférences" }).click();
 		const transpose = page.locator('[aria-label="tonality choice"]');
 		await expect(transpose).toBeVisible();
@@ -90,7 +76,6 @@ test.describe("chord transposition", () => {
 		await down.click();
 		await expect(chordCell(page)).toBeVisible();
 
-		// And the reset path, from the other direction.
 		await down.click();
 		await expect(page.getByTestId("song-page").getByText("Em", { exact: true })).toHaveCount(0);
 		await reset.click();
@@ -108,16 +93,14 @@ test.describe("walking a setlist", () => {
 		const step = page.getByTestId("setlist-step-counter");
 		await expect(step).toContainText(`Étape 1/${setlist.steps}`);
 
-		// Walk to the end of step 1's strophes and across the boundary. The bound
-		// only has to exceed the opening song's slide count.
 		for (let i = 0; i < 60; i++) {
 			if (((await step.textContent()) ?? "").startsWith("Étape 2/")) break;
 			await page.keyboard.press("ArrowRight");
 		}
 		await expect(step).toContainText(`Étape 2/${setlist.steps}`);
 
-		// Step 3 of this fixture is a text, which has no strophes at all —
-		// navigation has to come from the setlist or the buttons go dead here.
+		// Step 3 is a text and has no strophes, so navigation must come from the
+		// setlist rather than from strophe bounds.
 		for (let i = 0; i < 60; i++) {
 			if (((await step.textContent()) ?? "").startsWith("Étape 3/")) break;
 			await page.keyboard.press("ArrowRight");
@@ -130,24 +113,18 @@ test.describe("song editor round-trip", () => {
 	test("edit a line, save, reload, the change is still there", async ({
 		page,
 	}) => {
-		// A song of its own: this spec writes, the suite runs fullyParallel, and a
-		// writer must not share a row with a reader.
 		const draft = SONGS.editable;
-		// Every fixture value for this row starts "Ligne ", which is what makes the
-		// prefix match below safe.
 		const edited = `Ligne modifiée ${Date.now()}`;
 
 		const save = async () => {
 			await page.getByRole("button", { name: "Enregistrer" }).click();
-			// The write is a mutation; navigating before it resolves loses it, which
-			// is exactly what made the first version of this test flaky.
+			// Navigating before the mutation resolves loses the write.
 			await expect(page.getByText("Modifications enregistrées")).toBeVisible();
 		};
 
 		await page.goto(`/songs/${draft.id}/edit`);
-		// Matched by prefix, not by exact text: if an earlier run failed between
-		// its write and its restore, this row still holds that run's value, and a
-		// write-test that poisons every later run is worse than no test.
+		// Prefix match, so a run that failed between its write and its restore
+		// leaves this row still findable.
 		await (
 			await inputMatching(
 				page,
@@ -157,13 +134,11 @@ test.describe("song editor round-trip", () => {
 		).fill(edited);
 		await save();
 
-		// Reload rather than trusting the page we are on: the assertion is about
-		// what was persisted, not what is sitting in the query cache.
+		// Reload so this asserts what was persisted, not the query cache.
 		await page.goto(`/songs/${draft.id}`);
 		await page.reload();
 		await expect(page.getByTestId("song-page")).toContainText(edited);
 
-		// Put it back, so a second local run starts where this one did.
 		await page.goto(`/songs/${draft.id}/edit`);
 		await (await inputShowing(page, edited)).fill(draft.firstLine);
 		await save();
@@ -175,8 +150,7 @@ test.describe("song editor round-trip", () => {
 
 test.describe("search", () => {
 	test("finds a fixture song by title", async ({ page }) => {
-		// searchOnly is deliberately in no setlist, so finding it proves search
-		// reaches the corpus rather than some recently-touched subset.
+		// In no setlist, so finding it proves search reaches the whole corpus.
 		const target = SONGS.searchOnly;
 		await page.goto("/");
 		await expect(page.getByTestId("song-list")).toBeVisible();

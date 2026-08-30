@@ -66,8 +66,8 @@ import {
 
 function createWrapper() {
 	const queryClient = new QueryClient({
-		// gcTime must not be 0: several tests read the cache after an `await`, and an
-		// entry with no mounted observer is garbage-collected the moment the test yields.
+		// Not 0: an entry with no mounted observer is collected the moment a test
+		// yields at an `await`, and several tests read the cache after one.
 		defaultOptions: {
 			queries: { retry: false, gcTime: Number.POSITIVE_INFINITY },
 		},

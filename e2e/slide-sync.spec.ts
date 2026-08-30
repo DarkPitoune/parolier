@@ -2,28 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { SETLISTS } from "./fixtures";
 
 /**
- * PLAN-01 1.6a — the transport contract.
- *
- * This is the behaviour Phase 3 must preserve when MQTT is replaced. Nothing
- * covered it before: the presenter specs open /slides *after* advancing, so they
- * only exercise mount-time hydration, and the unit tests fire a synthetic
- * StorageEvent at `window`, which exercises the handler rather than real
- * cross-tab delivery.
- *
- * Both pages live in ONE Playwright context on purpose — that is what makes
- * them share an origin and therefore localStorage, which is the transport
- * actually under test here. Two contexts would share nothing and, with the MQTT
- * broker unreachable, would silently assert nothing at all.
- *
- * These pass today with the broker at 192.168.8.1 unreachable. That is the
- * point: it proves the same-device path owes MQTT nothing, which is what makes
- * the swap safe. They must still pass afterwards, unchanged — if one needs
- * editing to go green, the swap changed behaviour.
- *
- * The sixth assertion of this contract — that a display-role action does not
- * reach another device — cannot be written here. It needs a second device,
- * which is the leg MQTT carries and localStorage does not. It belongs to Phase
- * 3.1, against the new transport's mock.
+ * Both pages must live in ONE Playwright context: that is what makes them share
+ * an origin, and localStorage is the transport carrying slide state between
+ * them. Separate contexts share nothing and would pass while asserting nothing.
  */
 
 const setlist = SETLISTS.sunday;
@@ -51,9 +32,6 @@ test.describe("slide sync: presenter to an already-open slide window", () => {
 	}) => {
 		const presenter = await openPresenter(await context.newPage());
 
-		// The slide window opens BEFORE the advance. This is the whole difference
-		// from the existing specs, which open it after and so only ever test
-		// hydration on mount.
 		const slides = await context.newPage();
 		await slides.goto("/slides");
 		await expect(slides.locator('img[alt="logo"]')).toHaveCount(0);
@@ -66,7 +44,6 @@ test.describe("slide sync: presenter to an already-open slide window", () => {
 		const after = await presenterSlideText(presenter);
 		expect(after).not.toBe(before);
 
-		// No reload anywhere: the open window has to move on its own.
 		await expect(slides.locator("body")).toContainText(after);
 
 		await slides.close();
@@ -93,8 +70,7 @@ test.describe("slide sync: presenter to an already-open slide window", () => {
 			seen.push(current);
 		}
 
-		// Each step was a distinct slide, so "it followed" cannot be satisfied by
-		// a window that simply never changed.
+		// Distinct slides, so a window that never changed cannot pass.
 		expect(new Set(seen).size).toBe(seen.length);
 
 		await slides.close();
@@ -109,7 +85,7 @@ test.describe("slide sync: presenter to an already-open slide window", () => {
 		await slides.goto("/slides");
 		await expect(slides.locator('img[alt="logo"]')).toHaveCount(0);
 
-		// The button's accessible name comes from its icon's alt text, not its title.
+		// Accessible name comes from the icon's alt text, not the title attribute.
 		const logoToggle = presenter.locator('button:has(img[alt="logo toggle"])');
 
 		await logoToggle.click();
@@ -133,7 +109,6 @@ test.describe("slide sync: presenter to an already-open slide window", () => {
 		await expect(presenter.getByTestId("strophe-counter")).toContainText("3/");
 		const third = await presenterSlideText(presenter);
 
-		// Only now does the display join.
 		const slides = await context.newPage();
 		await slides.goto("/slides");
 		await expect(slides.locator('img[alt="logo"]')).toHaveCount(0);
@@ -147,8 +122,6 @@ test.describe("slide sync: presenter to an already-open slide window", () => {
 	test("5. reloading the presenter mid-song does not reset the slide window", async ({
 		context,
 	}) => {
-		// The presenter-only half of this lives in presenter-flow.spec.ts; this is
-		// the two-window form the contract actually describes.
 		const presenter = await openPresenter(await context.newPage());
 		const slides = await context.newPage();
 		await slides.goto("/slides");
@@ -160,17 +133,12 @@ test.describe("slide sync: presenter to an already-open slide window", () => {
 		const third = await presenterSlideText(presenter);
 		await expect(slides.locator("body")).toContainText(third);
 
-		// Land on the standalone presenter, which is the case this contract means:
-		// it has no step in its URL, so the only way back to the lyrics is the
-		// stored state. Reloading /presenter/:setlistId/:stepNumber instead is a
-		// different thing and correctly restarts the step — that URL names step 0,
-		// so mounting it dispatches LOAD_SONG and the slide window follows it back
-		// to the first verse, as it should.
+		// Standalone /presenter has no step in its URL, so it rebuilds from stored
+		// state. Reloading /presenter/:setlistId/:stepNumber restarts the step
+		// instead, because that URL names step 0.
 		await presenter.goto("/presenter");
 		await expect(presenter.getByTestId("strophe-counter")).toContainText("3/");
 
-		// The display must still be on the slide it was on — a reload is not a
-		// reason for the congregation's screen to jump back to the first verse.
 		await expect(slides.locator("body")).toContainText(third);
 
 		await slides.close();
