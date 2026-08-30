@@ -3,7 +3,6 @@ import {
 	type BibleTodayReading,
 	useBibleToday,
 } from "@/hooks/queries/useBibleTodayQuery";
-import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
 import { useEffect } from "react";
 
 function ReadingSection({ reading }: { reading: BibleTodayReading }) {
@@ -42,13 +41,6 @@ function ReadingSection({ reading }: { reading: BibleTodayReading }) {
 
 function BibleToday() {
 	const { data, isLoading } = useBibleToday();
-
-	useRecordVisit({
-		path: "/bible/today",
-		title: "Lecture du jour",
-		type: "bible",
-	});
-	useRestoreScroll();
 
 	useEffect(() => {
 		document.title = "Lecture du jour - Bible - Parolier";

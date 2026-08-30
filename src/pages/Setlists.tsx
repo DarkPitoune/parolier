@@ -1,8 +1,5 @@
 import { ConfirmDialog, PageHeader } from "@/components";
-import {
-	globalSearchEnabledAtom,
-	isDarkAtom,
-} from "@/components/Contexts/SettingsContext";
+import { isDarkAtom } from "@/components/Contexts/SettingsContext";
 import {
 	UnifiedSearchInput,
 	UnifiedSearchResults,
@@ -30,7 +27,6 @@ import { Link, useNavigate } from "react-router-dom";
 
 const Setlists = () => {
 	const { data: setslists = [], isLoading } = useAllSetlists();
-	const globalSearchEnabled = useAtomValue(globalSearchEnabledAtom);
 	const darkMode = useAtomValue(isDarkAtom);
 	const unifiedSearch = useUnifiedSearch("setlists");
 	const queryClient = useQueryClient();
@@ -86,14 +82,11 @@ const Setlists = () => {
 			<div className="sticky top-0 z-10 bg-white dark:bg-gray-800">
 				<PageHeader
 					variant="list"
-					title={globalSearchEnabled ? undefined : "Setlists"}
 					left={
-						globalSearchEnabled ? (
-							<UnifiedSearchInput
-								search={unifiedSearch}
-								placeholder="Rechercher une setlist..."
-							/>
-						) : undefined
+						<UnifiedSearchInput
+							search={unifiedSearch}
+							placeholder="Rechercher une setlist..."
+						/>
 					}
 				/>
 				<div className="flex justify-center border-b border-gray-200 dark:border-gray-600 p-2">
@@ -106,7 +99,7 @@ const Setlists = () => {
 					</button>
 				</div>
 			</div>
-			{globalSearchEnabled && unifiedSearch.showResults ? (
+			{unifiedSearch.showResults ? (
 				<UnifiedSearchResults search={unifiedSearch} />
 			) : (
 				<div className="flex flex-col items-stretch divide-y pb-14">

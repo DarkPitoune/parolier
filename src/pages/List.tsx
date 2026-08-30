@@ -1,10 +1,8 @@
 import { PageHeader, SongItem, useLeader } from "@/components";
 import {
 	filtersAtom,
-	globalSearchEnabledAtom,
 	tagTabOpenAtom,
 } from "@/components/Contexts/SettingsContext";
-import { getSongItemId } from "@/components/SongItem";
 import { TagChip } from "@/components/TagChip";
 import {
 	UnifiedSearchInput,
@@ -12,24 +10,13 @@ import {
 } from "@/components/UnifiedSearch/UnifiedSearch";
 import { useUnifiedSearch } from "@/components/UnifiedSearch/useUnifiedSearch";
 import { useAllSongs, useAllTags } from "@/hooks/queries/useSongQueries";
-import { normalize } from "@/utils/normalize";
 import supabase, { type AllSongs } from "@/utils/supabase";
-import {
-	ChevronRightIcon,
-	MagnifyingGlassIcon,
-} from "@heroicons/react/16/solid";
+import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import clsx from "clsx";
-import Fuse from "fuse.js";
-import { useAtom, useAtomValue } from "jotai";
-import {
-	type ChangeEventHandler,
-	useCallback,
-	useEffect,
-	useMemo,
-	useState,
-} from "react";
+import { useAtom } from "jotai";
+import { useMemo } from "react";
 import toast from "react-hot-toast";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function Index() {
 	const { data: songsData } = useAllSongs();
@@ -44,29 +31,9 @@ function Index() {
 		[tagsData],
 	);
 
-	const [searchResults, setSearchResults] = useState<AllSongs | null>(null);
-	const globalSearchEnabled = useAtomValue(globalSearchEnabledAtom);
 	const unifiedSearch = useUnifiedSearch("songs");
-	const filteredSongs = searchResults ?? songs;
 	const [selectedTags, setSelectedTags] = useAtom<number[]>(filtersAtom);
 	const [tagTabOpen, setTagTabOpen] = useAtom(tagTabOpenAtom);
-	const navigate = useNavigate();
-	const [selectedSongIndex, setSelectedSongIndex] = useState<number | null>(
-		null,
-	);
-	const fuse = useMemo(
-		() =>
-			new Fuse(songs, {
-				keys: ["title"],
-				threshold: 0.3,
-				getFn: (obj, path) => {
-					const k = Array.isArray(path) ? path[0] : path;
-					const v = (obj as Record<string, unknown>)[k];
-					return typeof v === "string" ? normalize(v) : "";
-				},
-			}),
-		[songs],
-	);
 	const { leader } = useLeader();
 
 	const toggleTag = (id: number) => {
@@ -75,82 +42,6 @@ function Index() {
 			return oldTags.filter((tagId) => tagId !== id);
 		});
 	};
-
-	const scrollToSelectedSong = useCallback(() => {
-		if (selectedSongIndex !== null) {
-			const selectedSongId = filteredSongs[selectedSongIndex]?.id;
-			const element = document.getElementById(getSongItemId(selectedSongId));
-			if (element)
-				element.scrollIntoView({ behavior: "smooth", block: "center" });
-		}
-	}, [selectedSongIndex, filteredSongs]);
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: we want to trigger the function when selectedSongId changes
-	useEffect(scrollToSelectedSong, [scrollToSelectedSong]);
-
-	useEffect(() => {
-		if (globalSearchEnabled) return;
-		const handleKeyDown = (event: KeyboardEvent) => {
-			if (selectedSongIndex !== null && event.key === "ArrowUp") {
-				event.preventDefault();
-				setSelectedSongIndex(Math.max(0, selectedSongIndex - 1));
-			}
-			if (event.key === "ArrowDown") {
-				event.preventDefault();
-				if (selectedSongIndex === null) setSelectedSongIndex(0);
-				else
-					setSelectedSongIndex(
-						Math.min(filteredSongs.length - 1, selectedSongIndex + 1),
-					);
-			}
-			if (event.key === "Enter") {
-				if (selectedSongIndex !== null) {
-					navigate(`/songs/${filteredSongs[selectedSongIndex].id}`);
-				}
-			}
-			// Catch any letter input (a-z, A-Z) and focus the search input
-			if (event.key.length === 1 && /[a-zA-Z]/.test(event.key)) {
-				const searchInput = document.querySelector(
-					'input[type="search"]',
-				) as HTMLInputElement | null;
-				if (searchInput) {
-					searchInput.focus();
-					if (document.activeElement !== searchInput) {
-						searchInput.value += event.key;
-						const inputEvent = new Event("input", { bubbles: true });
-						searchInput.dispatchEvent(inputEvent);
-					}
-				}
-			}
-		};
-		window.addEventListener("keydown", handleKeyDown);
-		return () => {
-			window.removeEventListener("keydown", handleKeyDown);
-		};
-	}, [globalSearchEnabled, selectedSongIndex, filteredSongs, navigate]);
-
-	const [searchValue, setSearchValue] = useState("");
-
-	const search: ChangeEventHandler<HTMLInputElement> = useCallback(
-		(event) => {
-			setSearchValue(event.target.value);
-			if (event.target.value.length === 0) setSearchResults(null);
-			else {
-				window.scrollTo(0, 0);
-				if (!Number.isNaN(Number(event.target.value))) {
-					const song = songs.find((s) => s.id === Number(event.target.value));
-					setSearchResults(song ? [song] : []);
-					setSelectedSongIndex(0);
-				} else {
-					setSearchResults(
-						fuse.search(normalize(event.target.value)).map((hit) => hit.item),
-					);
-					setSelectedSongIndex(null);
-				}
-			}
-		},
-		[fuse, songs],
-	);
 
 	const isCorrectTag = (song: AllSongs[number]) => {
 		if (selectedTags.length === 0) return true;
@@ -184,22 +75,10 @@ function Index() {
 				<PageHeader
 					variant="list"
 					left={
-						globalSearchEnabled ? (
-							<UnifiedSearchInput
-								search={unifiedSearch}
-								placeholder="Vite, une idée..."
-							/>
-						) : (
-							<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
-								<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
-								<input
-									className="w-full h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
-									type="search"
-									onChange={search}
-									placeholder="Vite, une idée..."
-								/>
-							</div>
-						)
+						<UnifiedSearchInput
+							search={unifiedSearch}
+							placeholder="Vite, une idée..."
+						/>
 					}
 				/>
 				<div className="px-6 py-2 flex flex-col items-stretch shadow-sm font-flame">
@@ -233,7 +112,7 @@ function Index() {
 					</div>
 				</div>
 			</div>
-			{globalSearchEnabled && unifiedSearch.showResults ? (
+			{unifiedSearch.showResults ? (
 				<UnifiedSearchResults
 					search={unifiedSearch}
 					onAskNewSong={askNewSong}
@@ -244,30 +123,15 @@ function Index() {
 					style={{ columnCount: 2 }}
 					data-testid="song-list"
 				>
-					{filteredSongs.filter(isCorrectTag).map((song, index) => (
+					{songs.filter(isCorrectTag).map((song) => (
 						<Link
 							key={song.id}
 							to={`/songs/${song.id}`}
 							data-testid={`song-link-${song.id}`}
-							className={
-								index === selectedSongIndex
-									? "bg-gray-300 dark:bg-slate-700"
-									: ""
-							}
 						>
 							<SongItem song={song} />
 						</Link>
 					))}
-
-					{searchValue && (
-						<button
-							className="px-2 py-4 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 text-black dark:text-white w-full"
-							onClick={() => askNewSong(searchValue)}
-							type="button"
-						>
-							Demander l'ajout de <b>"{searchValue}"</b> dans la liste
-						</button>
-					)}
 				</div>
 			)}
 		</div>

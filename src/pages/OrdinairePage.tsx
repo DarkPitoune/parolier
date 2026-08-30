@@ -6,7 +6,6 @@ import {
 } from "@/components/Contexts/SettingsContext";
 import { DynamicText } from "@/components/DynamicText";
 import { useOrdinaireDetail } from "@/hooks/queries/useSongQueries";
-import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
 import { queryKeys } from "@/utils/queryKeys";
 import {
 	type OrdinaireDetail,
@@ -114,17 +113,6 @@ export function OrdinairePage() {
 	const { ordinaireId } = useParams<{ ordinaireId: string }>();
 	const id = ordinaireId ? Number(ordinaireId) : undefined;
 	const { data: ordinaire } = useOrdinaireDetail(id);
-
-	useRecordVisit(
-		ordinaire
-			? {
-					path: `/ordinaires/${ordinaireId}`,
-					title: ordinaire.name,
-					type: "ordinaire",
-				}
-			: null,
-	);
-	useRestoreScroll();
 
 	const addChorus = useAtomValue(addChorusAtom);
 	const showChords = useAtomValue(showChordsAtom);
