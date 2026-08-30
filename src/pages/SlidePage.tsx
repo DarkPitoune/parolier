@@ -77,6 +77,7 @@ const SlidePage = () => {
 	// Init from song query (URL or synced songId)
 	// location.key changes on every navigation (even to the same URL), so re-selecting
 	// the same song via SlideFinder re-dispatches LOAD_SONG (exits logo mode, resets strophe).
+	// biome-ignore lint/correctness/useExhaustiveDependencies: re-picking the song already showing changes no other dep, so location.key is what re-runs this
 	useEffect(() => {
 		if (songData?.strophes) {
 			if (songIdFromUrl) {

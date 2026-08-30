@@ -229,6 +229,7 @@ function SetlistPage() {
 		<div className="flex flex-col h-screen">
 			<div className="flex justify-between items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 bg-white dark:bg-gray-900 shrink-0">
 				<BackButton />
+				{/* biome-ignore lint/a11y/useKeyWithClickEvents: hidden triple-tap shortcut; Setlists.tsx links this route visibly */}
 				<h3
 					className="text-xl lg:text-3xl font-flame text-jubilateBlue-500 dark:text-jubilateBlue-400 select-none"
 					onClick={handleTitleTap}

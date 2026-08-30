@@ -1,39 +1,33 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { SONGS } from "./fixtures";
+
+const song = SONGS.withChords;
 
 test.describe("Song navigation", () => {
-	test("homepage shows song list and navigating to a song works", async ({
+	test("homepage lists the fixture songs and navigates into one", async ({
 		page,
 	}) => {
 		await page.goto("/");
 
-		// Song list should be visible
 		const songList = page.getByTestId("song-list");
 		await expect(songList).toBeVisible();
 
-		// Should have at least one song link
-		const firstLink = songList.locator("a").first();
-		await expect(firstLink).toBeVisible();
+		// Named, not `.first()`: this asserts the list rendered *this* song rather
+		// than merely rendering something.
+		const link = page.getByTestId(`song-link-${song.id}`);
+		await expect(link).toBeVisible();
+		await expect(link).toContainText(song.title);
 
-		// Click the first song
-		await firstLink.click();
+		await link.click();
 
-		// Should navigate to /songs/:id
-		await expect(page).toHaveURL(/\/songs\/\d+/);
-
-		// Song page should render
+		await expect(page).toHaveURL(new RegExp(`/songs/${song.id}$`));
 		await expect(page.getByTestId("song-page")).toBeVisible();
 	});
 
-	test("song page shows title", async ({ page }) => {
-		await page.goto("/");
+	test("song page shows the fixture song's title", async ({ page }) => {
+		await page.goto(`/songs/${song.id}`);
 
-		const songList = page.getByTestId("song-list");
-		const firstLink = songList.locator("a").first();
-		await firstLink.click();
 		await expect(page.getByTestId("song-page")).toBeVisible();
-
-		// Page should contain an h1 with content
-		const heading = page.locator("h1");
-		await expect(heading.first()).toBeVisible();
+		await expect(page.locator("h1").first()).toContainText(song.title);
 	});
 });

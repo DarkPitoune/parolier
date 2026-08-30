@@ -2,6 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
 	testDir: "e2e",
+	// e2e/manual specs call page.pause() and would hang an unattended run.
+	testIgnore: "**/manual/**",
 	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 2 : 0,
@@ -16,7 +18,7 @@ export default defineConfig({
 		},
 	],
 	webServer: {
-		command: "VITE_E2E=true pnpm build && pnpm preview",
+		command: "pnpm build:e2e && pnpm preview",
 		port: 4173,
 		reuseExistingServer: !process.env.CI,
 	},

@@ -18,10 +18,12 @@ import {
 // biome-ignore lint/suspicious/noExplicitAny: test double for the realtime callback signature
 let realtimeCallback: ((payload: any) => void) | undefined;
 const mockChannel = {
-	on: vi.fn((_event: string, _filter: unknown, callback: typeof realtimeCallback) => {
-		realtimeCallback = callback;
-		return mockChannel;
-	}),
+	on: vi.fn(
+		(_event: string, _filter: unknown, callback: typeof realtimeCallback) => {
+			realtimeCallback = callback;
+			return mockChannel;
+		},
+	),
 	subscribe: vi.fn(),
 	unsubscribe: vi.fn(),
 };
@@ -64,7 +66,11 @@ import {
 
 function createWrapper() {
 	const queryClient = new QueryClient({
-		defaultOptions: { queries: { retry: false, gcTime: 0 } },
+		// Not 0: an entry with no mounted observer is collected the moment a test
+		// yields at an `await`, and several tests read the cache after one.
+		defaultOptions: {
+			queries: { retry: false, gcTime: Number.POSITIVE_INFINITY },
+		},
 	});
 	return {
 		queryClient,
@@ -409,7 +415,11 @@ describe("useSaveSongEdit", () => {
 	});
 
 	const draftStrophes: Strophe[] = [
-		{ content: [{ text: "Tu es là", chords: "Em" }], type: "verse", repetition: false },
+		{
+			content: [{ text: "Tu es là", chords: "Em" }],
+			type: "verse",
+			repetition: false,
+		},
 	];
 
 	it("preserves a note added on the server since the editor loaded", async () => {
@@ -448,7 +458,9 @@ describe("useSaveSongEdit", () => {
 		await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
 		const written = vi.mocked(songEditMutation).mock.calls[0][1];
-		expect(written.strophes[0]).toMatchObject({ note: { who: ["🥁"], how: [] } });
+		expect(written.strophes[0]).toMatchObject({
+			note: { who: ["🥁"], how: [] },
+		});
 		expect(queryClient.getQueryData(queryKeys.songs.detail(1))).toEqual(saved);
 	});
 
@@ -462,7 +474,10 @@ describe("useSaveSongEdit", () => {
 		} as never);
 
 		const { wrapper, queryClient } = createWrapper();
-		queryClient.setQueryData(queryKeys.songs.detail(1), { id: 1, title: "Old" });
+		queryClient.setQueryData(queryKeys.songs.detail(1), {
+			id: 1,
+			title: "Old",
+		});
 
 		const { result } = renderHook(() => useSaveSongEdit(), { wrapper });
 		act(() => {
@@ -524,7 +539,9 @@ describe("useSongsRealtimeSync", () => {
 		};
 		expect(detail.title).toBe("Nouveau titre");
 		// The broadcast row has no `tags` join — must not clobber it.
-		expect(detail.tags).toEqual([{ id: 1, name: "tag", svg: null, color: null }]);
+		expect(detail.tags).toEqual([
+			{ id: 1, name: "tag", svg: null, color: null },
+		]);
 	});
 
 	it("does not create a cache entry for a song nobody has fetched yet", () => {
@@ -535,7 +552,9 @@ describe("useSongsRealtimeSync", () => {
 			realtimeCallback?.({ new: { id: 99, title: "Inconnu" } });
 		});
 
-		expect(queryClient.getQueryData(queryKeys.songs.detail(99))).toBeUndefined();
+		expect(
+			queryClient.getQueryData(queryKeys.songs.detail(99)),
+		).toBeUndefined();
 	});
 
 	it("unsubscribes on unmount", () => {

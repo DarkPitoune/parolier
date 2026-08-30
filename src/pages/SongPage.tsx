@@ -1,18 +1,18 @@
+import type { StropheNote } from "@/assets/types";
 import { PageHeader, SongViewer, useLeader } from "@/components";
 import { showPerformanceNotesAtom } from "@/components/Contexts/SettingsContext";
 import { PerformanceNoteSheet } from "@/components/PerformanceNotes/PerformanceNoteSheet";
-import type { StropheNote } from "@/assets/types";
 import {
 	useSetStropheNote,
 	useTaggedSong,
 } from "@/hooks/queries/useSongQueries";
 import { useRecordVisit, useRestoreScroll } from "@/hooks/useNavigationHistory";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import { analyticsSong } from "@/utils/supabase";
 import { getStropheNote, stropheFingerprint } from "@/utils/stropheNotes";
-import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
-import { DocumentTextIcon } from "@heroicons/react/24/outline";
+import { analyticsSong } from "@/utils/supabase";
 import { supabaseUrl } from "@/utils/supabase";
+import { DocumentTextIcon } from "@heroicons/react/24/outline";
+import { ComputerDesktopIcon } from "@heroicons/react/24/solid";
 import { useAtomValue } from "jotai";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -35,9 +35,9 @@ function SongPage() {
 	const [noteStatus, setNoteStatus] = useState<
 		Record<number, "saving" | "saved">
 	>({});
-	const noteStatusTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>(
-		{},
-	);
+	const noteStatusTimers = useRef<
+		Record<number, ReturnType<typeof setTimeout>>
+	>({});
 	// Lets an older save's callback recognize it's been superseded by a
 	// newer edit to the same strophe, so it doesn't flip the badge to
 	// "saved" while that newer save is still in flight.
@@ -144,6 +144,7 @@ function SongPage() {
 			<PageHeader
 				variant="detail"
 				title={
+					// biome-ignore lint/a11y/useKeyWithClickEvents: hidden triple-tap shortcut; a key handler would announce the title as a button
 					<h1
 						className="font-flame text-xl lg:text-3xl text-jubilateBlue-500 dark:text-jubilateBlue-400 select-none"
 						onClick={handleTitleTap}

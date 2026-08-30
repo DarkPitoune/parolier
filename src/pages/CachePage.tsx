@@ -81,7 +81,7 @@ const CachePage = () => {
 		return unsubscribe;
 	}, []);
 
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+	// biome-ignore lint/correctness/useExhaustiveDependencies: getCacheEntries() reads the cache imperatively, so `version` is the only recompute trigger
 	const groups = useMemo(() => getCacheEntries(), [version]);
 
 	const totalEntries = Array.from(groups.values()).reduce(
