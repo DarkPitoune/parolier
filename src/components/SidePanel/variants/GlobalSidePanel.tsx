@@ -5,8 +5,8 @@ import {
 	themeModeAtom,
 } from "@/components";
 import {
-	DEFAULT_FONT_SIZE,
-	MAX_FONT_SIZE,
+	FONT_SIZES,
+	type FontSize,
 	type ThemeMode,
 	showPerformanceNotesAtom,
 	tonalityAtom,
@@ -42,7 +42,9 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { SidePanel } from "../SidePanel";
 import { LeaderSetting } from "./SettingsSidePanel/LeaderSetting";
 import {
+	type SegmentedOption,
 	SettingRow,
+	SettingSegmented,
 	SettingStepper,
 	SettingToggle,
 	SettingsSection,
@@ -200,14 +202,27 @@ function NavigationContent() {
 	);
 }
 
-const THEME_MODES: {
-	value: ThemeMode;
-	label: string;
-	Icon: typeof SunIcon;
-}[] = [
-	{ value: "system", label: "Système", Icon: ComputerDesktopIcon },
-	{ value: "light", label: "Clair", Icon: SunIcon },
-	{ value: "dark", label: "Sombre", Icon: MoonIcon },
+const THEME_MODES: SegmentedOption<ThemeMode>[] = [
+	{
+		value: "system",
+		label: "Système",
+		icon: <ComputerDesktopIcon className="size-4" />,
+	},
+	{ value: "light", label: "Clair", icon: <SunIcon className="size-4" /> },
+	{ value: "dark", label: "Sombre", icon: <MoonIcon className="size-4" /> },
+];
+
+// The glyph is the control: a letter drawn at the size it selects needs no label.
+const sizeGlyph = (scale: string) => (
+	<span className={clsx("w-6 text-center font-flame leading-none", scale)}>
+		A
+	</span>
+);
+
+const FONT_SIZE_OPTIONS: SegmentedOption<FontSize>[] = [
+	{ value: FONT_SIZES[0], label: "Normal", icon: sizeGlyph("text-sm") },
+	{ value: FONT_SIZES[1], label: "Grand", icon: sizeGlyph("text-lg") },
+	{ value: FONT_SIZES[2], label: "Très grand", icon: sizeGlyph("text-2xl") },
 ];
 
 function SettingsContent() {
@@ -240,44 +255,6 @@ function SettingsContent() {
 	return (
 		<>
 			<div className="flex flex-col gap-4">
-				<SettingsSection label="Lecture">
-					<SettingRow ariaLabel="font size choice" name="Taille du texte">
-						<SettingStepper
-							label="Taille du texte"
-							value={String(fontSize)}
-							active={fontSize !== DEFAULT_FONT_SIZE}
-							onStep={(increment) =>
-								setFontSize((size) =>
-									Math.min(MAX_FONT_SIZE, Math.max(0, size + increment)),
-								)
-							}
-							onReset={() => setFontSize(DEFAULT_FONT_SIZE)}
-						/>
-					</SettingRow>
-					<SettingRow ariaLabel="theme choice" name="Thème">
-						<div className="flex shrink-0 gap-1 rounded-full bg-slate-300 dark:bg-slate-700 p-1">
-							{THEME_MODES.map(({ value, label, Icon }) => (
-								<button
-									key={value}
-									type="button"
-									onClick={() => setThemeMode(value)}
-									aria-pressed={themeMode === value}
-									aria-label={label}
-									className={clsx(
-										"flex items-center gap-1 rounded-full px-3 py-1 transition-colors",
-										themeMode === value
-											? "bg-white dark:bg-slate-800 text-jubilateBlue-500 dark:text-jubilateBlue-400"
-											: "bg-transparent",
-									)}
-								>
-									<Icon className="size-4" />
-									<span className="text-sm hidden md:block">{label}</span>
-								</button>
-							))}
-						</div>
-					</SettingRow>
-				</SettingsSection>
-
 				<SettingsSection label="Partition">
 					<SettingRow ariaLabel="chords choice" name="Accords">
 						<SettingToggle
@@ -311,6 +288,24 @@ function SettingsContent() {
 							label="Notes de jeu"
 							checked={showPerformanceNotes}
 							onChange={setShowPerformanceNotes}
+						/>
+					</SettingRow>
+				</SettingsSection>
+
+				<SettingsSection label="Lecture">
+					<SettingRow ariaLabel="font size choice" name="Taille du texte">
+						<SettingSegmented
+							value={fontSize}
+							options={FONT_SIZE_OPTIONS}
+							onChange={setFontSize}
+						/>
+					</SettingRow>
+					<SettingRow ariaLabel="theme choice" name="Thème">
+						<SettingSegmented
+							value={themeMode}
+							options={THEME_MODES}
+							onChange={setThemeMode}
+							withLabels
 						/>
 					</SettingRow>
 				</SettingsSection>

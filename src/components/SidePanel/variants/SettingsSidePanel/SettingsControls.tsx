@@ -92,6 +92,51 @@ function SettingToggle({
 	);
 }
 
+type SegmentedOption<T> = {
+	value: T;
+	label: string;
+	icon: ReactNode;
+};
+
+function SettingSegmented<T extends string | number>({
+	value,
+	options,
+	onChange,
+	withLabels,
+}: {
+	value: T;
+	options: readonly SegmentedOption<T>[];
+	onChange: (value: T) => void;
+	/** Spells the label out beside the icon once the panel has room for it. */
+	withLabels?: boolean;
+}) {
+	return (
+		<div className="flex shrink-0 gap-1 rounded-full bg-slate-300 dark:bg-slate-700 p-1">
+			{options.map((option) => (
+				<button
+					key={String(option.value)}
+					type="button"
+					onClick={() => onChange(option.value)}
+					aria-pressed={value === option.value}
+					aria-label={option.label}
+					title={option.label}
+					className={clsx(
+						"flex items-center justify-center gap-1 rounded-full px-3 py-1 transition-colors",
+						value === option.value
+							? "bg-white dark:bg-slate-800 text-jubilateBlue-500 dark:text-jubilateBlue-400"
+							: "bg-transparent",
+					)}
+				>
+					{option.icon}
+					{withLabels && (
+						<span className="text-sm hidden md:block">{option.label}</span>
+					)}
+				</button>
+			))}
+		</div>
+	);
+}
+
 type SettingStepperProps = {
 	label: string;
 	value: string;
@@ -148,7 +193,9 @@ function SettingStepper({
 
 export {
 	ACCENT_FILL,
+	type SegmentedOption,
 	SettingRow,
+	SettingSegmented,
 	SettingStepper,
 	SettingToggle,
 	SettingsSection,

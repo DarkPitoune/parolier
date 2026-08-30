@@ -1,11 +1,34 @@
 import { atom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 
-export const DEFAULT_FONT_SIZE = 2;
-export const MAX_FONT_SIZE = 9;
-export const fontSizeAtom = atomWithStorage(
+/**
+ * Positions in the `fontSizeTailwind` scale of DynamicText. They stay put even
+ * though the steps between them are now unreachable: the stored number is an
+ * index into that scale, so renumbering would resize every existing reader.
+ */
+export const FONT_SIZES = [2, 5, 8] as const;
+export type FontSize = (typeof FONT_SIZES)[number];
+export const DEFAULT_FONT_SIZE: FontSize = 2;
+
+// getOnInit spares everyone who is not on Normal a first frame at the wrong
+// size — the steps are far enough apart that the reflow is impossible to miss.
+const storedFontSizeAtom = atomWithStorage<number>(
 	"settings.fontSize",
 	DEFAULT_FONT_SIZE,
+	createJSONStorage(() => localStorage),
+	{ getOnInit: true },
+);
+
+function nearestFontSize(stored: number): FontSize {
+	return FONT_SIZES.reduce((closest, size) =>
+		Math.abs(size - stored) < Math.abs(closest - stored) ? size : closest,
+	);
+}
+
+// Reads snap: builds before the three-step picker stored any position from 0 to 9.
+export const fontSizeAtom = atom(
+	(get) => nearestFontSize(get(storedFontSizeAtom)),
+	(_get, set, size: FontSize) => set(storedFontSizeAtom, size),
 );
 export const showChordsAtom = atomWithStorage("settings.showChords", true);
 export const addChorusAtom = atomWithStorage("settings.addChorus", false);
