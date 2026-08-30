@@ -13,7 +13,7 @@ import { BookOpenIcon } from "@heroicons/react/16/solid";
 import { ChevronRightIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
 function BibleTodayBanner() {
 	const { data } = useBibleToday();
@@ -49,6 +49,13 @@ function Bible() {
 	const { leader } = useLeader();
 	const { book: selectedBook, chapter: selectedChapter } = useParams();
 	const navigate = useNavigate();
+	const { hash } = useLocation();
+
+	// :target is no help here — the verses mount well after the document does,
+	// and in-app navigation is pushState, which never retargets.
+	const targetVerse = hash.startsWith("#verse-")
+		? hash.slice("#verse-".length)
+		: null;
 
 	const selectedBookEntry = useMemo(
 		() => bible.find((b) => b.abbr === selectedBook),
@@ -88,6 +95,13 @@ function Bible() {
 			}
 		}
 	}, [selectedBook, selectedChapter, selectedBookEntry]);
+
+	useEffect(() => {
+		if (!targetVerse || verses.length === 0) return;
+		document
+			.getElementById(`verse-${targetVerse}`)
+			?.scrollIntoView({ block: "center", behavior: "smooth" });
+	}, [targetVerse, verses]);
 
 	const selectBook = (abbr: string) => {
 		navigate(`/bible/${encodeURIComponent(abbr)}`);
@@ -226,7 +240,12 @@ function Bible() {
 											<span
 												key={`${verse.verse}`}
 												id={`verse-${verse.verse}`}
-												className="hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-200 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 scroll-mt-24"
+												className={clsx(
+													"transition-colors duration-200 rounded-sm px-1 py-0.5 -mx-1 -my-0.5 scroll-mt-24",
+													verse.verse === targetVerse
+														? "bg-jubilateBlue-200 dark:bg-jubilateBlue-400/30"
+														: "hover:bg-gray-100/50 dark:hover:bg-gray-700/50",
+												)}
 											>
 												<span className="text-sm font-medium text-red-700 dark:text-jubilateBlue-400 mr-1">
 													{Number(verse.verse)}
