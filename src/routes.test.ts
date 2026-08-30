@@ -6,7 +6,6 @@ const EXPECTED_PATHS = [
 	"/bible",
 	"/bible/:book",
 	"/bible/:book/:chapter",
-	"/bible/today",
 	"/cache",
 	"/certificate",
 	"/messe",

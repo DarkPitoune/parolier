@@ -1,7 +1,6 @@
 import {
 	Analytics,
 	Bible,
-	BibleToday,
 	Index,
 	Messe,
 	PresenterPage,
@@ -54,10 +53,6 @@ export const appRoutes: RouteObject[] = [
 	{
 		path: "/bible",
 		element: <Bible />,
-	},
-	{
-		path: "/bible/today",
-		element: <BibleToday />,
 	},
 	{
 		path: "/bible/:book",
