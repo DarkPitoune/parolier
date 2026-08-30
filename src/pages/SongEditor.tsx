@@ -15,7 +15,6 @@ import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import {
 	ArrowDownIcon,
 	ArrowUpIcon,
-	CameraIcon,
 	DocumentTextIcon,
 	TrashIcon,
 } from "@heroicons/react/24/outline";
@@ -33,15 +32,6 @@ const SongEditor = () => {
 	const [selectedTags, setSelectedTags] = useState<number[]>([]);
 	const [isSongEditorHelpOpen, setIsSongEditorHelpOpen] =
 		useAtom(songEditorHelpOpen);
-
-	// Image-to-lyrics state
-	const [isProcessing, setIsProcessing] = useState(false);
-	const [processingStep, setProcessingStep] = useState<string>("");
-	const [suggestedLyrics, setSuggestedLyrics] = useState<Strophe[] | null>(
-		null,
-	);
-	const [showWarning, setShowWarning] = useState(false);
-	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	// PDF upload state
 	const [isPdfUploading, setIsPdfUploading] = useState(false);
@@ -186,171 +176,6 @@ const SongEditor = () => {
 		});
 	};
 
-	const compressImage = useCallback((file: File): Promise<File> => {
-		return new Promise((resolve) => {
-			const canvas = document.createElement("canvas");
-			const ctx = canvas.getContext("2d");
-			if (!ctx) {
-				resolve(file);
-				return;
-			}
-			const img = new Image();
-
-			img.onload = () => {
-				// Set maximum dimensions
-				const maxWidth = 1920;
-				const maxHeight = 1920;
-
-				let { width, height } = img;
-
-				// Calculate new dimensions maintaining aspect ratio
-				if (width > maxWidth || height > maxHeight) {
-					if (width > height) {
-						height = (height * maxWidth) / width;
-						width = maxWidth;
-					} else {
-						width = (width * maxHeight) / height;
-						height = maxHeight;
-					}
-				}
-
-				canvas.width = width;
-				canvas.height = height;
-
-				// Draw and compress
-				ctx.drawImage(img, 0, 0, width, height);
-
-				canvas.toBlob(
-					(blob) => {
-						if (blob) {
-							const compressedFile = new File([blob], file.name, {
-								type: "image/jpeg",
-								lastModified: Date.now(),
-							});
-							resolve(compressedFile);
-						} else {
-							resolve(file); // Fallback to original if compression fails
-						}
-					},
-					"image/jpeg",
-					0.8, // 80% quality
-				);
-			};
-
-			img.onerror = () => resolve(file); // Fallback to original if loading fails
-			img.src = URL.createObjectURL(file);
-		});
-	}, []);
-
-	const handleImageUpload = useCallback(
-		async (file: File) => {
-			if (!file.type.startsWith("image/")) {
-				toast.error("Veuillez sélectionner un fichier image");
-				return;
-			}
-
-			setIsProcessing(true);
-			setProcessingStep("Compression de l'image...");
-
-			try {
-				// Compress image before upload
-				const compressedFile = await compressImage(file);
-
-				setProcessingStep("Téléchargement...");
-
-				// Upload compressed image to Supabase Storage
-				const fileName = `song-${Date.now()}-${compressedFile.name}`;
-				const { error: uploadError } = await supabase.storage
-					.from("song-images")
-					.upload(fileName, compressedFile);
-
-				if (uploadError) {
-					throw new Error(`Erreur de téléchargement: ${uploadError.message}`);
-				}
-
-				setProcessingStep("Traitement de l'image...");
-
-				// Get public URL
-				const {
-					data: { publicUrl },
-				} = supabase.storage.from("song-images").getPublicUrl(fileName);
-
-				setProcessingStep("Génération des paroles...");
-
-				// Call edge function
-				const { data: result, error: functionError } =
-					await supabase.functions.invoke("process-image-to-lyrics", {
-						body: { imageUrl: publicUrl },
-					});
-
-				if (functionError) {
-					throw new Error(`Erreur de traitement: ${functionError.message}`);
-				}
-
-				if (!result.success) {
-					throw new Error(
-						result.error || "Erreur lors du traitement de l'image",
-					);
-				}
-
-				if (!result.strophes || result.strophes.length === 0) {
-					throw new Error("Aucune parole n'a pu être extraite de cette image");
-				}
-
-				// Update song title if provided
-				if (result.title?.trim()) {
-					handleChange("title", result.title.trim());
-				}
-
-				setSuggestedLyrics(result.strophes);
-				toast.success("Paroles générées avec succès!");
-			} catch (error) {
-				console.error("Error processing image:", error);
-				toast.error(
-					error instanceof Error ? error.message : "Erreur lors du traitement",
-				);
-			} finally {
-				setIsProcessing(false);
-				setProcessingStep("");
-			}
-		},
-		[compressImage, handleChange],
-	);
-
-	const handleFileSelect = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			const file = e.target.files?.[0];
-			if (file) {
-				handleImageUpload(file);
-			}
-		},
-		[handleImageUpload],
-	);
-
-	const handleDrop = useCallback(
-		(e: React.DragEvent) => {
-			e.preventDefault();
-			const file = e.dataTransfer.files[0];
-			if (file) {
-				handleImageUpload(file);
-			}
-		},
-		[handleImageUpload],
-	);
-
-	const handleDragOver = useCallback((e: React.DragEvent) => {
-		e.preventDefault();
-	}, []);
-
-	const applySuggestedLyrics = useCallback(() => {
-		if (suggestedLyrics && song) {
-			handleChange("strophes", suggestedLyrics);
-			setSuggestedLyrics(null);
-			setShowWarning(false);
-			toast.success("Paroles appliquées avec succès!");
-		}
-	}, [suggestedLyrics, song, handleChange]);
-
 	const handlePdfUpload = useCallback(
 		async (file: File) => {
 			if (!file.type.includes("pdf")) {
@@ -439,19 +264,18 @@ const SongEditor = () => {
 		}
 	}, [song?.sheet_music_url, handleChange]);
 
-	// Warn user before leaving page during processing or with unsaved suggestions
 	useEffect(() => {
 		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-			if (isProcessing || suggestedLyrics || isPdfUploading) {
+			if (isPdfUploading) {
 				e.preventDefault();
 				e.returnValue =
-					"Vous avez un traitement en cours ou des paroles suggérées non appliquées. Êtes-vous sûr de vouloir quitter?";
+					"Le téléchargement de la partition est en cours. Êtes-vous sûr de vouloir quitter?";
 			}
 		};
 
 		window.addEventListener("beforeunload", handleBeforeUnload);
 		return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-	}, [isProcessing, suggestedLyrics, isPdfUploading]);
+	}, [isPdfUploading]);
 
 	useEffect(() => {
 		if (copySourceIndex === null) return;
@@ -577,158 +401,6 @@ const SongEditor = () => {
 						)}
 					</div>
 
-					{/* Image Upload Section */}
-					<div className="border p-4 rounded-md border-jubilateBlue-100 dark:border-slate-500">
-						<h3 className="text-lg font-semibold mb-3">
-							Générer à partir d'une image
-						</h3>
-
-						{!isProcessing ? (
-							<div
-								onDrop={handleDrop}
-								onDragOver={handleDragOver}
-								className="border-2 border-dashed border-jubilateBlue-300 dark:border-slate-400 rounded-lg p-6 text-center cursor-pointer hover:bg-jubilateBlue-50 dark:hover:bg-slate-700 transition-colors"
-								onClick={() => fileInputRef.current?.click()}
-								onKeyDown={(e) => {
-									if (e.key === "Enter" || e.key === " ") {
-										e.preventDefault();
-										fileInputRef.current?.click();
-									}
-								}}
-								tabIndex={0}
-								role="button"
-								aria-label="Upload image"
-							>
-								<CameraIcon className="mx-auto h-12 w-12 text-jubilateBlue-400 dark:text-slate-400 mb-3" />
-								<p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
-									Cliquez pour télécharger ou glissez une image
-								</p>
-								<p className="text-xs text-gray-500 dark:text-gray-400">
-									JPG, PNG, WebP jusqu'à 10MB
-								</p>
-								<input
-									ref={fileInputRef}
-									type="file"
-									accept="image/*"
-									onChange={handleFileSelect}
-									className="hidden"
-								/>
-							</div>
-						) : (
-							<div className="text-center py-8">
-								<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-jubilateBlue-500 mx-auto mb-3" />
-								<p className="text-sm font-medium text-jubilateBlue-600 dark:text-jubilateBlue-400">
-									{processingStep}
-								</p>
-								<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-									Cela peut prendre 30-60 secondes...
-								</p>
-								<div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-600 rounded-md">
-									<p className="text-xs text-yellow-800 dark:text-yellow-200 font-medium">
-										⚠️ Ne fermez pas cette page pendant le traitement
-									</p>
-									<p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-										Le processus sera interrompu et devra être relancé
-									</p>
-								</div>
-							</div>
-						)}
-					</div>
-
-					{/* Suggested Lyrics Section */}
-					{suggestedLyrics && (
-						<div className="border p-4 rounded-md border-green-200 bg-green-50 dark:border-green-600 dark:bg-green-900/20">
-							<div className="flex justify-between items-start mb-3">
-								<h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
-									Paroles suggérées
-								</h3>
-								<div className="text-xs text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30 px-2 py-1 rounded-sm">
-									⚠️ Ne fermez pas la page
-								</div>
-							</div>
-
-							<div className="bg-white dark:bg-gray-800 p-3 rounded-sm border mb-4 max-h-40 overflow-y-auto">
-								{suggestedLyrics.map((strophe, index) => (
-									<div key={`${strophe.type}-${index}`} className="mb-2">
-										<div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
-											{strophe.type === "verse"
-												? "Couplet"
-												: strophe.type === "chorus"
-													? "Refrain"
-													: strophe.type === "bridge"
-														? "Pont"
-														: "Section"}
-										</div>
-										{typeof strophe.content === "string" ? (
-											<p className="text-sm">{strophe.content}</p>
-										) : (
-											strophe.content.map((line, lineIndex) => (
-												<div
-													key={`line-${lineIndex}-${line.text?.slice(0, 10) || ""}`}
-													className="text-sm"
-												>
-													{line.chords && (
-														<span className="text-jubilateBlue-600 dark:text-jubilateBlue-400 text-xs font-mono">
-															{line.chords}{" "}
-														</span>
-													)}
-													{line.text}
-												</div>
-											))
-										)}
-									</div>
-								))}
-							</div>
-
-							<div className="flex gap-2 flex-wrap">
-								<button
-									type="button"
-									onClick={() => setShowWarning(true)}
-									className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-								>
-									Appliquer les paroles suggérées
-								</button>
-								<button
-									type="button"
-									onClick={() => setSuggestedLyrics(null)}
-									className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-								>
-									Ignorer
-								</button>
-							</div>
-						</div>
-					)}
-
-					{/* Warning Modal */}
-					{showWarning && (
-						<div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-							<div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
-								<h3 className="text-lg font-semibold mb-3 text-red-600 dark:text-red-400">
-									⚠️ Attention
-								</h3>
-								<p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-									Cette action remplacera toutes les paroles et accords actuels
-									par le contenu généré. Cette action ne peut pas être annulée.
-								</p>
-								<div className="flex gap-2 justify-end">
-									<button
-										type="button"
-										onClick={() => setShowWarning(false)}
-										className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-									>
-										Annuler
-									</button>
-									<button
-										type="button"
-										onClick={applySuggestedLyrics}
-										className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-									>
-										Remplacer les paroles
-									</button>
-								</div>
-							</div>
-						</div>
-					)}
 					{allTags.map((tag) => (
 						<TagChip
 							tag={tag}
