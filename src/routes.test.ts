@@ -26,7 +26,6 @@ const EXPECTED_PATHS = [
 	"/texts",
 	"/texts/:textId",
 	"/texts/:textId/edit",
-	"/tuner",
 	"*",
 ];
 

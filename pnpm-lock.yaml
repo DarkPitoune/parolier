@@ -53,9 +53,6 @@ importers:
       mqtt:
         specifier: ^5.14.1
         version: 5.14.1
-      pitchy:
-        specifier: ^4.1.0
-        version: 4.1.0
       postcss:
         specifier: ^8.4.47
         version: 8.4.47
@@ -2319,9 +2316,6 @@ packages:
       picomatch:
         optional: true
 
-  fft.js@4.0.4:
-    resolution: {integrity: sha512-f9c00hphOgeQTlDyavwTtu6RiK8AIFjD6+jvXkNkpeQ7rirK3uFWVpalkoS4LAwbdX7mfZ8aoBfFVQX1Re/8aw==}
-
   filelist@1.0.4:
     resolution: {integrity: sha512-w1cEuf3S+DrLCQL7ET6kz+gmlJdbq9J7yXCSjK/OZCPA+qEN1WyF4ZAf0YYJa4/shHJra2t/d/r8SV4Ji+x+8Q==}
 
@@ -2962,9 +2956,6 @@ packages:
   picomatch@4.0.3:
     resolution: {integrity: sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==}
     engines: {node: '>=12'}
-
-  pitchy@4.1.0:
-    resolution: {integrity: sha512-E8nQ8svBroGSMcc3qu2KvLHIuRYAIfrSkqDKWhjgj3WizseqWQXjQ+Q5t4g1CU73R5Euk+DAinyNFDK+KZw7zA==}
 
   playwright-core@1.58.2:
     resolution: {integrity: sha512-yZkEtftgwS8CsfYo7nm0KE8jsvm6i/PTgVtB8DL726wNf6H2IMsDuxCpJj59KDaxCtSnrWan2AeDqM7JBaultg==}
@@ -5938,8 +5929,6 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.3
 
-  fft.js@4.0.4: {}
-
   filelist@1.0.4:
     dependencies:
       minimatch: 5.1.6
@@ -6541,10 +6530,6 @@ snapshots:
   picomatch@2.3.1: {}
 
   picomatch@4.0.3: {}
-
-  pitchy@4.1.0:
-    dependencies:
-      fft.js: 4.0.4
 
   playwright-core@1.58.2: {}
 

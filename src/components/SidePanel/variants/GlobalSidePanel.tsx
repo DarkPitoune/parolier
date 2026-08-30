@@ -22,7 +22,6 @@ import {
 	getLeaderPositionsQuery,
 	newSongMutation,
 } from "@/utils/supabase";
-import { startTunerCapture } from "@/utils/tunerAudio";
 import {
 	BeakerIcon,
 	BookOpenIcon,
@@ -36,7 +35,6 @@ import {
 	PresentationChartLineIcon,
 	QueueListIcon,
 	RectangleGroupIcon,
-	SpeakerWaveIcon,
 } from "@heroicons/react/16/solid";
 import {
 	ArrowPathIcon,
@@ -184,14 +182,6 @@ function NavigationContent({ onClose }: { onClose: () => void }) {
 				>
 					<CalendarDaysIcon className="w-4 h-4" />
 					Messe
-				</Link>
-				<Link
-					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
-					to="/tuner"
-					onClick={() => startTunerCapture()}
-				>
-					<SpeakerWaveIcon className="w-4 h-4" />
-					Accordeur
 				</Link>
 				<Link
 					className="flex items-center gap-2 px-3 py-2 rounded-sm hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 transition"
