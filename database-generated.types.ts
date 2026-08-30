@@ -167,38 +167,6 @@ export type Database = {
         }
         Relationships: []
       }
-      slideshow_position: {
-        Row: {
-          created_at: string
-          slideshow_id: string
-          song: number | null
-          step: number | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          slideshow_id: string
-          song?: number | null
-          step?: number | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          slideshow_id?: string
-          song?: number | null
-          step?: number | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "slideshow_position_song_fkey"
-            columns: ["song"]
-            isOneToOne: false
-            referencedRelation: "songs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       song_requests: {
         Row: {
           created_at: string

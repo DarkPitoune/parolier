@@ -6,7 +6,6 @@ const EXPECTED_PATHS = [
 	"/bible",
 	"/bible/:book",
 	"/bible/:book/:chapter",
-	"/bible/today",
 	"/cache",
 	"/certificate",
 	"/messe",
@@ -26,7 +25,6 @@ const EXPECTED_PATHS = [
 	"/texts",
 	"/texts/:textId",
 	"/texts/:textId/edit",
-	"/tuner",
 	"*",
 ];
 

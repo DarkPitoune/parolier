@@ -1,4 +1,4 @@
-import type { Strophe } from "../assets/types";
+import type { Strophe } from "../src/assets/types";
 
 /**
  * Assembly responses of the Roman Mass (French, Missel Romain).

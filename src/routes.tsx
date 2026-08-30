@@ -1,7 +1,6 @@
 import {
 	Analytics,
 	Bible,
-	BibleToday,
 	Index,
 	Messe,
 	PresenterPage,
@@ -10,7 +9,6 @@ import {
 	SlidePage,
 	SongPage,
 	TextEditor,
-	Tuner,
 } from "@/pages";
 import type { RouteObject } from "react-router-dom";
 import { CachePage } from "./pages/CachePage";
@@ -57,10 +55,6 @@ export const appRoutes: RouteObject[] = [
 		element: <Bible />,
 	},
 	{
-		path: "/bible/today",
-		element: <BibleToday />,
-	},
-	{
 		path: "/bible/:book",
 		element: <Bible />,
 	},
@@ -71,10 +65,6 @@ export const appRoutes: RouteObject[] = [
 	{
 		path: "/messe",
 		element: <Messe />,
-	},
-	{
-		path: "/tuner",
-		element: <Tuner />,
 	},
 	{
 		path: "/setlists",
