@@ -49,7 +49,7 @@ const PageHeader = ({
 				) : (
 					title
 				))}
-			{right ?? <span />}
+			{right ?? (title != null ? <span /> : null)}
 		</header>
 	);
 };

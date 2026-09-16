@@ -1,44 +1,27 @@
 import { PageHeader } from "@/components";
 import { type Text, textQuery } from "@/utils/supabase";
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-
-type RightClickMenuPosition = {
-	x: number;
-	y: number;
-};
+import { useNavigate, useParams } from "react-router-dom";
 
 function TextPage() {
 	const { textId } = useParams();
 	const [text, setText] = useState<Text>();
-	const rightClickMenuRef = useRef<HTMLDivElement>(null);
-	const [rightClickMenuPosition, setRightClickMenuPosition] =
-		useState<RightClickMenuPosition | null>(null);
+	const navigate = useNavigate();
+	const tapCount = useRef(0);
+	const tapTimer = useRef<ReturnType<typeof setTimeout>>();
 
-	const handleOnContextMenu: React.MouseEventHandler<HTMLDivElement> = (e) => {
-		e.preventDefault();
-		e.stopPropagation();
-
-		setRightClickMenuPosition({
-			x: e.clientX,
-			y: e.clientY + window.pageYOffset,
-		});
+	const handleTitleTap = () => {
+		tapCount.current += 1;
+		clearTimeout(tapTimer.current);
+		if (tapCount.current >= 3) {
+			tapCount.current = 0;
+			navigate(`/texts/${text?.id}/edit`);
+			return;
+		}
+		tapTimer.current = setTimeout(() => {
+			tapCount.current = 0;
+		}, 500);
 	};
-
-	useEffect(() => {
-		const handleClick = (e: MouseEvent) => {
-			if (
-				rightClickMenuRef.current &&
-				!rightClickMenuRef.current.contains(e.target as Node)
-			)
-				setRightClickMenuPosition(null);
-		};
-
-		document.addEventListener("click", handleClick);
-		return () => {
-			document.removeEventListener("click", handleClick);
-		};
-	}, []);
 
 	useEffect(() => {
 		if (textId) {
@@ -52,8 +35,19 @@ function TextPage() {
 
 	return (
 		<div>
-			<PageHeader variant="detail" title={`${text.id}. ${text.title}`} />
-			<div onContextMenu={handleOnContextMenu} className="p-6">
+			<PageHeader
+				variant="detail"
+				title={
+					// biome-ignore lint/a11y/useKeyWithClickEvents: hidden triple-tap shortcut; a key handler would announce the title as a button
+					<h1
+						className="font-flame text-xl lg:text-3xl text-jubilateBlue-500 dark:text-jubilateBlue-400 select-none"
+						onClick={handleTitleTap}
+					>
+						{text.id}. {text.title}
+					</h1>
+				}
+			/>
+			<div className="p-6">
 				<div className="max-w-4xl mx-auto">
 					<div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
 						<h2 className="text-2xl font-bold mb-4 text-black dark:text-white">
@@ -72,24 +66,6 @@ function TextPage() {
 						</div>
 					</div>
 				</div>
-				{rightClickMenuPosition && (
-					<div
-						ref={rightClickMenuRef}
-						style={{
-							left: rightClickMenuPosition.x,
-							top: rightClickMenuPosition.y,
-						}}
-						className="absolute rounded-md bg-gray-100 dark:bg-slate-800 p-1 flex flex-col gap-1"
-					>
-						<p className="text-sm italic px-1">Actions administrateur</p>
-						<Link
-							to={`/texts/${text.id}/edit`}
-							className="px-2 py-1 text-black dark:text-white dark:hover:bg-slate-700 bg-white hover:bg-slate-200 dark:bg-slate-800 rounded-md transition"
-						>
-							Modifier le texte
-						</Link>
-					</div>
-				)}
 			</div>
 		</div>
 	);
