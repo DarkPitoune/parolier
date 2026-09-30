@@ -84,9 +84,3 @@ export const filtersAtom = atomWithStorage<number[]>(
 	[],
 	createJSONStorage(() => sessionStorage),
 );
-
-export const tagTabOpenAtom = atomWithStorage(
-	"tagTabOpen",
-	false,
-	createJSONStorage(() => sessionStorage),
-);

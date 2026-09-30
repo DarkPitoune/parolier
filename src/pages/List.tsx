@@ -1,8 +1,5 @@
 import { PageHeader, SongItem, useLeader } from "@/components";
-import {
-	filtersAtom,
-	tagTabOpenAtom,
-} from "@/components/Contexts/SettingsContext";
+import { filtersAtom } from "@/components/Contexts/SettingsContext";
 import { TagChip } from "@/components/TagChip";
 import {
 	UnifiedSearchInput,
@@ -11,10 +8,9 @@ import {
 import { useUnifiedSearch } from "@/components/UnifiedSearch/useUnifiedSearch";
 import { useAllSongs, useAllTags } from "@/hooks/queries/useSongQueries";
 import supabase, { type AllSongs } from "@/utils/supabase";
-import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import clsx from "clsx";
 import { useAtom } from "jotai";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 
@@ -33,8 +29,27 @@ function Index() {
 
 	const unifiedSearch = useUnifiedSearch("songs");
 	const [selectedTags, setSelectedTags] = useAtom<number[]>(filtersAtom);
-	const [tagTabOpen, setTagTabOpen] = useAtom(tagTabOpenAtom);
 	const { leader } = useLeader();
+	const filtersRef = useRef<HTMLDivElement>(null);
+	const drag = useRef({
+		active: false,
+		startX: 0,
+		startScroll: 0,
+		moved: false,
+	});
+
+	// Molette verticale → défilement horizontal (desktop)
+	useEffect(() => {
+		const el = filtersRef.current;
+		if (!el) return;
+		const onWheel = (e: WheelEvent) => {
+			if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+			e.preventDefault();
+			el.scrollLeft += e.deltaY;
+		};
+		el.addEventListener("wheel", onWheel, { passive: false });
+		return () => el.removeEventListener("wheel", onWheel);
+	}, []);
 
 	const toggleTag = (id: number) => {
 		setSelectedTags((oldTags) => {
@@ -74,42 +89,59 @@ function Index() {
 			>
 				<PageHeader
 					variant="list"
+					className="pb-2"
 					left={
 						<UnifiedSearchInput
 							search={unifiedSearch}
-							placeholder="Vite, une idée..."
+							placeholder="Vite, une idée ..."
 						/>
 					}
 				/>
-				<div className="px-6 py-2 flex flex-col items-stretch shadow-sm font-flame">
-					<button
-						className="flex gap-2 text-jubilateBlue-500 dark:text-jubilateBlue-400 items-center"
-						onClick={() => setTagTabOpen((v) => !v)}
-						type="button"
-					>
-						<ChevronRightIcon
-							data-tabopen={tagTabOpen}
-							className="size-6 lg:size-8 data-[tabopen=true]:rotate-90 transition"
+				<div
+					ref={filtersRef}
+					className="flex flex-nowrap items-center w-0 min-w-full px-5 pb-4 overflow-x-auto overscroll-x-contain shadow-sm font-flame bg-jubilateBlue-500 dark:bg-slate-900 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0"
+					data-testid="tag-filters"
+					onPointerDown={(e) => {
+						if (e.pointerType !== "mouse") return;
+						drag.current = {
+							active: true,
+							startX: e.clientX,
+							startScroll: e.currentTarget.scrollLeft,
+							moved: false,
+						};
+					}}
+					onPointerMove={(e) => {
+						const d = drag.current;
+						if (!d.active) return;
+						const dx = e.clientX - d.startX;
+						if (Math.abs(dx) > 5) d.moved = true;
+						e.currentTarget.scrollLeft = d.startScroll - dx;
+					}}
+					onPointerUp={() => {
+						drag.current.active = false;
+					}}
+					onPointerLeave={() => {
+						drag.current.active = false;
+					}}
+					onClickCapture={(e) => {
+						// évite de (dé)sélectionner un filtre à la fin d'un glissement
+						if (drag.current.moved) {
+							e.stopPropagation();
+							e.preventDefault();
+							drag.current.moved = false;
+						}
+					}}
+				>
+					{tags.map((tag) => (
+						<TagChip
+							key={tag.id}
+							tag={tag}
+							className="h-10"
+							onClick={() => toggleTag(tag.id)}
+							inverted={selectedTags.includes(tag.id)}
+							outline
 						/>
-						<h3 className="text-lg lg:text-2xl font-bold">Filtres</h3>
-						{selectedTags.length > 0 && (
-							<div className="bg-jubilateBlue-500 rounded-full text-white font-bold w-6">
-								{selectedTags.length}
-							</div>
-						)}
-					</button>
-					<div>
-						{tagTabOpen &&
-							tags.map((tag) => (
-								<TagChip
-									key={tag.id}
-									tag={tag}
-									onClick={() => toggleTag(tag.id)}
-									inverted={selectedTags.includes(tag.id)}
-									outline
-								/>
-							))}
-					</div>
+					))}
 				</div>
 			</div>
 			{unifiedSearch.showResults ? (
@@ -119,7 +151,7 @@ function Index() {
 				/>
 			) : (
 				<div
-					className="flex flex-col items-stretch px-2 divide-y divide-jubilateBlue-300 dark:bg-gray-800 print:block print:p-0"
+					className="flex flex-col items-stretch px-2 divide-y dark:bg-gray-800 print:block print:p-0"
 					style={{ columnCount: 2 }}
 					data-testid="song-list"
 				>

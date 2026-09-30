@@ -131,11 +131,11 @@ export function UnifiedSearchInput({
 	}, []);
 
 	return (
-		<div className="flex bg-white flex-1 rounded-full pl-2 gap-1 items-center">
-			<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-jubilateBlue-400" />
+		<div className="flex bg-white flex-1 rounded-full pl-4 gap-1 items-center">
+			<MagnifyingGlassIcon className="w-6 fill-jubilateBlue-500 dark:fill-slate-900" />
 			<input
 				ref={inputRef}
-				className="w-full h-9 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
+				className="w-full h-10 rounded-full px-2 outline-hidden bg-white dark:bg-white text-black dark:text-black"
 				type="search"
 				value={query}
 				onChange={onChange}

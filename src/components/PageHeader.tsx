@@ -24,7 +24,7 @@ const PageHeader = ({
 			className={clsx(
 				"flex justify-between items-center sticky top-0 z-10",
 				isList
-					? "bg-jubilateBlue-500 dark:bg-slate-900 px-6 py-4 gap-4"
+					? "bg-jubilateBlue-500 dark:bg-slate-900 px-6 py-6 gap-4"
 					: "bg-white dark:bg-gray-900 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 px-4 md:px-6 py-2 md:py-4",
 				className,
 			)}

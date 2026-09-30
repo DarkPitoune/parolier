@@ -13,25 +13,26 @@ export const TagChip = ({
 	inverted = false,
 	outline = false,
 	tag,
+	className,
 	...props
 }: TagChipProps) => {
 	return (
 		<div
-			key={tag.id}
 			className={clsx(
-				"rounded-full font-semibold inline-flex items-center gap-2 m-1 select-none ",
-				outline ? "border-2" : "border-0",
+				"rounded-full font-semibold inline-flex items-center gap-2 m-1 select-none",
+				outline ? "border" : inverted ? "border-0" : "border-2",
 				iconOnly ? "p-2" : "px-3 py-0.5",
 				inverted
 					? "text-white bg-(--tag-color) border-(--tag-color)"
-					: "text-(--tag-color) bg-transparent border-(--tag-color) border-2",
+					: "text-(--tag-color) bg-transparent border-(--tag-color)",
+				className,
 			)}
 			style={{ "--tag-color": tag.color } as React.CSSProperties}
 			{...(props.onClick && { role: "button" })}
 			{...props}
 		>
 			<div
-				className="w-4 h-4 flex items-center justify-center"
+				className="size-5 flex items-center justify-center"
 				style={{
 					fill: inverted ? "white" : tag.color || "black",
 				}}
