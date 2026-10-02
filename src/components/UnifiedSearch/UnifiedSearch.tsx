@@ -261,8 +261,18 @@ export function UnifiedSearchResults({
 	return (
 		<div className="flex flex-col divide-y divide-jubilateBlue-200 dark:divide-slate-700">
 			{!anyResults && (
-				<div className="px-6 py-10 text-center text-gray-500 dark:text-gray-400">
-					Aucun résultat pour "{trimmedQuery}"
+				<div className="h-[calc(100dvh-8rem)] flex flex-col items-center justify-center gap-15 text-center text-gray-500 dark:text-gray-400">
+					<img
+						src="/svg/no-result-light.svg"
+						alt=""
+						className="w-[70vw] max-w-xs h-auto dark:hidden"
+					/>
+					<img
+						src="/svg/no-result-dark.svg"
+						alt=""
+						className="w-[70vw] max-w-xs h-auto hidden dark:block"
+					/>
+					<p>Aucun résultat pour "{trimmedQuery}"</p>
 				</div>
 			)}
 			{sectionOrder.map((section) => (
