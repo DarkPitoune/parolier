@@ -5,6 +5,7 @@ import {
 	tonalityAtom,
 } from "@/components/Contexts/SettingsContext";
 import { PerformanceNoteSheet } from "@/components/PerformanceNotes/PerformanceNoteSheet";
+import { SetlistPrint } from "@/components/SetlistPrint";
 import SwipeableTabs, { type Tab } from "@/components/SwipeableTabs";
 import { useSetlist } from "@/hooks/queries/useSetlistQueries";
 import {
@@ -16,6 +17,7 @@ import { getStropheNote, stropheFingerprint } from "@/utils/stropheNotes";
 import {
 	ComputerDesktopIcon,
 	PresentationChartLineIcon,
+	PrinterIcon,
 } from "@heroicons/react/24/solid";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -226,56 +228,67 @@ function SetlistPage() {
 	});
 
 	return (
-		<div className="flex flex-col h-screen">
-			<div className="flex justify-between items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 bg-white dark:bg-gray-900 shrink-0">
-				<BackButton />
-				{/* biome-ignore lint/a11y/useKeyWithClickEvents: hidden triple-tap shortcut; Setlists.tsx links this route visibly */}
-				<h3
-					className="text-xl lg:text-3xl font-flame text-jubilateBlue-500 dark:text-jubilateBlue-400 select-none"
-					onClick={handleTitleTap}
-				>
-					{setlist ? setlist[0]?.setlists?.name : "Chargement..."}
-				</h3>
-				<div className="flex items-center gap-2">
-					<Link
-						className="rounded-full hidden md:block bg-green-500 hover:bg-green-600 text-white p-3"
-						data-testid="open-presenter-btn"
-						to={`/presenter/${setlistId}/${activeStepIndex}`}
+		<>
+			<div className="flex flex-col h-screen print:hidden">
+				<div className="flex justify-between items-center py-4 px-6 border-b-4 border-jubilateBlue-500 dark:border-jubilateBlue-400 bg-white dark:bg-gray-900 shrink-0">
+					<BackButton />
+					{/* biome-ignore lint/a11y/useKeyWithClickEvents: hidden triple-tap shortcut; Setlists.tsx links this route visibly */}
+					<h3
+						className="text-xl lg:text-3xl font-flame text-jubilateBlue-500 dark:text-jubilateBlue-400 select-none"
+						onClick={handleTitleTap}
 					>
-						<PresentationChartLineIcon className="size-6 fill-white" />
-					</Link>
-					<Link
-						className="rounded-full hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-3"
-						onClick={() => document.body.requestFullscreen()}
-						to={`/setlists/${setlistId}/steps/${activeStepIndex}/slide`}
-					>
-						<ComputerDesktopIcon className="size-6 fill-white" />
-					</Link>
+						{setlist ? setlist[0]?.setlists?.name : "Chargement..."}
+					</h3>
+					<div className="flex items-center gap-2">
+						<button
+							type="button"
+							className="rounded-full hidden md:block bg-jubilatePurple-500 hover:bg-jubilatePurple-400 text-white p-3"
+							aria-label="Imprimer"
+							onClick={() => window.print()}
+						>
+							<PrinterIcon className="size-6 fill-white" />
+						</button>
+						<Link
+							className="rounded-full hidden md:block bg-green-500 hover:bg-green-600 text-white p-3"
+							data-testid="open-presenter-btn"
+							to={`/presenter/${setlistId}/${activeStepIndex}`}
+						>
+							<PresentationChartLineIcon className="size-6 fill-white" />
+						</Link>
+						<Link
+							className="rounded-full hidden md:block bg-jubilateBlue-500 dark:bg-jubilateBlue-400 text-white p-3"
+							onClick={() => document.body.requestFullscreen()}
+							to={`/setlists/${setlistId}/steps/${activeStepIndex}/slide`}
+						>
+							<ComputerDesktopIcon className="size-6 fill-white" />
+						</Link>
+					</div>
 				</div>
-			</div>
-			{setlist && (
-				<SwipeableTabs
-					activeTab={activeTab}
-					setActiveTab={handleChangeTab}
-					tabs={tabs}
+				{setlist && (
+					<SwipeableTabs
+						activeTab={activeTab}
+						setActiveTab={handleChangeTab}
+						tabs={tabs}
+					/>
+				)}
+				<PerformanceNoteSheet
+					key={
+						editingSong ? `${editingSong.songId}:${editingSong.index}` : "none"
+					}
+					open={editingSong !== null}
+					onClose={() => setEditingSong(null)}
+					note={editedStrophe && getStropheNote(editedStrophe)}
+					stropheLabel={
+						editedStrophe && editedStrophe.type !== "section"
+							? editedStrophe.content?.[0]?.text
+							: undefined
+					}
+					onSave={saveNote}
+					isQueued={setStropheNoteMutation.isPaused}
 				/>
-			)}
-			<PerformanceNoteSheet
-				key={
-					editingSong ? `${editingSong.songId}:${editingSong.index}` : "none"
-				}
-				open={editingSong !== null}
-				onClose={() => setEditingSong(null)}
-				note={editedStrophe && getStropheNote(editedStrophe)}
-				stropheLabel={
-					editedStrophe && editedStrophe.type !== "section"
-						? editedStrophe.content?.[0]?.text
-						: undefined
-				}
-				onSave={saveNote}
-				isQueued={setStropheNoteMutation.isPaused}
-			/>
-		</div>
+			</div>
+			{setlist && <SetlistPrint items={setlist} songsById={songsById} />}
+		</>
 	);
 }
 

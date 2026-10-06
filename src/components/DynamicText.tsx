@@ -20,19 +20,18 @@ type DynamicTextProps = {
 	className?: string;
 };
 
+//Le but est ici de remplacer les espaces avant les ponctuations par des espaces insécables, pour éviter d'avoir une ponctuation toute seule sur une ligne. On fait de même pour les guillemets français, mais dans l'autre sens (espace insécable après les guillemets ouvrants, et avant les guillemets fermants)
+const withNonBreakingSpaces = (text: string) =>
+	text.replace(/ ([?!:;»])/g, "\u00A0$1").replace(/([«]) /g, "$1\u00A0");
+
 function DynamicText({ text, className }: DynamicTextProps) {
 	const fontSize = useAtomValue(fontSizeAtom);
 
-	//Le but est ici de remplacer les espaces avant les ponctuations par des espaces insécables, pour éviter d'avoir une ponctuation toute seule sur une ligne. On fait de même pour les guillemets français, mais dans l'autre sens (espace insécable après les guillemets ouvrants, et avant les guillemets fermants)
-	const formattedText = text
-		.replace(/ ([?!:;»])/g, "\u00A0$1")
-		.replace(/([«]) /g, "$1\u00A0");
-
 	return (
 		<p className={clsx(fontSizeTailwind[fontSize], className)}>
-			{formattedText}
+			{withNonBreakingSpaces(text)}
 		</p>
 	);
 }
 
-export { DynamicText };
+export { DynamicText, withNonBreakingSpaces };

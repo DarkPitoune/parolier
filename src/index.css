@@ -151,3 +151,33 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
+/* SETLIST PRINT */
+
+@page setlist {
+  size: A4 landscape;
+  margin: 1cm;
+}
+
+@media print {
+  .setlist-print {
+    --print-columns: 2;
+    --print-font-size: 12.25pt;
+
+    page: setlist;
+    column-count: var(--print-columns);
+    column-gap: 0.8cm;
+    column-rule: 0.5pt solid black;
+    font-size: var(--print-font-size);
+    line-height: 1.2;
+  }
+
+  .setlist-print-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4em;
+  }
+
+  .setlist-print-item + .setlist-print-item {
+    break-before: column;
+  }
+}
