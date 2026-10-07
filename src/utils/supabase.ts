@@ -468,11 +468,16 @@ export type UpdateLeaderPositionMutation = QueryData<
 	ReturnType<typeof updateLeaderPositionMutation>
 >;
 
+const LEADER_POSITION_TTL_MS = 60 * 60 * 1000;
+const leaderPositionCutoff = () =>
+	new Date(Date.now() - LEADER_POSITION_TTL_MS).toISOString();
+
 export const getLeaderPositionQuery = async (leaderId: string) =>
 	supabase
 		.from("leader_position")
 		.select("song, setlist_item")
 		.eq("leader_id", leaderId)
+		.gt("updated_at", leaderPositionCutoff())
 		.single();
 export type GetLeaderPositionQuery = QueryData<
 	ReturnType<typeof getLeaderPositionQuery>
@@ -482,6 +487,7 @@ export const getLeaderPositionsQuery = async () =>
 	supabase
 		.from("leader_position")
 		.select("leader_id, song, setlist_item, updated_at")
+		.gt("updated_at", leaderPositionCutoff())
 		.order("updated_at", { ascending: false });
 export type LeaderPositions = QueryData<
 	ReturnType<typeof getLeaderPositionsQuery>
