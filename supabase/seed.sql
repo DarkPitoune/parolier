@@ -88,6 +88,12 @@ insert into public.setlist_items (id, setlist_id, position, song_id, text_id, te
   (405, 502, 0, 602,  null, null),
   (406, 502, 1, 606,  null, null);
 
+-- ---------------------------------------------------------------- incipits
+update public.songs set incipits = '[
+  {"label":"Prière pénitentielle","abc":"X:1\nM:none\nL:1/4\nK:A\nF4 C F G2 | G4 A2 | A4 d c B4 |]"},
+  {"label":"Kyrie","abc":"X:1\nM:3/4\nL:1/4\nK:A\nF2 C | G3 | A2 F | B2 B | c3 | A3 | B3- | B3 :|"}
+]'::jsonb where id = 604;
+
 -- ---------------------------------------------------------------- sequences
 -- Explicit ids bypass the identity sequences; move them clear of the fixtures.
 select setval(pg_get_serial_sequence('public.tags',          'id'), 1000, false);

@@ -1,712 +1,724 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import { VitePWA, type VitePWAOptions } from "vite-plugin-pwa";
 import path from "node:path";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+import { VitePWA, type VitePWAOptions } from "vite-plugin-pwa";
 import packageJson from "./package.json";
 
 const manifest: Partial<VitePWAOptions> = {
-  manifest: {
-    name: "Chants Jubilate",
-    theme_color: "#002e5d",
-    background_color: "white",
-    display: "standalone",
-    start_url: "/",
-    icons: [
-      {
-        src: "windows11/SmallTile.scale-100.png",
-        sizes: "71x71",
-      },
-      {
-        src: "windows11/SmallTile.scale-125.png",
-        sizes: "89x89",
-      },
-      {
-        src: "windows11/SmallTile.scale-150.png",
-        sizes: "107x107",
-      },
-      {
-        src: "windows11/SmallTile.scale-200.png",
-        sizes: "142x142",
-      },
-      {
-        src: "windows11/SmallTile.scale-400.png",
-        sizes: "284x284",
-      },
-      {
-        src: "windows11/Square150x150Logo.scale-100.png",
-        sizes: "150x150",
-      },
-      {
-        src: "windows11/Square150x150Logo.scale-125.png",
-        sizes: "188x188",
-      },
-      {
-        src: "windows11/Square150x150Logo.scale-150.png",
-        sizes: "225x225",
-      },
-      {
-        src: "windows11/Square150x150Logo.scale-200.png",
-        sizes: "300x300",
-      },
-      {
-        src: "windows11/Square150x150Logo.scale-400.png",
-        sizes: "600x600",
-      },
-      {
-        src: "windows11/Wide310x150Logo.scale-100.png",
-        sizes: "310x150",
-      },
-      {
-        src: "windows11/Wide310x150Logo.scale-125.png",
-        sizes: "388x188",
-      },
-      {
-        src: "windows11/Wide310x150Logo.scale-150.png",
-        sizes: "465x225",
-      },
-      {
-        src: "windows11/Wide310x150Logo.scale-200.png",
-        sizes: "620x300",
-      },
-      {
-        src: "windows11/Wide310x150Logo.scale-400.png",
-        sizes: "1240x600",
-      },
-      {
-        src: "windows11/LargeTile.scale-100.png",
-        sizes: "310x310",
-      },
-      {
-        src: "windows11/LargeTile.scale-125.png",
-        sizes: "388x388",
-      },
-      {
-        src: "windows11/LargeTile.scale-150.png",
-        sizes: "465x465",
-      },
-      {
-        src: "windows11/LargeTile.scale-200.png",
-        sizes: "620x620",
-      },
-      {
-        src: "windows11/LargeTile.scale-400.png",
-        sizes: "1240x1240",
-      },
-      {
-        src: "windows11/Square44x44Logo.scale-100.png",
-        sizes: "44x44",
-      },
-      {
-        src: "windows11/Square44x44Logo.scale-125.png",
-        sizes: "55x55",
-      },
-      {
-        src: "windows11/Square44x44Logo.scale-150.png",
-        sizes: "66x66",
-      },
-      {
-        src: "windows11/Square44x44Logo.scale-200.png",
-        sizes: "88x88",
-      },
-      {
-        src: "windows11/Square44x44Logo.scale-400.png",
-        sizes: "176x176",
-      },
-      {
-        src: "windows11/StoreLogo.scale-100.png",
-        sizes: "50x50",
-      },
-      {
-        src: "windows11/StoreLogo.scale-125.png",
-        sizes: "63x63",
-      },
-      {
-        src: "windows11/StoreLogo.scale-150.png",
-        sizes: "75x75",
-      },
-      {
-        src: "windows11/StoreLogo.scale-200.png",
-        sizes: "100x100",
-      },
-      {
-        src: "windows11/StoreLogo.scale-400.png",
-        sizes: "200x200",
-      },
-      {
-        src: "windows11/SplashScreen.scale-100.png",
-        sizes: "620x300",
-      },
-      {
-        src: "windows11/SplashScreen.scale-125.png",
-        sizes: "775x375",
-      },
-      {
-        src: "windows11/SplashScreen.scale-150.png",
-        sizes: "930x450",
-      },
-      {
-        src: "windows11/SplashScreen.scale-200.png",
-        sizes: "1240x600",
-      },
-      {
-        src: "windows11/SplashScreen.scale-400.png",
-        sizes: "2480x1200",
-      },
-      {
-        src: "windows11/Square44x44Logo.targetsize-16.png",
-        sizes: "16x16",
-      },
-      {
-        src: "windows11/Square44x44Logo.targetsize-20.png",
-        sizes: "20x20",
-      },
-      {
-        src: "windows11/Square44x44Logo.targetsize-24.png",
-        sizes: "24x24",
-      },
-      {
-        src: "windows11/Square44x44Logo.targetsize-30.png",
-        sizes: "30x30",
-      },
-      {
-        src: "windows11/Square44x44Logo.targetsize-32.png",
-        sizes: "32x32",
-      },
-      {
-        src: "windows11/Square44x44Logo.targetsize-36.png",
-        sizes: "36x36",
-      },
-      {
-        src: "windows11/Square44x44Logo.targetsize-40.png",
-        sizes: "40x40",
-      },
-      {
-        src: "windows11/Square44x44Logo.targetsize-44.png",
-        sizes: "44x44",
-      },
-      {
-        src: "windows11/Square44x44Logo.targetsize-48.png",
-        sizes: "48x48",
-      },
-      {
-        src: "windows11/Square44x44Logo.targetsize-60.png",
-        sizes: "60x60",
-      },
-      {
-        src: "windows11/Square44x44Logo.targetsize-64.png",
-        sizes: "64x64",
-      },
-      {
-        src: "windows11/Square44x44Logo.targetsize-72.png",
-        sizes: "72x72",
-      },
-      {
-        src: "windows11/Square44x44Logo.targetsize-80.png",
-        sizes: "80x80",
-      },
-      {
-        src: "windows11/Square44x44Logo.targetsize-96.png",
-        sizes: "96x96",
-      },
-      {
-        src: "windows11/Square44x44Logo.targetsize-256.png",
-        sizes: "256x256",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-unplated_targetsize-16.png",
-        sizes: "16x16",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-unplated_targetsize-20.png",
-        sizes: "20x20",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-unplated_targetsize-24.png",
-        sizes: "24x24",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-unplated_targetsize-30.png",
-        sizes: "30x30",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-unplated_targetsize-32.png",
-        sizes: "32x32",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-unplated_targetsize-36.png",
-        sizes: "36x36",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-unplated_targetsize-40.png",
-        sizes: "40x40",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-unplated_targetsize-44.png",
-        sizes: "44x44",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-unplated_targetsize-48.png",
-        sizes: "48x48",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-unplated_targetsize-60.png",
-        sizes: "60x60",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-unplated_targetsize-64.png",
-        sizes: "64x64",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-unplated_targetsize-72.png",
-        sizes: "72x72",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-unplated_targetsize-80.png",
-        sizes: "80x80",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-unplated_targetsize-96.png",
-        sizes: "96x96",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-unplated_targetsize-256.png",
-        sizes: "256x256",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-16.png",
-        sizes: "16x16",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-20.png",
-        sizes: "20x20",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-24.png",
-        sizes: "24x24",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-30.png",
-        sizes: "30x30",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-32.png",
-        sizes: "32x32",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-36.png",
-        sizes: "36x36",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-40.png",
-        sizes: "40x40",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-44.png",
-        sizes: "44x44",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-48.png",
-        sizes: "48x48",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-60.png",
-        sizes: "60x60",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-64.png",
-        sizes: "64x64",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-72.png",
-        sizes: "72x72",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-80.png",
-        sizes: "80x80",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-96.png",
-        sizes: "96x96",
-      },
-      {
-        src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-256.png",
-        sizes: "256x256",
-      },
-      {
-        src: "android/android-launchericon-512-512.png",
-        sizes: "512x512",
-      },
-      {
-        src: "android/android-launchericon-192-192.png",
-        sizes: "192x192",
-      },
-      {
-        src: "android/android-launchericon-144-144.png",
-        sizes: "144x144",
-      },
-      {
-        src: "android/android-launchericon-96-96.png",
-        sizes: "96x96",
-      },
-      {
-        src: "android/android-launchericon-72-72.png",
-        sizes: "72x72",
-      },
-      {
-        src: "android/android-launchericon-48-48.png",
-        sizes: "48x48",
-      },
-      {
-        src: "ios/16.png",
-        sizes: "16x16",
-      },
-      {
-        src: "ios/20.png",
-        sizes: "20x20",
-      },
-      {
-        src: "ios/29.png",
-        sizes: "29x29",
-      },
-      {
-        src: "ios/32.png",
-        sizes: "32x32",
-      },
-      {
-        src: "ios/40.png",
-        sizes: "40x40",
-      },
-      {
-        src: "ios/50.png",
-        sizes: "50x50",
-      },
-      {
-        src: "ios/57.png",
-        sizes: "57x57",
-      },
-      {
-        src: "ios/58.png",
-        sizes: "58x58",
-      },
-      {
-        src: "ios/60.png",
-        sizes: "60x60",
-      },
-      {
-        src: "ios/64.png",
-        sizes: "64x64",
-      },
-      {
-        src: "ios/72.png",
-        sizes: "72x72",
-      },
-      {
-        src: "ios/76.png",
-        sizes: "76x76",
-      },
-      {
-        src: "ios/80.png",
-        sizes: "80x80",
-      },
-      {
-        src: "ios/87.png",
-        sizes: "87x87",
-      },
-      {
-        src: "ios/100.png",
-        sizes: "100x100",
-      },
-      {
-        src: "ios/114.png",
-        sizes: "114x114",
-      },
-      {
-        src: "ios/120.png",
-        sizes: "120x120",
-      },
-      {
-        src: "ios/128.png",
-        sizes: "128x128",
-      },
-      {
-        src: "ios/144.png",
-        sizes: "144x144",
-      },
-      {
-        src: "ios/152.png",
-        sizes: "152x152",
-      },
-      {
-        src: "ios/167.png",
-        sizes: "167x167",
-      },
-      {
-        src: "ios/180.png",
-        sizes: "180x180",
-      },
-      {
-        src: "ios/192.png",
-        sizes: "192x192",
-      },
-      {
-        src: "ios/256.png",
-        sizes: "256x256",
-      },
-      {
-        src: "ios/512.png",
-        sizes: "512x512",
-      },
-      {
-        src: "ios/1024.png",
-        sizes: "1024x1024",
-      },
-    ],
-    screenshots: [
-      {
-        src: "screenshots/wide-1-setlists.png",
-        sizes: "1905x1080",
-        type: "image/png",
-        form_factor: "wide",
-      },
-      {
-        src: "screenshots/wide-2-song.png",
-        sizes: "1920x1080",
-        type: "image/png",
-        form_factor: "wide",
-      },
-      {
-        src: "screenshots/wide-3-setlist-song.png",
-        sizes: "1905x1080",
-        type: "image/png",
-        form_factor: "wide",
-      },
-      {
-        src: "screenshots/wide-4-presenter.png",
-        sizes: "1920x1080",
-        type: "image/png",
-        form_factor: "wide",
-      },
-      {
-        src: "screenshots/wide-5-liturgy.png",
-        sizes: "1905x1080",
-        type: "image/png",
-        form_factor: "wide",
-      },
-      {
-        src: "screenshots/wide-6-bible.png",
-        sizes: "1920x1080",
-        type: "image/png",
-        form_factor: "wide",
-      },
-      {
-        src: "screenshots/mobile-1-song-list.png",
-        sizes: "1560x3376",
-        type: "image/png",
-        form_factor: "narrow",
-      },
-      {
-        src: "screenshots/mobile-2-song.png",
-        sizes: "1560x3376",
-        type: "image/png",
-        form_factor: "narrow",
-      },
-      {
-        src: "screenshots/mobile-3-setlist-song.png",
-        sizes: "1560x3376",
-        type: "image/png",
-        form_factor: "narrow",
-      },
-      {
-        src: "screenshots/mobile-4-presenter.png",
-        sizes: "1560x3376",
-        type: "image/png",
-        form_factor: "narrow",
-      },
-    ],
-  },
-  registerType: "autoUpdate",
-  workbox: {
-    mode: "generateSW",
-    globPatterns: ["**/*.{js,css,html,png,jpg,svg,ttf}"],
-    clientsClaim: true,
-    skipWaiting: true,
-    runtimeCaching: [
-      // Connectivity probe: bypass SW cache so offline detection works
-      {
-        urlPattern: ({ request }) =>
-          request.headers.get("X-Connectivity-Probe") === "1",
-        handler: "NetworkOnly",
-      },
-      // Songs & tags: the critical path — must render instantly even on a
-      // slow connection or wifi-with-no-internet, so StaleWhileRevalidate
-      // stays even though the row can be edited. Freshness for lyrics/notes
-      // now comes from useSongsRealtimeSync (pushes straight into the
-      // TanStack Query cache) and useSaveSongEdit/useSetStropheNote's own
-      // cache writes on save — neither goes through a GET, so neither is
-      // slowed down or staled by this SW cache. This layer only matters as
-      // the fallback for a cold load, where "instant, maybe a second stale"
-      // beats "correct, maybe never loads".
-      {
-        urlPattern: ({ url }) =>
-          url.href.includes("/rest/v1/songs") ||
-          url.href.includes("/rest/v1/tags"),
-        handler: "StaleWhileRevalidate",
-        options: {
-          cacheName: "supabase-songs-cache",
-          expiration: {
-            maxEntries: 300,
-            maxAgeSeconds: 365 * 24 * 60 * 60,
-          },
-          cacheableResponse: { statuses: [200] },
-          plugins: [
-            {
-              requestWillFetch: async ({ request }: { request: Request }) => {
-                const modifiedRequest = new Request(request);
-                modifiedRequest.headers.set(
-                  "Apikey",
-                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHBiY3RsZWpyempqdmttY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjIwMDU0ODksImV4cCI6MjAzNzU4MTQ4OX0.aOrgMlTl_1Odj5Z0ssCsa0879UaSDrtUTIpNbXbaaOg",
-                );
-                return modifiedRequest;
-              },
-            },
-          ],
-        },
-      },
-      // Setlists: must be fresh, NetworkFirst with 3s timeout fallback
-      {
-        urlPattern: ({ url }) =>
-          url.href.includes("/rest/v1/setlist") ||
-          url.href.includes("/rest/v1/leader_position"),
-        handler: "NetworkFirst",
-        options: {
-          cacheName: "supabase-setlists-cache",
-          networkTimeoutSeconds: 3,
-          expiration: {
-            maxEntries: 100,
-            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
-          },
-          cacheableResponse: { statuses: [200] },
-          plugins: [
-            {
-              requestWillFetch: async ({ request }: { request: Request }) => {
-                const modifiedRequest = new Request(request);
-                modifiedRequest.headers.set(
-                  "Apikey",
-                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHBiY3RsZWpyempqdmttY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjIwMDU0ODksImV4cCI6MjAzNzU4MTQ4OX0.aOrgMlTl_1Odj5Z0ssCsa0879UaSDrtUTIpNbXbaaOg",
-                );
-                return modifiedRequest;
-              },
-            },
-          ],
-        },
-      },
-      // Texts: rarely change, StaleWhileRevalidate
-      {
-        urlPattern: ({ url }) => url.href.includes("/rest/v1/texts"),
-        handler: "StaleWhileRevalidate",
-        options: {
-          cacheName: "supabase-texts-cache",
-          expiration: {
-            maxEntries: 100,
-            maxAgeSeconds: 365 * 24 * 60 * 60,
-          },
-          cacheableResponse: { statuses: [200] },
-          plugins: [
-            {
-              requestWillFetch: async ({ request }: { request: Request }) => {
-                const modifiedRequest = new Request(request);
-                modifiedRequest.headers.set(
-                  "Apikey",
-                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHBiY3RsZWpyempqdmttY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjIwMDU0ODksImV4cCI6MjAzNzU4MTQ4OX0.aOrgMlTl_1Odj5Z0ssCsa0879UaSDrtUTIpNbXbaaOg",
-                );
-                return modifiedRequest;
-              },
-            },
-          ],
-        },
-      },
-      // Catch-all for other Supabase API calls (excluding analytics)
-      {
-        urlPattern: ({ url }) =>
-          url.href.includes("/rest/v1/") &&
-          !url.href.includes("/rest/v1/analytics") &&
-          !url.href.includes("/rest/v1/songs") &&
-          !url.href.includes("/rest/v1/tags") &&
-          !url.href.includes("/rest/v1/setlist") &&
-          !url.href.includes("/rest/v1/leader_position") &&
-          !url.href.includes("/rest/v1/texts"),
-        handler: "StaleWhileRevalidate",
-        options: {
-          cacheName: "supabase-api-cache",
-          expiration: {
-            maxEntries: 100,
-            maxAgeSeconds: 365 * 24 * 60 * 60,
-          },
-          cacheableResponse: { statuses: [200] },
-          plugins: [
-            {
-              requestWillFetch: async ({ request }: { request: Request }) => {
-                const modifiedRequest = new Request(request);
-                modifiedRequest.headers.set(
-                  "Apikey",
-                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHBiY3RsZWpyempqdmttY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjIwMDU0ODksImV4cCI6MjAzNzU4MTQ4OX0.aOrgMlTl_1Odj5Z0ssCsa0879UaSDrtUTIpNbXbaaOg",
-                );
-                return modifiedRequest;
-              },
-            },
-          ],
-        },
-      },
-      // Bible in a year: changes daily, NetworkFirst
-      {
-        urlPattern: ({ url }) =>
-          url.hostname === "bible-api-lovat.vercel.app" &&
-          url.pathname.startsWith("/bible-in-a-year"),
-        handler: "NetworkFirst",
-        options: {
-          cacheName: "bible-today-cache",
-          networkTimeoutSeconds: 3,
-          expiration: {
-            maxEntries: 5,
-            maxAgeSeconds: 2 * 24 * 60 * 60,
-          },
-          cacheableResponse: { statuses: [200] },
-        },
-      },
-      // Bible API: static content, CacheFirst
-      {
-        urlPattern: ({ url }) => url.hostname === "bible-api-lovat.vercel.app",
-        handler: "CacheFirst",
-        options: {
-          cacheName: "bible-api-cache",
-          expiration: {
-            maxEntries: 100,
-            maxAgeSeconds: 365 * 24 * 60 * 60,
-          },
-          cacheableResponse: { statuses: [200] },
-        },
-      },
-    ],
-  },
+	manifest: {
+		name: "Chants Jubilate",
+		theme_color: "#002e5d",
+		background_color: "white",
+		display: "standalone",
+		start_url: "/",
+		icons: [
+			{
+				src: "windows11/SmallTile.scale-100.png",
+				sizes: "71x71",
+			},
+			{
+				src: "windows11/SmallTile.scale-125.png",
+				sizes: "89x89",
+			},
+			{
+				src: "windows11/SmallTile.scale-150.png",
+				sizes: "107x107",
+			},
+			{
+				src: "windows11/SmallTile.scale-200.png",
+				sizes: "142x142",
+			},
+			{
+				src: "windows11/SmallTile.scale-400.png",
+				sizes: "284x284",
+			},
+			{
+				src: "windows11/Square150x150Logo.scale-100.png",
+				sizes: "150x150",
+			},
+			{
+				src: "windows11/Square150x150Logo.scale-125.png",
+				sizes: "188x188",
+			},
+			{
+				src: "windows11/Square150x150Logo.scale-150.png",
+				sizes: "225x225",
+			},
+			{
+				src: "windows11/Square150x150Logo.scale-200.png",
+				sizes: "300x300",
+			},
+			{
+				src: "windows11/Square150x150Logo.scale-400.png",
+				sizes: "600x600",
+			},
+			{
+				src: "windows11/Wide310x150Logo.scale-100.png",
+				sizes: "310x150",
+			},
+			{
+				src: "windows11/Wide310x150Logo.scale-125.png",
+				sizes: "388x188",
+			},
+			{
+				src: "windows11/Wide310x150Logo.scale-150.png",
+				sizes: "465x225",
+			},
+			{
+				src: "windows11/Wide310x150Logo.scale-200.png",
+				sizes: "620x300",
+			},
+			{
+				src: "windows11/Wide310x150Logo.scale-400.png",
+				sizes: "1240x600",
+			},
+			{
+				src: "windows11/LargeTile.scale-100.png",
+				sizes: "310x310",
+			},
+			{
+				src: "windows11/LargeTile.scale-125.png",
+				sizes: "388x388",
+			},
+			{
+				src: "windows11/LargeTile.scale-150.png",
+				sizes: "465x465",
+			},
+			{
+				src: "windows11/LargeTile.scale-200.png",
+				sizes: "620x620",
+			},
+			{
+				src: "windows11/LargeTile.scale-400.png",
+				sizes: "1240x1240",
+			},
+			{
+				src: "windows11/Square44x44Logo.scale-100.png",
+				sizes: "44x44",
+			},
+			{
+				src: "windows11/Square44x44Logo.scale-125.png",
+				sizes: "55x55",
+			},
+			{
+				src: "windows11/Square44x44Logo.scale-150.png",
+				sizes: "66x66",
+			},
+			{
+				src: "windows11/Square44x44Logo.scale-200.png",
+				sizes: "88x88",
+			},
+			{
+				src: "windows11/Square44x44Logo.scale-400.png",
+				sizes: "176x176",
+			},
+			{
+				src: "windows11/StoreLogo.scale-100.png",
+				sizes: "50x50",
+			},
+			{
+				src: "windows11/StoreLogo.scale-125.png",
+				sizes: "63x63",
+			},
+			{
+				src: "windows11/StoreLogo.scale-150.png",
+				sizes: "75x75",
+			},
+			{
+				src: "windows11/StoreLogo.scale-200.png",
+				sizes: "100x100",
+			},
+			{
+				src: "windows11/StoreLogo.scale-400.png",
+				sizes: "200x200",
+			},
+			{
+				src: "windows11/SplashScreen.scale-100.png",
+				sizes: "620x300",
+			},
+			{
+				src: "windows11/SplashScreen.scale-125.png",
+				sizes: "775x375",
+			},
+			{
+				src: "windows11/SplashScreen.scale-150.png",
+				sizes: "930x450",
+			},
+			{
+				src: "windows11/SplashScreen.scale-200.png",
+				sizes: "1240x600",
+			},
+			{
+				src: "windows11/SplashScreen.scale-400.png",
+				sizes: "2480x1200",
+			},
+			{
+				src: "windows11/Square44x44Logo.targetsize-16.png",
+				sizes: "16x16",
+			},
+			{
+				src: "windows11/Square44x44Logo.targetsize-20.png",
+				sizes: "20x20",
+			},
+			{
+				src: "windows11/Square44x44Logo.targetsize-24.png",
+				sizes: "24x24",
+			},
+			{
+				src: "windows11/Square44x44Logo.targetsize-30.png",
+				sizes: "30x30",
+			},
+			{
+				src: "windows11/Square44x44Logo.targetsize-32.png",
+				sizes: "32x32",
+			},
+			{
+				src: "windows11/Square44x44Logo.targetsize-36.png",
+				sizes: "36x36",
+			},
+			{
+				src: "windows11/Square44x44Logo.targetsize-40.png",
+				sizes: "40x40",
+			},
+			{
+				src: "windows11/Square44x44Logo.targetsize-44.png",
+				sizes: "44x44",
+			},
+			{
+				src: "windows11/Square44x44Logo.targetsize-48.png",
+				sizes: "48x48",
+			},
+			{
+				src: "windows11/Square44x44Logo.targetsize-60.png",
+				sizes: "60x60",
+			},
+			{
+				src: "windows11/Square44x44Logo.targetsize-64.png",
+				sizes: "64x64",
+			},
+			{
+				src: "windows11/Square44x44Logo.targetsize-72.png",
+				sizes: "72x72",
+			},
+			{
+				src: "windows11/Square44x44Logo.targetsize-80.png",
+				sizes: "80x80",
+			},
+			{
+				src: "windows11/Square44x44Logo.targetsize-96.png",
+				sizes: "96x96",
+			},
+			{
+				src: "windows11/Square44x44Logo.targetsize-256.png",
+				sizes: "256x256",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-unplated_targetsize-16.png",
+				sizes: "16x16",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-unplated_targetsize-20.png",
+				sizes: "20x20",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-unplated_targetsize-24.png",
+				sizes: "24x24",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-unplated_targetsize-30.png",
+				sizes: "30x30",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-unplated_targetsize-32.png",
+				sizes: "32x32",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-unplated_targetsize-36.png",
+				sizes: "36x36",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-unplated_targetsize-40.png",
+				sizes: "40x40",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-unplated_targetsize-44.png",
+				sizes: "44x44",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-unplated_targetsize-48.png",
+				sizes: "48x48",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-unplated_targetsize-60.png",
+				sizes: "60x60",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-unplated_targetsize-64.png",
+				sizes: "64x64",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-unplated_targetsize-72.png",
+				sizes: "72x72",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-unplated_targetsize-80.png",
+				sizes: "80x80",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-unplated_targetsize-96.png",
+				sizes: "96x96",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-unplated_targetsize-256.png",
+				sizes: "256x256",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-16.png",
+				sizes: "16x16",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-20.png",
+				sizes: "20x20",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-24.png",
+				sizes: "24x24",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-30.png",
+				sizes: "30x30",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-32.png",
+				sizes: "32x32",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-36.png",
+				sizes: "36x36",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-40.png",
+				sizes: "40x40",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-44.png",
+				sizes: "44x44",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-48.png",
+				sizes: "48x48",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-60.png",
+				sizes: "60x60",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-64.png",
+				sizes: "64x64",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-72.png",
+				sizes: "72x72",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-80.png",
+				sizes: "80x80",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-96.png",
+				sizes: "96x96",
+			},
+			{
+				src: "windows11/Square44x44Logo.altform-lightunplated_targetsize-256.png",
+				sizes: "256x256",
+			},
+			{
+				src: "android/android-launchericon-512-512.png",
+				sizes: "512x512",
+			},
+			{
+				src: "android/android-launchericon-192-192.png",
+				sizes: "192x192",
+			},
+			{
+				src: "android/android-launchericon-144-144.png",
+				sizes: "144x144",
+			},
+			{
+				src: "android/android-launchericon-96-96.png",
+				sizes: "96x96",
+			},
+			{
+				src: "android/android-launchericon-72-72.png",
+				sizes: "72x72",
+			},
+			{
+				src: "android/android-launchericon-48-48.png",
+				sizes: "48x48",
+			},
+			{
+				src: "ios/16.png",
+				sizes: "16x16",
+			},
+			{
+				src: "ios/20.png",
+				sizes: "20x20",
+			},
+			{
+				src: "ios/29.png",
+				sizes: "29x29",
+			},
+			{
+				src: "ios/32.png",
+				sizes: "32x32",
+			},
+			{
+				src: "ios/40.png",
+				sizes: "40x40",
+			},
+			{
+				src: "ios/50.png",
+				sizes: "50x50",
+			},
+			{
+				src: "ios/57.png",
+				sizes: "57x57",
+			},
+			{
+				src: "ios/58.png",
+				sizes: "58x58",
+			},
+			{
+				src: "ios/60.png",
+				sizes: "60x60",
+			},
+			{
+				src: "ios/64.png",
+				sizes: "64x64",
+			},
+			{
+				src: "ios/72.png",
+				sizes: "72x72",
+			},
+			{
+				src: "ios/76.png",
+				sizes: "76x76",
+			},
+			{
+				src: "ios/80.png",
+				sizes: "80x80",
+			},
+			{
+				src: "ios/87.png",
+				sizes: "87x87",
+			},
+			{
+				src: "ios/100.png",
+				sizes: "100x100",
+			},
+			{
+				src: "ios/114.png",
+				sizes: "114x114",
+			},
+			{
+				src: "ios/120.png",
+				sizes: "120x120",
+			},
+			{
+				src: "ios/128.png",
+				sizes: "128x128",
+			},
+			{
+				src: "ios/144.png",
+				sizes: "144x144",
+			},
+			{
+				src: "ios/152.png",
+				sizes: "152x152",
+			},
+			{
+				src: "ios/167.png",
+				sizes: "167x167",
+			},
+			{
+				src: "ios/180.png",
+				sizes: "180x180",
+			},
+			{
+				src: "ios/192.png",
+				sizes: "192x192",
+			},
+			{
+				src: "ios/256.png",
+				sizes: "256x256",
+			},
+			{
+				src: "ios/512.png",
+				sizes: "512x512",
+			},
+			{
+				src: "ios/1024.png",
+				sizes: "1024x1024",
+			},
+		],
+		screenshots: [
+			{
+				src: "screenshots/wide-1-setlists.png",
+				sizes: "1905x1080",
+				type: "image/png",
+				form_factor: "wide",
+			},
+			{
+				src: "screenshots/wide-2-song.png",
+				sizes: "1920x1080",
+				type: "image/png",
+				form_factor: "wide",
+			},
+			{
+				src: "screenshots/wide-3-setlist-song.png",
+				sizes: "1905x1080",
+				type: "image/png",
+				form_factor: "wide",
+			},
+			{
+				src: "screenshots/wide-4-presenter.png",
+				sizes: "1920x1080",
+				type: "image/png",
+				form_factor: "wide",
+			},
+			{
+				src: "screenshots/wide-5-liturgy.png",
+				sizes: "1905x1080",
+				type: "image/png",
+				form_factor: "wide",
+			},
+			{
+				src: "screenshots/wide-6-bible.png",
+				sizes: "1920x1080",
+				type: "image/png",
+				form_factor: "wide",
+			},
+			{
+				src: "screenshots/mobile-1-song-list.png",
+				sizes: "1560x3376",
+				type: "image/png",
+				form_factor: "narrow",
+			},
+			{
+				src: "screenshots/mobile-2-song.png",
+				sizes: "1560x3376",
+				type: "image/png",
+				form_factor: "narrow",
+			},
+			{
+				src: "screenshots/mobile-3-setlist-song.png",
+				sizes: "1560x3376",
+				type: "image/png",
+				form_factor: "narrow",
+			},
+			{
+				src: "screenshots/mobile-4-presenter.png",
+				sizes: "1560x3376",
+				type: "image/png",
+				form_factor: "narrow",
+			},
+		],
+	},
+	registerType: "autoUpdate",
+	workbox: {
+		mode: "generateSW",
+		globPatterns: ["**/*.{js,css,html,png,jpg,svg,ttf}"],
+		clientsClaim: true,
+		skipWaiting: true,
+		runtimeCaching: [
+			// Connectivity probe: bypass SW cache so offline detection works
+			{
+				urlPattern: ({ request }) =>
+					request.headers.get("X-Connectivity-Probe") === "1",
+				handler: "NetworkOnly",
+			},
+			// Songs & tags: the critical path — must render instantly even on a
+			// slow connection or wifi-with-no-internet, so StaleWhileRevalidate
+			// stays even though the row can be edited. Freshness for lyrics/notes
+			// now comes from useSongsRealtimeSync (pushes straight into the
+			// TanStack Query cache) and useSaveSongEdit/useSetStropheNote's own
+			// cache writes on save — neither goes through a GET, so neither is
+			// slowed down or staled by this SW cache. This layer only matters as
+			// the fallback for a cold load, where "instant, maybe a second stale"
+			// beats "correct, maybe never loads".
+			{
+				urlPattern: ({ url }) =>
+					url.href.includes("/rest/v1/songs") ||
+					url.href.includes("/rest/v1/tags"),
+				handler: "StaleWhileRevalidate",
+				options: {
+					cacheName: "supabase-songs-cache",
+					expiration: {
+						maxEntries: 300,
+						maxAgeSeconds: 365 * 24 * 60 * 60,
+					},
+					cacheableResponse: { statuses: [200] },
+					plugins: [
+						{
+							requestWillFetch: async ({ request }: { request: Request }) => {
+								const modifiedRequest = new Request(request);
+								modifiedRequest.headers.set(
+									"Apikey",
+									"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHBiY3RsZWpyempqdmttY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjIwMDU0ODksImV4cCI6MjAzNzU4MTQ4OX0.aOrgMlTl_1Odj5Z0ssCsa0879UaSDrtUTIpNbXbaaOg",
+								);
+								return modifiedRequest;
+							},
+						},
+					],
+				},
+			},
+			// Incipit crops are written once and replaced under a new name, never
+			// edited in place, so a cached copy is never stale.
+			{
+				urlPattern: ({ url }) =>
+					url.href.includes("/storage/v1/object/public/sheet-music/incipits/"),
+				handler: "CacheFirst",
+				options: {
+					cacheName: "incipit-images-cache",
+					expiration: {
+						maxEntries: 200,
+						maxAgeSeconds: 365 * 24 * 60 * 60,
+					},
+					cacheableResponse: { statuses: [200] },
+				},
+			},
+			// Setlists: must be fresh, NetworkFirst with 3s timeout fallback
+			{
+				urlPattern: ({ url }) =>
+					url.href.includes("/rest/v1/setlist") ||
+					url.href.includes("/rest/v1/leader_position"),
+				handler: "NetworkFirst",
+				options: {
+					cacheName: "supabase-setlists-cache",
+					networkTimeoutSeconds: 3,
+					expiration: {
+						maxEntries: 100,
+						maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+					},
+					cacheableResponse: { statuses: [200] },
+					plugins: [
+						{
+							requestWillFetch: async ({ request }: { request: Request }) => {
+								const modifiedRequest = new Request(request);
+								modifiedRequest.headers.set(
+									"Apikey",
+									"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHBiY3RsZWpyempqdmttY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjIwMDU0ODksImV4cCI6MjAzNzU4MTQ4OX0.aOrgMlTl_1Odj5Z0ssCsa0879UaSDrtUTIpNbXbaaOg",
+								);
+								return modifiedRequest;
+							},
+						},
+					],
+				},
+			},
+			// Texts: rarely change, StaleWhileRevalidate
+			{
+				urlPattern: ({ url }) => url.href.includes("/rest/v1/texts"),
+				handler: "StaleWhileRevalidate",
+				options: {
+					cacheName: "supabase-texts-cache",
+					expiration: {
+						maxEntries: 100,
+						maxAgeSeconds: 365 * 24 * 60 * 60,
+					},
+					cacheableResponse: { statuses: [200] },
+					plugins: [
+						{
+							requestWillFetch: async ({ request }: { request: Request }) => {
+								const modifiedRequest = new Request(request);
+								modifiedRequest.headers.set(
+									"Apikey",
+									"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHBiY3RsZWpyempqdmttY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjIwMDU0ODksImV4cCI6MjAzNzU4MTQ4OX0.aOrgMlTl_1Odj5Z0ssCsa0879UaSDrtUTIpNbXbaaOg",
+								);
+								return modifiedRequest;
+							},
+						},
+					],
+				},
+			},
+			// Catch-all for other Supabase API calls (excluding analytics)
+			{
+				urlPattern: ({ url }) =>
+					url.href.includes("/rest/v1/") &&
+					!url.href.includes("/rest/v1/analytics") &&
+					!url.href.includes("/rest/v1/songs") &&
+					!url.href.includes("/rest/v1/tags") &&
+					!url.href.includes("/rest/v1/setlist") &&
+					!url.href.includes("/rest/v1/leader_position") &&
+					!url.href.includes("/rest/v1/texts"),
+				handler: "StaleWhileRevalidate",
+				options: {
+					cacheName: "supabase-api-cache",
+					expiration: {
+						maxEntries: 100,
+						maxAgeSeconds: 365 * 24 * 60 * 60,
+					},
+					cacheableResponse: { statuses: [200] },
+					plugins: [
+						{
+							requestWillFetch: async ({ request }: { request: Request }) => {
+								const modifiedRequest = new Request(request);
+								modifiedRequest.headers.set(
+									"Apikey",
+									"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVubHBiY3RsZWpyempqdmttY3prIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjIwMDU0ODksImV4cCI6MjAzNzU4MTQ4OX0.aOrgMlTl_1Odj5Z0ssCsa0879UaSDrtUTIpNbXbaaOg",
+								);
+								return modifiedRequest;
+							},
+						},
+					],
+				},
+			},
+			// Bible in a year: changes daily, NetworkFirst
+			{
+				urlPattern: ({ url }) =>
+					url.hostname === "bible-api-lovat.vercel.app" &&
+					url.pathname.startsWith("/bible-in-a-year"),
+				handler: "NetworkFirst",
+				options: {
+					cacheName: "bible-today-cache",
+					networkTimeoutSeconds: 3,
+					expiration: {
+						maxEntries: 5,
+						maxAgeSeconds: 2 * 24 * 60 * 60,
+					},
+					cacheableResponse: { statuses: [200] },
+				},
+			},
+			// Bible API: static content, CacheFirst
+			{
+				urlPattern: ({ url }) => url.hostname === "bible-api-lovat.vercel.app",
+				handler: "CacheFirst",
+				options: {
+					cacheName: "bible-api-cache",
+					expiration: {
+						maxEntries: 100,
+						maxAgeSeconds: 365 * 24 * 60 * 60,
+					},
+					cacheableResponse: { statuses: [200] },
+				},
+			},
+		],
+	},
 };
 
 // https://vitejs.dev/config/
 export default () => {
-  return defineConfig({
-    define: {
-      __APP_VERSION__: JSON.stringify(packageJson.version),
-    },
-    build: {
-      sourcemap: true,
-    },
-    plugins: [
-      react(),
-      VitePWA(manifest),
-    ],
-    resolve: {
-      alias: {
-        "@": path.resolve(__dirname, "src"),
-      },
-    },
-  });
+	return defineConfig({
+		define: {
+			__APP_VERSION__: JSON.stringify(packageJson.version),
+		},
+		build: {
+			sourcemap: true,
+		},
+		plugins: [react(), VitePWA(manifest)],
+		resolve: {
+			alias: {
+				"@": path.resolve(__dirname, "src"),
+			},
+		},
+	});
 };
