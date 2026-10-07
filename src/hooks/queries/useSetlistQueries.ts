@@ -5,6 +5,7 @@ import {
 	type Setlist,
 	allSetlistItemsQuery,
 	allSetlistsQuery,
+	setlistHistoryQuery,
 	setlistItemShowTextOnSlideMutation,
 	setlistItemsQuery,
 	setlistQuery,
@@ -38,6 +39,17 @@ export const useSetlist = (setlistId: string | undefined) =>
 		staleTime: 0,
 		refetchOnWindowFocus: true,
 		refetchOnReconnect: true,
+	});
+
+export const useSetlistHistory = () =>
+	useQuery({
+		queryKey: queryKeys.setlists.history(),
+		queryFn: async () => {
+			const { data, error } = await setlistHistoryQuery();
+			if (error) throw error;
+			return data ?? [];
+		},
+		staleTime: 5 * 60 * 1000,
 	});
 
 /**

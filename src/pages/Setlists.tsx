@@ -20,7 +20,11 @@ import {
 	DialogPanel,
 	DialogTitle,
 } from "@headlessui/react";
-import { PencilSquareIcon, TrashIcon } from "@heroicons/react/16/solid";
+import {
+	PencilSquareIcon,
+	SparklesIcon,
+	TrashIcon,
+} from "@heroicons/react/16/solid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtom, useAtomValue } from "jotai";
@@ -119,7 +123,7 @@ const Setlists = () => {
 						/>
 					}
 				/>
-				<div className="flex justify-center border-b border-gray-200 dark:border-gray-600 p-2">
+				<div className="flex flex-wrap justify-center gap-2 border-b border-gray-200 dark:border-gray-600 p-2">
 					<button
 						type="button"
 						onClick={() => setIsCreateOpen(true)}
@@ -127,6 +131,13 @@ const Setlists = () => {
 					>
 						Créer une setlist
 					</button>
+					<Link
+						to="/veillees/new"
+						className="flex items-center gap-2 px-4 py-2 border border-jubilateBlue-500 dark:border-jubilateBlue-400 text-jubilateBlue-500 dark:text-jubilateBlue-300 hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 rounded-full font-medium transition"
+					>
+						<SparklesIcon className="size-4" />
+						Préparer une veillée
+					</Link>
 				</div>
 				{allTags.length > 0 && (
 					<div className="flex gap-2 overflow-x-auto px-2 py-2 border-b border-gray-200 dark:border-gray-600">

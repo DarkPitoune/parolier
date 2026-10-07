@@ -9,6 +9,7 @@ export const queryKeys = {
 	tags: { all: () => ["tags"] as const },
 	setlists: {
 		list: () => ["setlists", "list"] as const,
+		history: () => ["setlists", "history"] as const,
 		detail: (id: string) => ["setlists", id] as const,
 		items: (id: string) => ["setlists", id, "items"] as const,
 	},
