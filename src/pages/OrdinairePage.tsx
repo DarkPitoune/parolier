@@ -5,6 +5,7 @@ import {
 	tonalityAtom,
 } from "@/components/Contexts/SettingsContext";
 import { DynamicText } from "@/components/DynamicText";
+import { IncipitPanel } from "@/components/Incipit/IncipitPanel";
 import { useOrdinaireDetail } from "@/hooks/queries/useSongQueries";
 import { queryKeys } from "@/utils/queryKeys";
 import {
@@ -69,6 +70,9 @@ function SongSection({
 
 	return (
 		<div className="flex flex-col gap-4">
+			{song.incipits && song.incipits.length > 0 && (
+				<IncipitPanel incipits={song.incipits} />
+			)}
 			{(strophes as Array<{ type?: string; content: unknown }>)?.map(
 				(strophe, index) =>
 					strophe.type !== "section" ? (

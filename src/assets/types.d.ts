@@ -42,3 +42,15 @@ export interface Settings {
 	darkMode: boolean;
 	username: string;
 }
+
+/**
+ * Opening phrase of a piece, to recognise which melody it is when the lyrics
+ * are shared across settings (mass ordinaries). `abc` is the soprano line of
+ * the first system; `image_path` is a crop of the score, a public storage
+ * path like `sheet_music_url`, shown when there is no transcription.
+ */
+export interface Incipit {
+	label: string;
+	abc?: string;
+	image_path?: string;
+}

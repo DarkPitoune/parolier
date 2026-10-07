@@ -595,7 +595,7 @@ export const ordinaireDetailQuery = async (id: number) =>
 	supabase
 		.from("ordinaires")
 		.select(
-			"id, name, sheet_music_url, songs (id, title, strophes, type, sheet_music_url, ordinaire_role, tags (id, name, svg, color))",
+			"id, name, sheet_music_url, songs (id, title, strophes, type, sheet_music_url, ordinaire_role, incipits, tags (id, name, svg, color))",
 		)
 		.eq("id", id)
 		.single();

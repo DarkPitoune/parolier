@@ -15,6 +15,7 @@ import {
 } from "./Contexts/SettingsContext";
 import { tonalityAtom } from "./Contexts/SettingsContext";
 import { DynamicText } from "./DynamicText";
+import { IncipitPanel } from "./Incipit/IncipitPanel";
 import { PerformanceNoteRow } from "./PerformanceNotes/PerformanceNoteRow";
 import { TagChip } from "./TagChip";
 
@@ -154,6 +155,9 @@ function SongViewer({
 						<TagChip tag={tag} key={tag.id} />
 					))}
 				</div>
+				{song.incipits && song.incipits.length > 0 && (
+					<IncipitPanel incipits={song.incipits} />
+				)}
 				<div className="flex flex-col gap-4 pb-10">
 					{displayStrophes.map(
 						({ strophe, sourceIndex, ordinalLabel, shownBecauseNoted }) =>

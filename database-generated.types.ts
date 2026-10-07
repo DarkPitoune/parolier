@@ -280,6 +280,7 @@ export type Database = {
       songs: {
         Row: {
           id: number
+          incipits: Json | null
           ordinaire_id: number | null
           ordinaire_role: string | null
           sheet_music_url: string | null
@@ -289,6 +290,7 @@ export type Database = {
         }
         Insert: {
           id?: number
+          incipits?: Json | null
           ordinaire_id?: number | null
           ordinaire_role?: string | null
           sheet_music_url?: string | null
@@ -298,6 +300,7 @@ export type Database = {
         }
         Update: {
           id?: number
+          incipits?: Json | null
           ordinaire_id?: number | null
           ordinaire_role?: string | null
           sheet_music_url?: string | null
