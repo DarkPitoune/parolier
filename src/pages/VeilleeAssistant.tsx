@@ -22,6 +22,22 @@ import {
 	usageHints,
 } from "@/utils/veillee";
 import { type DraftOp, applyOps } from "@/utils/veilleeDraft";
+import {
+	DndContext,
+	type DragEndEvent,
+	MouseSensor,
+	TouchSensor,
+	closestCenter,
+	useSensor,
+	useSensors,
+} from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import {
+	SortableContext,
+	useSortable,
+	verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import {
 	ArrowPathIcon,
@@ -246,12 +262,30 @@ const DraftRow = ({
 }) => {
 	const darkMode = useAtomValue(isDarkAtom);
 	const slot = SLOT_STYLES[item.slot];
+	const {
+		attributes,
+		listeners,
+		setNodeRef,
+		transform,
+		transition,
+		isDragging,
+	} = useSortable({ id: item.key });
 	return (
 		<li
+			ref={setNodeRef}
+			style={{
+				transform: CSS.Transform.toString(transform),
+				transition,
+				opacity: isDragging ? 0.5 : 1,
+				WebkitTouchCallout: "none",
+			}}
 			className={clsx(
-				"flex items-start gap-2 p-2 transition-colors duration-700",
+				"flex items-start gap-2 p-2 select-none transition-colors duration-700",
+				isDragging ? "cursor-grabbing" : "cursor-grab",
 				highlighted && "bg-jubilateYellow-400/30",
 			)}
+			{...attributes}
+			{...listeners}
 		>
 			<span
 				className={clsx(
@@ -490,6 +524,22 @@ const VeilleeAssistant = () => {
 		if (item) apply([{ op: "move", key: item.key, toIndex: index + delta }]);
 	};
 
+	// A click still reaches the row's buttons; on touch a long press starts the
+	// drag, so a swipe keeps scrolling the list.
+	const sensors = useSensors(
+		useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+		useSensor(TouchSensor, {
+			activationConstraint: { delay: 500, tolerance: 10 },
+		}),
+	);
+
+	const handleDragEnd = ({ active, over }: DragEndEvent) => {
+		if (!draft || !over || active.id === over.id) return;
+		const toIndex = draft.items.findIndex((i) => i.key === over.id);
+		if (toIndex !== -1)
+			apply([{ op: "move", key: String(active.id), toIndex }]);
+	};
+
 	const remove = (index: number) => {
 		const item = draft?.items[index];
 		if (item) apply([{ op: "remove", key: item.key }]);
@@ -707,22 +757,34 @@ const VeilleeAssistant = () => {
 									"opacity-50 pointer-events-none",
 							)}
 						>
-							{draft.items.map((item, index) => (
-								<DraftRow
-									key={item.key}
-									item={item}
-									index={index}
-									count={draft.items.length}
-									titleOf={titleOf}
-									swapChoices={(item.alternatives ?? []).filter(
-										(id) => !inDraft.has(id),
-									)}
-									highlighted={highlighted.has(item.key)}
-									onMove={(delta) => move(index, delta)}
-									onRemove={() => remove(index)}
-									onSwap={(songId) => swap(index, songId)}
-								/>
-							))}
+							<DndContext
+								sensors={sensors}
+								collisionDetection={closestCenter}
+								onDragEnd={handleDragEnd}
+								modifiers={[restrictToVerticalAxis]}
+							>
+								<SortableContext
+									items={draft.items.map((i) => i.key)}
+									strategy={verticalListSortingStrategy}
+								>
+									{draft.items.map((item, index) => (
+										<DraftRow
+											key={item.key}
+											item={item}
+											index={index}
+											count={draft.items.length}
+											titleOf={titleOf}
+											swapChoices={(item.alternatives ?? []).filter(
+												(id) => !inDraft.has(id),
+											)}
+											highlighted={highlighted.has(item.key)}
+											onMove={(delta) => move(index, delta)}
+											onRemove={() => remove(index)}
+											onSwap={(songId) => swap(index, songId)}
+										/>
+									))}
+								</SortableContext>
+							</DndContext>
 						</ul>
 						<div className="flex flex-wrap justify-between gap-2 pt-2">
 							<div className="flex">
