@@ -2,20 +2,25 @@ import supabase from "@/utils/supabase";
 import {
 	type CompactVeilleeSong,
 	type DraftItem,
-	type SuggestedItem,
 	type VeilleeBrief,
 	type VeilleeDraft,
 	buildDraft,
 	buildTemplate,
 } from "@/utils/veillee";
 import type { DraftOp } from "@/utils/veilleeDraft";
+import {
+	functionErrorMessage,
+	parseRefineResponse,
+	parseSuggestResponse,
+} from "@/utils/veilleeResponse";
 import { useMutation } from "@tanstack/react-query";
 
-interface SuggestResponse {
-	success: boolean;
-	summary?: string;
-	items?: SuggestedItem[];
-	error?: string;
+async function invoke(body: Record<string, unknown>): Promise<unknown> {
+	const { data, error } = await supabase.functions.invoke("suggest-veillee", {
+		body,
+	});
+	if (error) throw new Error(await functionErrorMessage(error));
+	return data;
 }
 
 interface SuggestVariables {
@@ -28,29 +33,18 @@ async function suggestVeillee({
 	songs,
 }: SuggestVariables): Promise<VeilleeDraft> {
 	const template = buildTemplate(brief);
-	const { data, error } = await supabase.functions.invoke("suggest-veillee", {
-		body: { brief, template, songs },
-	});
-	if (error) {
-		throw new Error(
-			`Erreur lors de l'appel au service de suggestions: ${error.message}`,
-		);
-	}
-
-	const result = data as SuggestResponse;
-	if (!result.success || !result.items) {
-		throw new Error(result.error ?? "Aucune suggestion retournée");
-	}
-
+	const { summary, items: suggested } = parseSuggestResponse(
+		await invoke({ brief, template, songs }),
+	);
 	const items = buildDraft(
 		template,
-		result.items,
+		suggested,
 		new Set(songs.map((s) => s.id)),
 	);
 	if (!items.some((item) => item.songId !== null)) {
 		throw new Error("Aucun chant valide dans la proposition");
 	}
-	return { summary: result.summary ?? "", items };
+	return { summary, items };
 }
 
 export const useVeilleeSuggestion = () =>
@@ -68,37 +62,21 @@ interface RefineVariables {
 	songs: CompactVeilleeSong[];
 }
 
-interface RefineResponse {
-	success: boolean;
-	reply?: string;
-	ops?: DraftOp[];
-	error?: string;
-}
-
 async function refineVeillee({
 	brief,
 	items,
 	messages,
 	songs,
 }: RefineVariables): Promise<{ reply: string; ops: DraftOp[] }> {
-	const { data, error } = await supabase.functions.invoke("suggest-veillee", {
-		body: {
+	return parseRefineResponse(
+		await invoke({
 			mode: "refine",
 			brief,
 			draft: items.map(({ key, slot, songId }) => ({ key, slot, songId })),
 			messages,
 			songs,
-		},
-	});
-	if (error) {
-		throw new Error(`Erreur lors de l'appel à l'assistant: ${error.message}`);
-	}
-
-	const result = data as RefineResponse;
-	if (!result.success) {
-		throw new Error(result.error ?? "Pas de réponse de l'assistant");
-	}
-	return { reply: result.reply ?? "", ops: result.ops ?? [] };
+		}),
+	);
 }
 
 export const useVeilleeRefine = () =>

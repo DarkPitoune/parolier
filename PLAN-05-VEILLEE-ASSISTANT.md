@@ -191,10 +191,13 @@ nonsense request ("mets du rock") gets a reply with no ops.
   response parsing, extracted into a pure helper the hook imports.
 - E2E `e2e/veillee-assistant.spec.ts`: stub `**/functions/v1/suggest-veillee` with
   `page.route` and a fixed response that references seeded ids from `e2e/fixtures.ts`. Walk the
-  questions, check the draft, save, and verify the setlist page. Seeded songs need the four tags.
-  Add to `supabase/seed.sql` if they're missing.
-- Edge function errors (Mistral down, malformed JSON) become a toast plus "Réessayer". The
-  answered brief is kept.
+  questions, check the draft, save, and verify the setlist page, then delete the setlist through the UI so the
+  run leaves no rows behind. The stub doesn't need tagged songs, since any song may fill any
+  slot. The spec blocks the service worker: its NetworkFirst cache for `/rest/v1/setlist*`
+  could otherwise list stale setlists.
+- Edge function errors (Mistral down, malformed JSON) show in the chat with "Réessayer", and the
+  answered brief is kept. supabase-js reports a non-2xx call as a generic error, so
+  `functionErrorMessage` reads the function's own message from the response body.
 
 ---
 
