@@ -73,7 +73,14 @@ function AbcIncipit({ abc, label }: { abc: string; label: string }) {
 		setPlaying(true);
 		await synth.init({
 			visualObj: tuneRef.current,
-			onEnded: () => setPlaying(false),
+			// abcjs only reads callbacks from `options`; its typings also accept a
+			// top-level onEnded, which it silently ignores.
+			options: {
+				onEnded: () => {
+					// A stopped synth still fires onended, possibly after a new one started.
+					if (synthRef.current === synth) setPlaying(false);
+				},
+			},
 		});
 		await synth.prime();
 		synth.start();
