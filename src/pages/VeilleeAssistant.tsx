@@ -90,6 +90,8 @@ const SLOT_STYLES: Record<SlotKind, { label: string; className: string }> = {
 const MAX_TURNS = 20;
 const HIGHLIGHT_MS = 2000;
 
+type DisplayMessage = ChatMessage & { skipped?: string[] };
+
 const isAsked = (id: QuestionId, answers: Answers) =>
 	id !== "silences" || answers.adoration === true;
 
@@ -340,7 +342,7 @@ const VeilleeAssistant = () => {
 	const [editing, setEditing] = useState<QuestionId | null>(null);
 	const [draft, setDraft] = useState<VeilleeDraft | null>(null);
 	const [draftBrief, setDraftBrief] = useState<VeilleeBrief | null>(null);
-	const [messages, setMessages] = useState<ChatMessage[]>([]);
+	const [messages, setMessages] = useState<DisplayMessage[]>([]);
 	const [undoStack, setUndoStack] = useState<DraftItem[][]>([]);
 	const [highlighted, setHighlighted] = useState<Set<string>>(new Set());
 	const highlightTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -421,28 +423,28 @@ const VeilleeAssistant = () => {
 
 	const turns = messages.filter((m) => m.role === "user").length;
 
-	const send = (conversation: ChatMessage[]) => {
+	const send = (conversation: DisplayMessage[]) => {
 		if (!draft || !brief || !songs) return;
 		setMessages(conversation);
 		refinement.mutate(
-			{ brief, items: draft.items, messages: conversation, songs },
+			{
+				brief,
+				items: draft.items,
+				messages: conversation.map(({ role, content }) => ({ role, content })),
+				songs,
+			},
 			{
 				onSuccess: ({ reply, ops }) => {
 					const skipped = apply(ops);
-					const plural = skipped.length > 1 ? "s" : "";
-					const note =
-						skipped.length > 0
-							? ` (${skipped.length} modification${plural} ignorée${plural})`
-							: "";
+					const nothingApplied =
+						ops.length > 0 && skipped.length === ops.length;
+					const content = nothingApplied
+						? "Je n'ai pas pu appliquer ce changement."
+						: reply ||
+							(ops.length > 0 ? "C'est fait." : "Je n'ai rien changé.");
 					setMessages([
 						...conversation,
-						{
-							role: "assistant",
-							content:
-								(reply ||
-									(ops.length > 0 ? "C'est fait." : "Je n'ai rien changé.")) +
-								note,
-						},
+						{ role: "assistant", content, skipped },
 					]);
 				},
 			},
@@ -620,7 +622,17 @@ const VeilleeAssistant = () => {
 								</div>
 							) : (
 								// biome-ignore lint/suspicious/noArrayIndexKey: messages are append-only
-								<AssistantBubble key={index}>{message.content}</AssistantBubble>
+								<AssistantBubble key={index}>
+									{message.content}
+									{message.skipped && message.skipped.length > 0 && (
+										<ul className="flex flex-col gap-0.5 pt-1 text-sm text-gray-500 dark:text-gray-400">
+											{message.skipped.map((reason, i) => (
+												// biome-ignore lint/suspicious/noArrayIndexKey: reasons can repeat
+												<li key={i}>{reason}</li>
+											))}
+										</ul>
+									)}
+								</AssistantBubble>
 							),
 						)}
 

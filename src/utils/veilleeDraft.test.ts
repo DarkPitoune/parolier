@@ -102,6 +102,8 @@ describe("applyOps", () => {
 		);
 		expect(items).toEqual(draft);
 		expect(skipped).toHaveLength(10);
+		expect(skipped[1]).toMatch(/silence/);
+		expect(skipped[9]).toMatch(/^Modification impossible/);
 	});
 
 	it("keeps a single Esprit Saint pivot", () => {

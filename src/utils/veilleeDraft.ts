@@ -15,6 +15,14 @@ export interface ApplyResult {
 
 const SONG_SLOTS: SongSlot[] = ["louange", "esprit", "adoration", "marie"];
 
+const OP_LABELS: Record<DraftOp["op"], string> = {
+	replace: "Remplacement",
+	insert: "Ajout",
+	remove: "Retrait",
+	move: "Déplacement",
+	addSilence: "Silence",
+};
+
 const insertAt = (items: DraftItem[], afterKey: string | null) =>
 	afterKey === null ? 0 : items.findIndex((i) => i.key === afterKey) + 1;
 
@@ -42,23 +50,27 @@ export function applyOps(
 	const inDraft = (songId: number) => current.some((i) => i.songId === songId);
 	const indexOf = (key: string) => current.findIndex((i) => i.key === key);
 	const skip = (op: DraftOp, reason: string) =>
-		skipped.push(`${op.op}: ${reason}`);
+		skipped.push(`${OP_LABELS[op.op]} : ${reason}`);
 
 	for (const op of ops) {
 		switch (op.op) {
 			case "replace": {
 				const index = indexOf(op.key);
 				const target = current[index];
-				if (!target || target.songId === null) {
-					skip(op, `élément ${op.key} introuvable`);
+				if (!target) {
+					skip(op, "ce chant n'est pas dans la setlist");
+					break;
+				}
+				if (target.songId === null) {
+					skip(op, "un silence ne peut pas être remplacé par un chant");
 					break;
 				}
 				if (!knownIds.has(op.songId)) {
-					skip(op, `chant ${op.songId} inconnu`);
+					skip(op, "chant absent du répertoire");
 					break;
 				}
 				if (inDraft(op.songId)) {
-					skip(op, `chant ${op.songId} déjà présent`);
+					skip(op, "ce chant est déjà dans la setlist");
 					break;
 				}
 				const key = `song-${op.songId}`;
@@ -81,23 +93,23 @@ export function applyOps(
 			}
 			case "insert": {
 				if (op.afterKey !== null && indexOf(op.afterKey) === -1) {
-					skip(op, `élément ${op.afterKey} introuvable`);
+					skip(op, "l'élément de repère n'est pas dans la setlist");
 					break;
 				}
 				if (!SONG_SLOTS.includes(op.slot)) {
-					skip(op, `moment ${op.slot} inconnu`);
+					skip(op, "moment de la veillée inconnu");
 					break;
 				}
 				if (!knownIds.has(op.songId)) {
-					skip(op, `chant ${op.songId} inconnu`);
+					skip(op, "chant absent du répertoire");
 					break;
 				}
 				if (inDraft(op.songId)) {
-					skip(op, `chant ${op.songId} déjà présent`);
+					skip(op, "ce chant est déjà dans la setlist");
 					break;
 				}
 				if (op.slot === "esprit" && current.some((i) => i.slot === "esprit")) {
-					skip(op, "un seul chant à l'Esprit Saint");
+					skip(op, "il n'y a qu'un seul chant à l'Esprit Saint");
 					break;
 				}
 				const key = `song-${op.songId}`;
@@ -112,7 +124,7 @@ export function applyOps(
 			}
 			case "remove": {
 				if (indexOf(op.key) === -1) {
-					skip(op, `élément ${op.key} introuvable`);
+					skip(op, "cet élément n'est pas dans la setlist");
 					break;
 				}
 				current = current.filter((i) => i.key !== op.key);
@@ -122,7 +134,7 @@ export function applyOps(
 			case "move": {
 				const from = indexOf(op.key);
 				if (from === -1) {
-					skip(op, `élément ${op.key} introuvable`);
+					skip(op, "cet élément n'est pas dans la setlist");
 					break;
 				}
 				const to = Math.max(0, Math.min(current.length - 1, op.toIndex));
@@ -135,7 +147,7 @@ export function applyOps(
 			}
 			case "addSilence": {
 				if (op.afterKey !== null && indexOf(op.afterKey) === -1) {
-					skip(op, `élément ${op.afterKey} introuvable`);
+					skip(op, "l'élément de repère n'est pas dans la setlist");
 					break;
 				}
 				const key = freshSilenceKey(current);
@@ -149,7 +161,9 @@ export function applyOps(
 				break;
 			}
 			default:
-				skipped.push("opération inconnue");
+				skipped.push(
+					"Modification impossible : l'assistant ne peut que choisir, ajouter, retirer ou déplacer des chants et des silences",
+				);
 		}
 	}
 
