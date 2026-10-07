@@ -28,3 +28,4 @@ export { BackButton } from "./BackButton";
 export { PageHeader } from "./PageHeader";
 export { ErrorBoundary } from "./ErrorBoundary";
 export { ConfirmDialog } from "./ConfirmDialog";
+export { SetlistTagsInput } from "./SetlistTagsInput";

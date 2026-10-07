@@ -167,6 +167,9 @@ export type SetlistNameMutation = QueryData<
 	ReturnType<typeof setlistNameMutation>
 >;
 
+export const setlistTagsMutation = async (setlistId: number, tags: string[]) =>
+	supabase.from("setlists").update({ tags }).eq("id", setlistId);
+
 export const setlistNameQuery = async (setlistId: string) =>
 	supabase.from("setlists").select("name").eq("id", setlistId).single();
 export type SetlistNameQuery = QueryData<ReturnType<typeof setlistNameQuery>>;

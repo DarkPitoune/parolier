@@ -79,6 +79,11 @@ export const slideHelpAtom = atomWithStorage(
 // True is : I want to see the song editor help
 export const songEditorHelpOpen = atomWithStorage("help.songEditor", true);
 
+export const setlistTagFiltersAtom = atomWithStorage<string[]>(
+	"setlistTagFilters",
+	[],
+);
+
 export const filtersAtom = atomWithStorage<number[]>(
 	"filters",
 	[],

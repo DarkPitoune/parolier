@@ -76,9 +76,9 @@ insert into public.song_tag (song_id, tag_id) values
   (601, 901), (601, 902), (602, 903), (605, 901);
 
 -- ---------------------------------------------------------------- setlists
-insert into public.setlists (id, name) values
-  (501, 'Messe du dimanche'),
-  (502, 'Répétition');
+insert into public.setlists (id, name, tags) values
+  (501, 'Messe du dimanche', '{Messes Chaillot}'),
+  (502, 'Répétition',        '{Jubilate FR}');
 
 insert into public.setlist_items (id, setlist_id, position, song_id, text_id, text) values
   (401, 501, 0, 601,  null, null),

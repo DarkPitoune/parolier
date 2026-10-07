@@ -1,5 +1,6 @@
 import {
 	PageHeader,
+	SetlistTagsInput,
 	SongItem,
 	SongPicker,
 	SongViewer,
@@ -7,17 +8,19 @@ import {
 	TextItem,
 	TextPicker,
 } from "@/components";
-import { useSetlist } from "@/hooks/queries/useSetlistQueries";
+import { useAllSetlists, useSetlist } from "@/hooks/queries/useSetlistQueries";
 import { useTaggedSong } from "@/hooks/queries/useSongQueries";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { queryKeys } from "@/utils/queryKeys";
 import { sortSetlistItems } from "@/utils/setlistOrder";
 import {
+	type AllSetlists,
 	setlistItemAppendMutation,
 	setlistItemDeleteMutation,
 	setlistItemPositionMutation,
 	setlistNameMutation,
 	setlistNameQuery,
+	setlistTagsMutation,
 	setlistTextItemMutation,
 } from "@/utils/supabase";
 import {
@@ -43,7 +46,7 @@ import {
 	PencilIcon,
 	XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
@@ -194,6 +197,39 @@ const SetlistEditor = () => {
 		});
 	};
 
+	const { data: allSetlists = [] } = useAllSetlists();
+	const setlistTags =
+		allSetlists.find((s) => String(s.id) === setlistId)?.tags ?? [];
+	const tagSuggestions = useMemo(
+		() =>
+			[...new Set(allSetlists.flatMap((s) => s.tags))].sort((a, b) =>
+				a.localeCompare(b, "fr"),
+			),
+		[allSetlists],
+	);
+
+	const tagsMutation = useMutation({
+		mutationFn: async (tags: string[]) => {
+			const { error } = await setlistTagsMutation(Number(setlistId), tags);
+			if (error) throw error;
+		},
+		onMutate: async (tags) => {
+			const listKey = queryKeys.setlists.list();
+			await queryClient.cancelQueries({ queryKey: listKey });
+			const previous = queryClient.getQueryData<AllSetlists>(listKey);
+			queryClient.setQueryData<AllSetlists>(listKey, (old) =>
+				old?.map((s) => (String(s.id) === setlistId ? { ...s, tags } : s)),
+			);
+			return { previous };
+		},
+		onError: (_error, _tags, context) => {
+			queryClient.setQueryData(queryKeys.setlists.list(), context?.previous);
+			toast.error("Erreur lors de l'enregistrement des tags");
+		},
+		onSettled: () =>
+			queryClient.invalidateQueries({ queryKey: queryKeys.setlists.list() }),
+	});
+
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;
 		if (!setlist || !setlistId || !over || active.id === over.id) return;
@@ -342,6 +378,13 @@ const SetlistEditor = () => {
 								value={setlistName}
 								onChange={setSetlistName}
 								onBlur={handleSaveSetlistName}
+							/>
+						</li>
+						<li className="px-4 pb-2">
+							<SetlistTagsInput
+								value={setlistTags}
+								suggestions={tagSuggestions}
+								onChange={(tags) => tagsMutation.mutate(tags)}
 							/>
 						</li>
 						<li className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-600 flex items-center justify-center flex-wrap gap-3 p-2">

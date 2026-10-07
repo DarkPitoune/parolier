@@ -1,5 +1,8 @@
 import { ConfirmDialog, PageHeader } from "@/components";
-import { isDarkAtom } from "@/components/Contexts/SettingsContext";
+import {
+	isDarkAtom,
+	setlistTagFiltersAtom,
+} from "@/components/Contexts/SettingsContext";
 import {
 	UnifiedSearchInput,
 	UnifiedSearchResults,
@@ -20,8 +23,8 @@ import {
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { useAtomValue } from "jotai";
-import { useEffect, useState } from "react";
+import { useAtom, useAtomValue } from "jotai";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -31,6 +34,33 @@ const Setlists = () => {
 	const unifiedSearch = useUnifiedSearch("setlists");
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
+
+	const [tagFilters, setTagFilters] = useAtom(setlistTagFiltersAtom);
+
+	const allTags = useMemo(
+		() =>
+			[...new Set(setslists.flatMap((s) => s.tags))].sort((a, b) =>
+				a.localeCompare(b, "fr"),
+			),
+		[setslists],
+	);
+	const activeFilters = tagFilters.filter((tag) => allTags.includes(tag));
+	// Untagged setlists stay visible so a forgotten tag never hides one.
+	const visibleSetlists =
+		activeFilters.length === 0
+			? setslists
+			: setslists.filter(
+					(s) =>
+						s.tags.length === 0 ||
+						s.tags.some((tag) => activeFilters.includes(tag)),
+				);
+
+	const toggleFilter = (tag: string) =>
+		setTagFilters(
+			activeFilters.includes(tag)
+				? activeFilters.filter((t) => t !== tag)
+				: [...activeFilters, tag],
+		);
 
 	const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -98,6 +128,29 @@ const Setlists = () => {
 						Créer une setlist
 					</button>
 				</div>
+				{allTags.length > 0 && (
+					<div className="flex gap-2 overflow-x-auto px-2 py-2 border-b border-gray-200 dark:border-gray-600">
+						{allTags.map((tag) => {
+							const active = activeFilters.includes(tag);
+							return (
+								<button
+									key={tag}
+									type="button"
+									aria-pressed={active}
+									onClick={() => toggleFilter(tag)}
+									className={clsx(
+										"shrink-0 rounded-full border-2 px-3 py-0.5 text-sm font-semibold transition",
+										active
+											? "border-jubilateBlue-500 bg-jubilateBlue-500 text-white"
+											: "border-jubilateBlue-300 text-jubilateBlue-500 dark:border-jubilateBlue-400 dark:text-jubilateBlue-300",
+									)}
+								>
+									{tag}
+								</button>
+							);
+						})}
+					</div>
+				)}
 			</div>
 			{unifiedSearch.showResults ? (
 				<UnifiedSearchResults search={unifiedSearch} />
@@ -108,13 +161,24 @@ const Setlists = () => {
 							Aucune setlist pour le moment.
 						</p>
 					)}
-					{setslists?.map((setlist) => (
+					{visibleSetlists.map((setlist) => (
 						<div
 							key={setlist.id}
 							className="px-2 text-black dark:text-white hover:bg-jubilateBlue-100 dark:hover:bg-gray-700 flex items-center gap-3 relative overflow-clip"
 						>
-							<Link className="grow py-4" to={`/setlists/${setlist.id}`}>
+							<Link
+								className="grow py-4 flex flex-wrap items-center gap-x-3 gap-y-1"
+								to={`/setlists/${setlist.id}`}
+							>
 								{setlist.name}
+								{setlist.tags.map((tag) => (
+									<span
+										key={tag}
+										className="rounded-full bg-jubilateBlue-100 dark:bg-jubilateBlue-700 text-jubilateBlue-700 dark:text-white px-2 text-xs font-medium"
+									>
+										{tag}
+									</span>
+								))}
 							</Link>
 							<button
 								type="button"
