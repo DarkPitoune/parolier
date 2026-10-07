@@ -385,12 +385,12 @@ const SongEditor = () => {
 				const sanitizedTitle = song.title
 					.replace(/\s+/g, "_")
 					.replace(/[^\w.-]/g, "");
-				const fileName = `${sanitizedTitle}.pdf`;
+				// The bucket is append-only for anon, so every upload needs a fresh name.
+				const fileName = `${sanitizedTitle}-${Date.now()}.pdf`;
 
-				// Upload PDF to Supabase Storage
 				const { error: uploadError } = await supabase.storage
 					.from("sheet-music")
-					.upload(fileName, file, { upsert: true });
+					.upload(fileName, file);
 
 				if (uploadError) {
 					throw new Error(`Erreur de téléchargement: ${uploadError.message}`);
@@ -425,33 +425,11 @@ const SongEditor = () => {
 		[handlePdfUpload],
 	);
 
-	const handleDeletePdf = useCallback(async () => {
+	// Only detaches the PDF: anon can't delete from the bucket, so the file stays.
+	const handleDeletePdf = useCallback(() => {
 		if (!song?.sheet_music_url) return;
-
-		try {
-			// Extract filename from URL
-			const fileName = song.sheet_music_url.replace("/sheet-music/", "");
-
-			// Delete from Supabase Storage
-			const { error } = await supabase.storage
-				.from("sheet-music")
-				.remove([fileName]);
-
-			if (error) {
-				throw new Error(`Erreur de suppression: ${error.message}`);
-			}
-
-			// Update song to remove sheet music URL
-			handleChange("sheet_music_url", null);
-			toast.success("Partition supprimée avec succès!");
-		} catch (error) {
-			console.error("Error deleting PDF:", error);
-			toast.error(
-				error instanceof Error
-					? error.message
-					: "Erreur lors de la suppression",
-			);
-		}
+		handleChange("sheet_music_url", null);
+		toast.success("Partition retirée du chant");
 	}, [song?.sheet_music_url, handleChange]);
 
 	// Warn user before leaving page during processing or with unsaved suggestions
@@ -546,7 +524,7 @@ const SongEditor = () => {
 									className="flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-sm text-sm transition-colors"
 								>
 									<TrashIcon className="h-4 w-4" />
-									Supprimer
+									Retirer
 								</button>
 							</div>
 						) : (
