@@ -52,7 +52,7 @@ function LeaderSetting() {
 	const [leaderList, setLeaderList] = useState<LeaderPositions>([]);
 	const [openPanel, setOpenPanel] = useState<OpenPanel>(null);
 	const navigate = useNavigate();
-	const { takeLead } = useLeader();
+	const { takeLead, follow } = useLeader();
 
 	const refreshLeaderList = () => {
 		getLeaderPositionsQuery().then(({ data }) => {
@@ -165,7 +165,7 @@ function LeaderSetting() {
 									type="button"
 									className="px-3 py-2 text-left text-sm transition-colors hover:bg-jubilateBlue-100 dark:hover:bg-slate-700"
 									onClick={() => {
-										setLeader({ id: position.leader_id, leading: false });
+										follow(position.leader_id);
 										if (position.song !== null)
 											navigate(`/songs/${position.song}`);
 									}}
