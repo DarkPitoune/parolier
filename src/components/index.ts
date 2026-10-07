@@ -16,6 +16,7 @@ export { useLeader } from "./Contexts/LeaderContext";
 export { SlideFinder } from "./Slides/SlideFinder";
 export { SlideViewer } from "./Slides/SlideViewer";
 export { SlideHelp } from "./Slides/SlideHelp";
+export { TextSlide } from "./Slides/TextSlide";
 export { TouchScreenListener } from "./TouchScreenListener";
 export { SongViewer } from "./SongViewer";
 export { TextInput } from "./TextInput";

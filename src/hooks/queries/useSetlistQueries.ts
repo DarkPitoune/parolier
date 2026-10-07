@@ -2,13 +2,16 @@ import { queryKeys } from "@/utils/queryKeys";
 import { sortSetlistItems } from "@/utils/setlistOrder";
 import {
 	type AllSetlistItems,
+	type Setlist,
 	allSetlistItemsQuery,
 	allSetlistsQuery,
+	setlistItemShowTextOnSlideMutation,
 	setlistItemsQuery,
 	setlistQuery,
 } from "@/utils/supabase";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import toast from "react-hot-toast";
 
 export const useAllSetlists = () =>
 	useQuery({
@@ -94,3 +97,43 @@ export const useSetlistItemsCached = (setlistId: string | undefined) =>
 		refetchOnWindowFocus: false,
 		refetchOnReconnect: false,
 	});
+
+export const useSetShowTextOnSlide = (setlistId: string | undefined) => {
+	const queryClient = useQueryClient();
+	const detailKey = queryKeys.setlists.detail(setlistId as string);
+
+	return useMutation({
+		mutationFn: async ({
+			itemId,
+			showTextOnSlide,
+		}: {
+			itemId: number;
+			showTextOnSlide: boolean;
+		}) => {
+			const { error } = await setlistItemShowTextOnSlideMutation(
+				setlistId as string,
+				itemId,
+				showTextOnSlide,
+			);
+			if (error) throw error;
+		},
+		onMutate: async ({ itemId, showTextOnSlide }) => {
+			await queryClient.cancelQueries({ queryKey: detailKey, exact: true });
+			const previous = queryClient.getQueryData<Setlist>(detailKey);
+			queryClient.setQueryData<Setlist>(detailKey, (items) =>
+				items?.map((item) =>
+					item.id === itemId
+						? { ...item, show_text_on_slide: showTextOnSlide }
+						: item,
+				),
+			);
+			return { previous };
+		},
+		onError: (_error, _variables, context) => {
+			queryClient.setQueryData(detailKey, context?.previous);
+			toast.error("Erreur lors de l'enregistrement");
+		},
+		// Prefix match: also refreshes the presenter's cached items for this setlist.
+		onSettled: () => queryClient.invalidateQueries({ queryKey: detailKey }),
+	});
+};

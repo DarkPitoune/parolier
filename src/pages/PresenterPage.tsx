@@ -16,6 +16,7 @@ import {
 	BeakerIcon,
 	ChevronLeftIcon,
 	ChevronRightIcon,
+	ComputerDesktopIcon,
 	EyeSlashIcon,
 	MusicalNoteIcon,
 	PlayIcon,
@@ -48,6 +49,7 @@ const PresenterPage = () => {
 				? state.songId
 				: null;
 	const textTitle = state.mode === "text" ? state.textTitle : null;
+	const isTextOnSlide = state.mode === "text" && !!state.textContent;
 
 	// Monitor MQTT connection status
 	useMqttConnectionStatus({ position: "top-center" });
@@ -64,8 +66,8 @@ const PresenterPage = () => {
 			? setlistItems[Number(stepNumber)]
 			: undefined;
 
-	// The text body isn't carried in the slide state (only its title is), so the
-	// readable copy comes straight from the step's data.
+	// The slide state only carries the text body when it's shown on the slide,
+	// so the readable copy comes straight from the step's data.
 	const stepText = stepData?.songs
 		? null
 		: stepData?.texts?.content ?? stepData?.text ?? null;
@@ -106,13 +108,26 @@ const PresenterPage = () => {
 			return;
 		}
 
-		// Non-song step (a reading, a prayer, a free text): the slideshow shows
-		// the logo, the presenter shows the text so it can be read out.
 		const label =
 			stepData.texts?.title ?? (stepData.text ? "Texte libre" : "Texte");
-		dispatch({ type: "LOAD_TEXT", textTitle: label, setlistContext });
+		dispatch({
+			type: "LOAD_TEXT",
+			textTitle: label,
+			textContent: stepData.show_text_on_slide
+				? stepText ?? undefined
+				: undefined,
+			setlistContext,
+		});
 		toast.success(label, { position: "top-center" });
-	}, [stepData, setlistId, stepNumber, totalSteps, startFromEnd, dispatch]);
+	}, [
+		stepData,
+		stepText,
+		setlistId,
+		stepNumber,
+		totalSteps,
+		startFromEnd,
+		dispatch,
+	]);
 
 	// Load strophes when current song changes (via sync from localStorage)
 	// Only fetch if state has the songId but no strophes (deserialized from sync)
@@ -434,16 +449,24 @@ const PresenterPage = () => {
 								data-testid="current-slide"
 							>
 								{isTextSlide && stepText ? (
-									// The slideshow shows the logo on a text step; the presenter
-									// shows the text itself so it can be read out.
+									// Shown here even when the slideshow shows the cross, so it can
+									// be read out.
 									<div className="absolute inset-0 flex flex-col gap-2 p-6 text-left">
 										<div className="flex items-center gap-2 shrink-0 text-sm text-gray-400">
-											<img
-												src="/svg/Jubilate_Croix.svg"
-												alt="logo"
-												className="size-4 opacity-60"
-											/>
+											{isTextOnSlide ? (
+												<ComputerDesktopIcon className="size-4" />
+											) : (
+												<img
+													src="/svg/Jubilate_Croix.svg"
+													alt="logo"
+													className="size-4 opacity-60"
+												/>
+											)}
 											<span>{textTitle}</span>
+											<span className="opacity-60">
+												·{" "}
+												{isTextOnSlide ? "texte à l'écran" : "croix à l'écran"}
+											</span>
 										</div>
 										<div className="grow overflow-y-auto whitespace-pre-wrap leading-relaxed">
 											{stepText}

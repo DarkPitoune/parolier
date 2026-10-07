@@ -8,7 +8,11 @@ import {
 	TextItem,
 	TextPicker,
 } from "@/components";
-import { useAllSetlists, useSetlist } from "@/hooks/queries/useSetlistQueries";
+import {
+	useAllSetlists,
+	useSetShowTextOnSlide,
+	useSetlist,
+} from "@/hooks/queries/useSetlistQueries";
 import { useTaggedSong } from "@/hooks/queries/useSongQueries";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { queryKeys } from "@/utils/queryKeys";
@@ -40,6 +44,7 @@ import {
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Switch } from "@headlessui/react";
 import {
 	DocumentTextIcon,
 	MusicalNoteIcon,
@@ -123,6 +128,44 @@ function SortableSetlistItem({
 				</button>
 			</div>
 		</li>
+	);
+}
+
+function ShowTextOnSlideSwitch({
+	checked,
+	onChange,
+}: {
+	checked: boolean;
+	onChange: (value: boolean) => void;
+}) {
+	return (
+		<div className="flex items-center justify-between gap-4 pb-4">
+			<div>
+				<p className="font-medium text-gray-900 dark:text-gray-100">
+					Afficher le texte sur l'écran
+				</p>
+				<p className="text-sm text-gray-500 dark:text-gray-400">
+					{checked
+						? "Le texte s'affiche dans le diaporama."
+						: "Le diaporama affiche la croix."}
+				</p>
+			</div>
+			<Switch
+				checked={checked}
+				onChange={onChange}
+				className={clsx(
+					"relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors",
+					checked ? "bg-jubilateBlue-500" : "bg-gray-300 dark:bg-gray-600",
+				)}
+			>
+				<span
+					className={clsx(
+						"inline-block h-5 w-5 translate-y-0.5 rounded-full bg-white transition-transform",
+						checked ? "translate-x-5.5" : "translate-x-0.5",
+					)}
+				/>
+			</Switch>
+		</div>
 	);
 }
 
@@ -360,7 +403,22 @@ const SetlistEditor = () => {
 	const selectedSongId = setlist?.find((item) => item.id === selectedItem)
 		?.songs?.id;
 	const { data: selectedSong } = useTaggedSong(selectedSongId);
-	const selectedText = setlist?.find((item) => item.id === selectedItem)?.texts;
+	const selectedSetlistItem = setlist?.find((item) => item.id === selectedItem);
+	const selectedText = selectedSetlistItem?.texts;
+
+	const setShowTextOnSlide = useSetShowTextOnSlide(setlistId);
+	const showTextOnSlideSwitch = selectedSetlistItem &&
+		!selectedSetlistItem.songs && (
+			<ShowTextOnSlideSwitch
+				checked={selectedSetlistItem.show_text_on_slide}
+				onChange={(showTextOnSlide) =>
+					setShowTextOnSlide.mutate({
+						itemId: selectedSetlistItem.id,
+						showTextOnSlide,
+					})
+				}
+			/>
+		);
 
 	return (
 		<div className="flex flex-col h-screen">
@@ -445,6 +503,7 @@ const SetlistEditor = () => {
 					)}
 					{selectedText && (
 						<div className="col-span-2 h-full min-h-0 overflow-y-auto hidden md:block p-6">
+							{showTextOnSlideSwitch}
 							<div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
 								<h2 className="text-2xl font-bold mb-4 text-black dark:text-white">
 									{selectedText.title}
@@ -456,10 +515,11 @@ const SetlistEditor = () => {
 						</div>
 					)}
 					{textNewValue !== null && (
-						<div className="p-4 col-span-2 h-full min-h-0 hidden md:block">
+						<div className="p-4 col-span-2 h-full min-h-0 hidden md:flex flex-col">
+							{showTextOnSlideSwitch}
 							<textarea
 								onChange={(value) => setTextNewValue(value.currentTarget.value)}
-								className="h-full w-full outline-hidden bg-transparent text-black dark:text-white"
+								className="grow w-full outline-hidden bg-transparent text-black dark:text-white"
 								onBlur={() => handleSaveNewText()}
 								placeholder="Probablement parler de Jésus..."
 								value={textNewValue}
@@ -487,6 +547,9 @@ const SetlistEditor = () => {
 							</button>
 						</div>
 						{selectedSong && <SongViewer showTitle song={selectedSong} />}
+						{showTextOnSlideSwitch && (
+							<div className="px-4">{showTextOnSlideSwitch}</div>
+						)}
 						{selectedText && (
 							<div className="p-6">
 								<h2 className="text-2xl font-bold mb-4 text-black dark:text-white">

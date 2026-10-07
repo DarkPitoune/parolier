@@ -29,6 +29,8 @@ export type SlideState =
 	| {
 			mode: "text";
 			textTitle: string;
+			/** Shown on the slide; without it the slide shows the cross. */
+			textContent?: string;
 			setlistContext: SetlistContext;
 	  };
 
@@ -39,7 +41,12 @@ export type SlideEvent =
 			strophes: Strophe[];
 			setlistContext?: SetlistContext;
 	  }
-	| { type: "LOAD_TEXT"; textTitle: string; setlistContext: SetlistContext }
+	| {
+			type: "LOAD_TEXT";
+			textTitle: string;
+			textContent?: string;
+			setlistContext: SetlistContext;
+	  }
 	| { type: "HYDRATE_STROPHES"; songId: number; strophes: Strophe[] }
 	| { type: "NEXT_STROPHE" }
 	| { type: "PREV_STROPHE" }
@@ -53,6 +60,7 @@ export type SyncPayload = {
 	songId?: number;
 	stropheIndex?: number;
 	textTitle?: string;
+	textContent?: string;
 	setlistContext?: SetlistContext;
 	stropheContent?: Line[];
 	timestamp: number;
@@ -80,6 +88,7 @@ export function slideReducer(state: SlideState, event: SlideEvent): SlideState {
 			return {
 				mode: "text",
 				textTitle: event.textTitle,
+				textContent: event.textContent,
 				setlistContext: event.setlistContext,
 			};
 
@@ -300,6 +309,7 @@ export function serializeState(
 			return {
 				...base,
 				textTitle: state.textTitle,
+				textContent: state.textContent,
 				setlistContext: state.setlistContext,
 			};
 		case "idle":
@@ -331,6 +341,7 @@ export function deserializeState(payload: SyncPayload): SlideState {
 			return {
 				mode: "text",
 				textTitle: payload.textTitle,
+				textContent: payload.textContent,
 				setlistContext: payload.setlistContext,
 			};
 		default:

@@ -105,6 +105,7 @@ export type Database = {
           id: number
           position: number
           setlist_id: number
+          show_text_on_slide: boolean
           song_id: number | null
           text: string | null
           text_id: number | null
@@ -113,6 +114,7 @@ export type Database = {
           id?: number
           position?: number
           setlist_id: number
+          show_text_on_slide?: boolean
           song_id?: number | null
           text?: string | null
           text_id?: number | null
@@ -121,6 +123,7 @@ export type Database = {
           id?: number
           position?: number
           setlist_id?: number
+          show_text_on_slide?: boolean
           song_id?: number | null
           text?: string | null
           text_id?: number | null
