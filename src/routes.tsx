@@ -11,6 +11,7 @@ import {
 	SongPage,
 	TextEditor,
 	Tuner,
+	VeilleeAssistant,
 } from "@/pages";
 import type { RouteObject } from "react-router-dom";
 import { CachePage } from "./pages/CachePage";
@@ -79,6 +80,10 @@ export const appRoutes: RouteObject[] = [
 	{
 		path: "/setlists",
 		element: <Setlists />,
+	},
+	{
+		path: "/veillees/new",
+		element: <VeilleeAssistant />,
 	},
 	{
 		path: "/setlists/:setlistId/edit",

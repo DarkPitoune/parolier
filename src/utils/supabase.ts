@@ -260,6 +260,38 @@ export type NewNamedSetlistMutation = QueryData<
 	ReturnType<typeof newNamedSetlistMutation>
 >;
 
+export const setlistHistoryQuery = async () =>
+	supabase
+		.from("setlist_items")
+		.select("id, setlist_id, position, song_id, setlists (name)")
+		.not("song_id", "is", null);
+
+export type VeilleeSetlistItem =
+	| { songId: number; text?: never }
+	| { songId?: never; text: string };
+
+export const newVeilleeSetlistMutation = async (
+	name: string,
+	items: VeilleeSetlistItem[],
+) => {
+	const { data: setlist, error } = await supabase
+		.from("setlists")
+		.insert({ name })
+		.select()
+		.single();
+	if (error || !setlist) return { data: setlist, error };
+
+	const { error: itemsError } = await supabase.from("setlist_items").insert(
+		items.map((item, position) => ({
+			setlist_id: setlist.id,
+			position,
+			song_id: item.songId ?? null,
+			text: item.text ?? null,
+		})),
+	);
+	return { data: setlist, error: itemsError };
+};
+
 /** One liturgical slot in a Mass reading (AELF lecture), as plain text ready to
  * become an inline free-text setlist step. HTML→text conversion happens in the
  * caller (this file stays DOM-free). */

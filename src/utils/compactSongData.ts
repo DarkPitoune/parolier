@@ -47,13 +47,15 @@ function extractExcerpt(strophes: Strophe[]): string {
 	return text;
 }
 
+// Tags are named "CD 1"…"CD 5" in the database.
+const CD_TAG = /^CD\s*\d+$/;
+
 export function compactSongs(songs: AllTaggedSongs): CompactSong[] {
-	const cdTags = ["CD1", "CD2", "CD3", "CD4", "CD5"];
 	return songs
 		.filter(
 			(song) =>
 				(song.type ?? "song") === "song" &&
-				!song.tags?.some((t) => t.name !== null && cdTags.includes(t.name)),
+				!song.tags?.some((t) => t.name !== null && CD_TAG.test(t.name)),
 		)
 		.map((song) => ({
 			id: song.id,
