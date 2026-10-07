@@ -3,6 +3,7 @@ import {
 	SlideFinder,
 	SlideHelp,
 	SlideViewer,
+	TextSlide,
 	TouchScreenListener,
 	slideHelpAtom,
 } from "@/components";
@@ -39,6 +40,7 @@ const SlidePage = () => {
 		state.mode === "song" || state.mode === "logo" ? state.stropheIndex : 0;
 	const isLogoSlide = state.mode === "logo";
 	const isTextSlide = state.mode === "text";
+	const slideText = state.mode === "text" ? state.textContent : undefined;
 	const currentSongId =
 		state.mode === "song"
 			? state.songId
@@ -154,6 +156,9 @@ const SlidePage = () => {
 			dispatch({
 				type: "LOAD_TEXT",
 				textTitle: label,
+				textContent: stepData.show_text_on_slide
+					? stepData.texts?.content ?? stepData.text ?? undefined
+					: undefined,
 				setlistContext: {
 					setlistId: setlistId ?? "",
 					stepNumber: Number(stepNumber),
@@ -243,9 +248,11 @@ const SlidePage = () => {
 	return (
 		<div className="absolute z-20 inset-0 flex flex-col justify-center items-center text-white bg-black overflow-clip">
 			<SlideFinder />
-			{isLogoSlide ||
-			isTextSlide ||
-			strophes[currentStropheIndex] === undefined ? (
+			{slideText ? (
+				<TextSlide text={slideText} />
+			) : isLogoSlide ||
+				isTextSlide ||
+				strophes[currentStropheIndex] === undefined ? (
 				<img src="/svg/Jubilate_Croix.svg" alt="logo" className="size-36" />
 			) : (
 				<>

@@ -683,6 +683,16 @@ describe("deserializeState", () => {
 		expect(deserializeState(payload)).toEqual(INITIAL_STATE);
 	});
 
+	it("round-trips the text shown on the slide", () => {
+		const state: SlideState = {
+			mode: "text",
+			textTitle: "Prière",
+			textContent: "Notre Père…",
+			setlistContext: setlistCtx,
+		};
+		expect(deserializeState(serializeState(state, "presenter"))).toEqual(state);
+	});
+
 	it("falls back to idle if text payload is incomplete", () => {
 		const payload: SyncPayload = {
 			mode: "text",

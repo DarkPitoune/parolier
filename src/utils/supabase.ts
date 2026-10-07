@@ -99,7 +99,7 @@ export const setlistQuery = async (setlistId: string) =>
 		.select(
 			`id,
 			songs (id, title, type, tags (id, name, svg, color)),
-			text, position,
+			text, position, show_text_on_slide,
 			texts (id, title, content, created_at),
 			setlists (id, name)`,
 		)
@@ -110,7 +110,7 @@ export type Setlist = QueryData<ReturnType<typeof setlistQuery>>;
 // query cache key (queryKeys.setlists.items), and two different shapes under one
 // key would hand callers inconsistent objects.
 const setlistItemSelect =
-	"id, setlist_id, songs (*, tags (id, name, svg, color)), texts (id, title, content, created_at), text, position";
+	"id, setlist_id, songs (*, tags (id, name, svg, color)), texts (id, title, content, created_at), text, position, show_text_on_slide";
 
 export const setlistItemsQuery = async (setlistId: string) =>
 	supabase
@@ -214,6 +214,17 @@ export const setlistTextItemMutation = async (
 export type SetlistTextItemMutation = QueryData<
 	ReturnType<typeof setlistTextItemMutation>
 >;
+
+export const setlistItemShowTextOnSlideMutation = async (
+	setlistId: string,
+	itemId: number,
+	showTextOnSlide: boolean,
+) =>
+	supabase
+		.from("setlist_items")
+		.update({ show_text_on_slide: showTextOnSlide })
+		.eq("setlist_id", setlistId)
+		.eq("id", itemId);
 
 export const setlistItemAppendMutation = async (
 	position: number,

@@ -85,8 +85,9 @@ index clamped to the fetched strophes
 - If entered from `idle` or `text`, `songId` is `null`
 
 ### `text`
-- A non-song setlist item (reading, prayer, etc.) — shows the cross
-- Fields: `textTitle`, `setlistContext`
+- A non-song setlist item (reading, prayer, etc.) — shows the cross, or the text itself
+  when the item's `show_text_on_slide` is set
+- Fields: `textTitle`, `textContent?` (present only when the text is shown), `setlistContext`
 - No strophe navigation — arrow keys trigger setlist step navigation instead
 
 ## Sync Details
