@@ -2,7 +2,11 @@ import { PageHeader } from "@/components";
 import { isDarkAtom } from "@/components/Contexts/SettingsContext";
 import { useSetlistHistory } from "@/hooks/queries/useSetlistQueries";
 import { useAllTaggedSongs } from "@/hooks/queries/useSongQueries";
-import { useVeilleeSuggestion } from "@/hooks/useVeilleeSuggestion";
+import {
+	type ChatMessage,
+	useVeilleeRefine,
+	useVeilleeSuggestion,
+} from "@/hooks/useVeilleeSuggestion";
 import { queryKeys } from "@/utils/queryKeys";
 import { newVeilleeSetlistMutation } from "@/utils/supabase";
 import {
@@ -17,9 +21,11 @@ import {
 	estimateDuration,
 	usageHints,
 } from "@/utils/veillee";
+import { type DraftOp, applyOps } from "@/utils/veilleeDraft";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import {
 	ArrowPathIcon,
+	ArrowUturnLeftIcon,
 	ArrowsRightLeftIcon,
 	ChevronDownIcon,
 	ChevronUpIcon,
@@ -31,7 +37,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -80,6 +86,9 @@ const SLOT_STYLES: Record<SlotKind, { label: string; className: string }> = {
 		className: "bg-gray-300 text-black dark:bg-gray-600 dark:text-white",
 	},
 };
+
+const MAX_TURNS = 20;
+const HIGHLIGHT_MS = 2000;
 
 const isAsked = (id: QuestionId, answers: Answers) =>
 	id !== "silences" || answers.adoration === true;
@@ -145,12 +154,18 @@ const Chips = <T,>({
 	</div>
 );
 
-const ThemeInput = ({
-	initial,
+const MessageInput = ({
+	initial = "",
+	placeholder,
+	label,
+	disabled,
 	onSubmit,
 }: {
-	initial: string;
-	onSubmit: (theme: string) => void;
+	initial?: string;
+	placeholder: string;
+	label: string;
+	disabled?: boolean;
+	onSubmit: (text: string) => void;
 }) => {
 	const [value, setValue] = useState(initial);
 	return (
@@ -158,7 +173,9 @@ const ThemeInput = ({
 			className="flex gap-2 self-stretch"
 			onSubmit={(e) => {
 				e.preventDefault();
-				if (value.trim()) onSubmit(value.trim());
+				if (!value.trim() || disabled) return;
+				onSubmit(value.trim());
+				setValue("");
 			}}
 		>
 			<input
@@ -166,13 +183,13 @@ const ThemeInput = ({
 				autoFocus
 				value={value}
 				onChange={(e) => setValue(e.target.value)}
-				placeholder="La confiance, le désert, la joie…"
+				placeholder={placeholder}
 				className="grow px-3 py-2 rounded-full border border-jubilateBlue-100 dark:border-slate-500 bg-transparent outline-hidden focus:border-jubilateBlue-500 dark:focus:border-jubilateBlue-400"
 			/>
 			<button
 				type="submit"
-				disabled={!value.trim()}
-				aria-label="Valider le thème"
+				disabled={!value.trim() || disabled}
+				aria-label={label}
 				className="p-2.5 rounded-full bg-jubilateBlue-500 hover:bg-jubilateBlue-600 disabled:opacity-50 text-white"
 			>
 				<PaperAirplaneIcon className="size-5" />
@@ -210,11 +227,13 @@ const DraftRow = ({
 	count,
 	titleOf,
 	swapChoices,
+	highlighted,
 	onMove,
 	onRemove,
 	onSwap,
 }: {
 	item: DraftItem;
+	highlighted: boolean;
 	index: number;
 	count: number;
 	titleOf: (id: number) => string;
@@ -226,7 +245,12 @@ const DraftRow = ({
 	const darkMode = useAtomValue(isDarkAtom);
 	const slot = SLOT_STYLES[item.slot];
 	return (
-		<li className="flex items-start gap-2 py-3">
+		<li
+			className={clsx(
+				"flex items-start gap-2 p-2 transition-colors duration-700",
+				highlighted && "bg-jubilateYellow-400/30",
+			)}
+		>
 			<span
 				className={clsx(
 					"shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
@@ -310,11 +334,18 @@ const VeilleeAssistant = () => {
 	const { data: allSongs } = useAllTaggedSongs();
 	const { data: history = [], isPending: historyPending } = useSetlistHistory();
 	const suggestion = useVeilleeSuggestion();
+	const refinement = useVeilleeRefine();
 
 	const [answers, setAnswers] = useState<Answers>({});
 	const [editing, setEditing] = useState<QuestionId | null>(null);
 	const [draft, setDraft] = useState<VeilleeDraft | null>(null);
 	const [draftBrief, setDraftBrief] = useState<VeilleeBrief | null>(null);
+	const [messages, setMessages] = useState<ChatMessage[]>([]);
+	const [undoStack, setUndoStack] = useState<DraftItem[][]>([]);
+	const [highlighted, setHighlighted] = useState<Set<string>>(new Set());
+	const highlightTimer = useRef<ReturnType<typeof setTimeout>>();
+
+	useEffect(() => () => clearTimeout(highlightTimer.current), []);
 
 	useEffect(() => {
 		document.title = "Préparer une veillée - Parolier";
@@ -343,14 +374,76 @@ const VeilleeAssistant = () => {
 	const ready = songs !== null && !historyPending;
 	const stale = draft !== null && !sameBrief(brief, draftBrief);
 
+	const knownIds = useMemo(() => new Set(songs?.map((s) => s.id)), [songs]);
+
+	const highlight = (keys: string[]) => {
+		clearTimeout(highlightTimer.current);
+		setHighlighted(new Set(keys));
+		highlightTimer.current = setTimeout(
+			() => setHighlighted(new Set()),
+			HIGHLIGHT_MS,
+		);
+	};
+
 	const generate = (forBrief: VeilleeBrief) => {
 		if (!songs) return;
 		suggestion.mutate(
 			{ brief: forBrief, songs },
 			{
 				onSuccess: (result) => {
+					if (draft) setUndoStack((stack) => [...stack, draft.items]);
 					setDraft(result);
 					setDraftBrief(forBrief);
+					setMessages([]);
+					refinement.reset();
+				},
+			},
+		);
+	};
+
+	const apply = (ops: DraftOp[]) => {
+		if (!draft) return [];
+		const result = applyOps(draft.items, ops, knownIds);
+		if (ops.length > result.skipped.length) {
+			setUndoStack((stack) => [...stack, draft.items]);
+			setDraft({ ...draft, items: result.items });
+			highlight(result.changed);
+		}
+		return result.skipped;
+	};
+
+	const undo = () => {
+		const previous = undoStack.at(-1);
+		if (!previous || !draft) return;
+		setUndoStack((stack) => stack.slice(0, -1));
+		setDraft({ ...draft, items: previous });
+	};
+
+	const turns = messages.filter((m) => m.role === "user").length;
+
+	const send = (conversation: ChatMessage[]) => {
+		if (!draft || !brief || !songs) return;
+		setMessages(conversation);
+		refinement.mutate(
+			{ brief, items: draft.items, messages: conversation, songs },
+			{
+				onSuccess: ({ reply, ops }) => {
+					const skipped = apply(ops);
+					const plural = skipped.length > 1 ? "s" : "";
+					const note =
+						skipped.length > 0
+							? ` (${skipped.length} modification${plural} ignorée${plural})`
+							: "";
+					setMessages([
+						...conversation,
+						{
+							role: "assistant",
+							content:
+								(reply ||
+									(ops.length > 0 ? "C'est fait." : "Je n'ai rien changé.")) +
+								note,
+						},
+					]);
 				},
 			},
 		);
@@ -390,38 +483,20 @@ const VeilleeAssistant = () => {
 		onError: () => toast.error("Erreur lors de la création de la setlist"),
 	});
 
-	const updateItems = (update: (items: DraftItem[]) => DraftItem[]) =>
-		setDraft((current) =>
-			current ? { ...current, items: update(current.items) } : current,
-		);
+	const move = (index: number, delta: -1 | 1) => {
+		const item = draft?.items[index];
+		if (item) apply([{ op: "move", key: item.key, toIndex: index + delta }]);
+	};
 
-	const move = (index: number, delta: -1 | 1) =>
-		updateItems((items) => {
-			const next = [...items];
-			[next[index], next[index + delta]] = [next[index + delta], next[index]];
-			return next;
-		});
+	const remove = (index: number) => {
+		const item = draft?.items[index];
+		if (item) apply([{ op: "remove", key: item.key }]);
+	};
 
-	const remove = (index: number) =>
-		updateItems((items) => items.filter((_, i) => i !== index));
-
-	const swap = (index: number, songId: number) =>
-		updateItems((items) =>
-			items.map((item, i) =>
-				i === index && item.songId !== null
-					? {
-							...item,
-							key: `song-${songId}`,
-							songId,
-							reasoning: undefined,
-							alternatives: [
-								item.songId,
-								...(item.alternatives ?? []).filter((id) => id !== songId),
-							],
-						}
-					: item,
-			),
-		);
+	const swap = (index: number, songId: number) => {
+		const item = draft?.items[index];
+		if (item) apply([{ op: "replace", key: item.key, songId }]);
+	};
 
 	const inDraft = new Set(draft?.items.map((i) => i.songId));
 
@@ -429,8 +504,10 @@ const VeilleeAssistant = () => {
 		switch (id) {
 			case "theme":
 				return (
-					<ThemeInput
+					<MessageInput
 						initial={answers.theme ?? ""}
+						placeholder="La confiance, le désert, la joie…"
+						label="Valider le thème"
 						onSubmit={(theme) => answer("theme", theme)}
 					/>
 				);
@@ -530,6 +607,65 @@ const VeilleeAssistant = () => {
 						</AssistantBubble>
 					)}
 
+					{draft &&
+						!suggestion.isPending &&
+						messages.map((message, index) =>
+							message.role === "user" ? (
+								<div
+									// biome-ignore lint/suspicious/noArrayIndexKey: messages are append-only
+									key={index}
+									className="self-end max-w-[85%] rounded-2xl rounded-tr-sm bg-jubilateBlue-500 text-white px-4 py-2"
+								>
+									{message.content}
+								</div>
+							) : (
+								// biome-ignore lint/suspicious/noArrayIndexKey: messages are append-only
+								<AssistantBubble key={index}>{message.content}</AssistantBubble>
+							),
+						)}
+
+					{refinement.isPending && (
+						<AssistantBubble>
+							<span className="flex items-center gap-2">
+								<span className="inline-block animate-spin rounded-full size-4 border-b-2 border-jubilateBlue-500" />
+								Je regarde…
+							</span>
+						</AssistantBubble>
+					)}
+
+					{refinement.isError && (
+						<div className="self-start flex flex-col gap-2 max-w-[85%] rounded-2xl rounded-tl-sm bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 px-4 py-2">
+							{refinement.error.message}
+							<button
+								type="button"
+								onClick={() => send(messages)}
+								className="self-start flex items-center gap-1 underline"
+							>
+								<ArrowPathIcon className="size-4" />
+								Réessayer
+							</button>
+						</div>
+					)}
+
+					{draft && !active && !stale && !suggestion.isPending && (
+						<div className="flex flex-col gap-1 pt-2">
+							<MessageInput
+								placeholder="Plus calme avant l'Esprit Saint, remplace…"
+								label="Envoyer"
+								disabled={refinement.isPending || turns >= MAX_TURNS}
+								onSubmit={(text) =>
+									send([...messages, { role: "user", content: text }])
+								}
+							/>
+							{turns >= MAX_TURNS && (
+								<span className="text-sm text-gray-500 dark:text-gray-400 px-3">
+									Limite de messages atteinte. Ajuste la proposition à la main
+									ou régénère-la.
+								</span>
+							)}
+						</div>
+					)}
+
 					{!active && stale && brief && !suggestion.isPending && (
 						<button
 							type="button"
@@ -555,7 +691,8 @@ const VeilleeAssistant = () => {
 						<ul
 							className={clsx(
 								"flex flex-col divide-y divide-gray-200 dark:divide-gray-600",
-								suggestion.isPending && "opacity-50",
+								(suggestion.isPending || refinement.isPending) &&
+									"opacity-50 pointer-events-none",
 							)}
 						>
 							{draft.items.map((item, index) => (
@@ -568,28 +705,43 @@ const VeilleeAssistant = () => {
 									swapChoices={(item.alternatives ?? []).filter(
 										(id) => !inDraft.has(id),
 									)}
+									highlighted={highlighted.has(item.key)}
 									onMove={(delta) => move(index, delta)}
 									onRemove={() => remove(index)}
 									onSwap={(songId) => swap(index, songId)}
 								/>
 							))}
 						</ul>
-						<div className="flex justify-between gap-2 pt-2">
-							<button
-								type="button"
-								onClick={() => brief && generate(brief)}
-								disabled={!brief || suggestion.isPending}
-								className="flex items-center gap-2 px-4 py-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
-							>
-								<ArrowPathIcon className="size-4" />
-								Régénérer
-							</button>
+						<div className="flex flex-wrap justify-between gap-2 pt-2">
+							<div className="flex">
+								<button
+									type="button"
+									onClick={undo}
+									disabled={undoStack.length === 0 || refinement.isPending}
+									className="flex items-center gap-2 px-4 py-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+								>
+									<ArrowUturnLeftIcon className="size-4" />
+									Annuler
+								</button>
+								<button
+									type="button"
+									onClick={() => brief && generate(brief)}
+									disabled={
+										!brief || suggestion.isPending || refinement.isPending
+									}
+									className="flex items-center gap-2 px-4 py-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+								>
+									<ArrowPathIcon className="size-4" />
+									Régénérer
+								</button>
+							</div>
 							<button
 								type="button"
 								onClick={() => save.mutate(draft.items)}
 								disabled={
 									save.isPending ||
 									suggestion.isPending ||
+									refinement.isPending ||
 									!draft.items.some((i) => i.songId !== null)
 								}
 								className="px-4 py-2 rounded-full bg-jubilateBlue-500 hover:bg-jubilateBlue-600 dark:bg-jubilateBlue-400 dark:hover:bg-jubilateBlue-300 disabled:opacity-50 text-white font-medium"

@@ -151,7 +151,7 @@ d'adoration".
 
 A pure reducer, `applyOps(draft, ops)`, with
 `Op = replace{key, songId} | insert{afterKey, slot, songId} | remove{key} | move{key, toIndex}
-| addSilence{afterKey} | removeSilence{key}`.
+| addSilence{afterKey}`. `remove` covers silences too.
 Each op is validated: the song exists and isn't already in the draft. The tag is not checked
 against the slot. An op that fails is
 skipped and reported. It must never throw.
@@ -165,8 +165,9 @@ code path.
 
 - Input: `{ mode: "refine", brief, draft, messages, songs }`. The whole conversation is
   sent each turn, which keeps the server stateless.
-- The model calls tools: the six ops above plus `reply(text)`. Mistral function calling. The
-  function returns `{ ops, reply }`. The client applies the ops through `applyOps`, which
+- The model answers in JSON mode with `{ reply, ops }`, the same mechanism as suggest mode,
+  rather than function calling: one response, no tool round-trips. The function normalises
+  song ids and drops unknown ones, then returns `{ ops, reply }`. The client applies the ops through `applyOps`, which
   validates them a second time.
 - Caps: max 20 turns per session (client-side), `max_tokens` capped, and only the last N
   messages are sent once a conversation gets long.
@@ -175,7 +176,9 @@ code path.
 
 - A text input under the chat once the draft exists. Assistant replies appear as bubbles.
 - Items an op just changed are highlighted briefly.
-- "Annuler" undoes the last turn. Keep a stack of drafts, since the reducer is pure.
+- "Annuler" undoes the last change, whether manual, from the AI or a regeneration. It keeps a
+  stack of drafts, since the reducer is pure. Regenerating clears the conversation, because
+  its item keys no longer exist.
 
 **Done when:** the five example requests above each produce the expected change, and a
 nonsense request ("mets du rock") gets a reply with no ops.
