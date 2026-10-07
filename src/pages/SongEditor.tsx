@@ -179,6 +179,21 @@ const SongEditor = () => {
 		setPasteFlash({ index: targetIndex });
 	};
 
+	// A click on a control inside a target card leaves copy mode and lets the
+	// control act; only a click on the card's empty space pastes.
+	const handleTargetCardClick = (
+		e: React.MouseEvent<HTMLDivElement>,
+		index: number,
+	) => {
+		const target = e.target as HTMLElement;
+		if (target.closest("[data-copy-chords]")) return;
+		if (target.closest("button, input, textarea, select, label, a")) {
+			setCopySourceIndex(null);
+			return;
+		}
+		copyChordsToStrophe(index);
+	};
+
 	const toggleTag = (tagId: number) => {
 		setSelectedTags((oldTags) => {
 			if (!oldTags.includes(tagId)) return oldTags.concat([tagId]);
@@ -790,6 +805,21 @@ const SongEditor = () => {
 									// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 									key={index}
 									data-strophe-card
+									{...(isEligibleTarget && {
+										tabIndex: 0,
+										"aria-label": "Coller les accords ici",
+										onClick: (e: React.MouseEvent<HTMLDivElement>) =>
+											handleTargetCardClick(e, index),
+										onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+											if (
+												e.target === e.currentTarget &&
+												(e.key === "Enter" || e.key === " ")
+											) {
+												e.preventDefault();
+												copyChordsToStrophe(index);
+											}
+										},
+									})}
 									className={clsx(
 										"border p-4 rounded-md relative transition-shadow",
 										strophe.type === "verse" &&
@@ -805,7 +835,7 @@ const SongEditor = () => {
 										isJustPasted &&
 											"ring-2 ring-jubilateGreen-500 ring-offset-2 dark:ring-offset-gray-800",
 										isEligibleTarget &&
-											"cursor-pointer hover:ring-2 hover:ring-jubilateBlue-300 hover:ring-offset-2 dark:hover:ring-offset-gray-800",
+											"group/paste cursor-pointer hover:ring-2 hover:ring-jubilateBlue-300 hover:ring-offset-2 dark:hover:ring-offset-gray-800",
 									)}
 								>
 									{isCopySource && (
@@ -814,18 +844,11 @@ const SongEditor = () => {
 										</div>
 									)}
 									{isEligibleTarget && (
-										<button
-											type="button"
-											onClick={() => copyChordsToStrophe(index)}
-											aria-label="Coller les accords ici"
-											className="group absolute inset-0 z-10 rounded-md cursor-pointer bg-transparent hover:bg-jubilateBlue-500/5 transition-colors"
-										>
-											<span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-												<span className="bg-jubilateBlue-500 text-white text-sm font-medium px-3 py-1 rounded-full shadow">
-													Coller les accords ici
-												</span>
+										<span className="absolute inset-0 z-10 flex items-center justify-center rounded-md opacity-0 group-hover/paste:opacity-100 group-hover/paste:bg-jubilateBlue-500/5 transition-opacity pointer-events-none">
+											<span className="bg-jubilateBlue-500 text-white text-sm font-medium px-3 py-1 rounded-full shadow">
+												Coller les accords ici
 											</span>
-										</button>
+										</span>
 									)}
 									{strophe.type === "section" ? (
 										// Section rendering
@@ -1007,6 +1030,7 @@ const SongEditor = () => {
 												</button>
 												<button
 													type="button"
+													data-copy-chords
 													onClick={() =>
 														setCopySourceIndex((curr) =>
 															curr === index ? null : index,
