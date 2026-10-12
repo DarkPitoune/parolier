@@ -15,6 +15,25 @@ interface SwipeableTabsProps {
 	contentClassName?: string;
 }
 
+function startsInHorizontalScroller(
+	target: EventTarget,
+	container: HTMLElement,
+): boolean {
+	for (
+		let el = target instanceof Element ? target : null;
+		el && el !== container;
+		el = el.parentElement
+	) {
+		const { overflowX } = getComputedStyle(el);
+		if (
+			(overflowX === "auto" || overflowX === "scroll") &&
+			el.scrollWidth > el.clientWidth
+		)
+			return true;
+	}
+	return false;
+}
+
 export default function SwipeableTabs({
 	tabs,
 	activeTab,
@@ -57,6 +76,9 @@ export default function SwipeableTabs({
 
 	// Touch handlers for swipe
 	const handleTouchStart: TouchEventHandler<HTMLDivElement> = (e) => {
+		// React's touch listeners are passive, so preventDefault can't stop a
+		// horizontal scroller from panning: both would move at once.
+		if (startsInHorizontalScroller(e.target, e.currentTarget)) return;
 		setIsDragging(true);
 		setStartX(e.touches[0].clientX);
 		setStartY(e.touches[0].clientY); // Enregistrer la position Y initiale
