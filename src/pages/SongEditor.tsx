@@ -118,6 +118,38 @@ const SongEditor = () => {
 		handleChange("strophes", newStrophes);
 	};
 
+	const pasteLines = (
+		index: number,
+		lineIndex: number,
+		e: React.ClipboardEvent<HTMLInputElement>,
+	) => {
+		if (!song) return;
+		const strophe = song.strophes[index];
+		if (strophe.type === "section") return;
+		const pasted = e.clipboardData.getData("text/plain");
+		if (!/[\r\n]/.test(pasted)) return;
+		e.preventDefault();
+
+		const input = e.currentTarget;
+		const current = strophe.content[lineIndex];
+		const before = input.value.slice(
+			0,
+			input.selectionStart ?? input.value.length,
+		);
+		const after = input.value.slice(input.selectionEnd ?? input.value.length);
+		const lines = pasted.split(/\r\n|\r|\n/);
+		lines[0] = before + lines[0];
+		lines[lines.length - 1] += after;
+
+		const newContent = [
+			...strophe.content.slice(0, lineIndex),
+			{ ...current, text: lines[0] },
+			...lines.slice(1).map((text) => ({ text, chords: "" })),
+			...strophe.content.slice(lineIndex + 1),
+		];
+		handleStropheChange(index, "content", newContent);
+	};
+
 	const addStrophe = (index: number) => {
 		if (!song) return;
 		const newStrophes = [
@@ -955,6 +987,7 @@ const SongEditor = () => {
 																	newContent,
 																);
 															}}
+															onPaste={(e) => pasteLines(index, lineIndex, e)}
 														/>
 														<TextInput
 															value={line.chords}

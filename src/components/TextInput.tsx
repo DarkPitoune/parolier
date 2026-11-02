@@ -5,6 +5,7 @@ type TextInputProps = {
 	onChange: (value: string) => void;
 	label?: string;
 	onBlur?: () => void;
+	onPaste?: (e: React.ClipboardEvent<HTMLInputElement>) => void;
 };
 
 export const TextInput = ({
@@ -12,6 +13,7 @@ export const TextInput = ({
 	onChange,
 	label,
 	onBlur,
+	onPaste,
 }: TextInputProps) => (
 	<label className="text-sm sm:text-base font-medium text-black dark:text-white">
 		{label && `${label} :`}
@@ -21,6 +23,7 @@ export const TextInput = ({
 				value={value}
 				onChange={(e) => onChange(e.target.value)}
 				onBlur={onBlur}
+				onPaste={onPaste}
 				className="w-full text-base peer focus:outline-hidden bg-transparent"
 			/>
 			<hr
