@@ -1,9 +1,14 @@
 import type { StropheNote } from "@/assets/types";
 import { PageHeader, SongViewer, useLeader } from "@/components";
-import { showPerformanceNotesAtom } from "@/components/Contexts/SettingsContext";
+import {
+	showPerformanceNotesAtom,
+	songLanguageAtom,
+} from "@/components/Contexts/SettingsContext";
 import { PerformanceNoteSheet } from "@/components/PerformanceNotes/PerformanceNoteSheet";
+import { TranslationActions } from "@/components/TranslationActions";
 import {
 	useSetStropheNote,
+	useSongTranslation,
 	useTaggedSong,
 } from "@/hooks/queries/useSongQueries";
 import { useWakeLock } from "@/hooks/useWakeLock";
@@ -25,6 +30,16 @@ function SongPage() {
 	const { setLeaderSong } = useLeader();
 	const navigate = useNavigate();
 	const showNotes = useAtomValue(showPerformanceNotesAtom);
+	const language = useAtomValue(songLanguageAtom);
+	const translation = useSongTranslation(song);
+	const inOtherLanguage = song !== undefined && song.language !== language;
+	const missingTranslation =
+		inOtherLanguage && song.type === "song" && translation === null;
+
+	useEffect(() => {
+		if (inOtherLanguage && translation)
+			navigate(`/songs/${translation.id}`, { replace: true });
+	}, [inOtherLanguage, translation, navigate]);
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
 	const setStropheNoteMutation = useSetStropheNote();
 	const tapCount = useRef(0);
@@ -162,6 +177,16 @@ function SongPage() {
 					</div>
 				}
 			/>
+			{missingTranslation && (
+				<div className="px-4 pt-4" data-testid="missing-translation">
+					<div className="rounded-xl border border-jubilateBlue-200 dark:border-slate-600 bg-jubilateBlue-100/40 dark:bg-slate-700/40">
+						<p className="px-3.5 pt-3 font-semibold text-black dark:text-white">
+							Pas de version {language === "en" ? "anglaise" : "française"}
+						</p>
+						<TranslationActions song={song} />
+					</div>
+				</div>
+			)}
 			<SongViewer
 				song={song}
 				onStropheLongPress={showNotes ? setEditingIndex : undefined}

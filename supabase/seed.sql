@@ -70,7 +70,36 @@ insert into public.songs (id, title, type, ordinaire_id, ordinaire_role, sheet_m
   -- Written to by the editor spec; nothing else may assert its contents.
   (608, 'Brouillon', 'song', null, null, null, array[
     '{"type":"verse","repetition":false,"content":[{"text":"Ligne de brouillon","chords":"C"}]}'
+  ]::jsonb[]),
+
+  (609, 'Saint, saint, saint', 'song', null, null, null, array[
+    '{"type":"verse","repetition":false,"content":[{"text":"Saint, saint, saint, le Seigneur Dieu","chords":"D"}]}'
+  ]::jsonb[]),
+
+  (610, 'Holy, Holy, Holy', 'song', null, null, null, array[
+    '{"type":"verse","repetition":false,"content":[{"text":"Holy, holy, holy! Lord God Almighty!","chords":"D"}]}'
+  ]::jsonb[]),
+
+  (611, 'Amazing Grace', 'song', null, null, null, array[
+    '{"type":"verse","repetition":false,"content":[{"text":"Amazing grace, how sweet the sound","chords":"G"}]}'
+  ]::jsonb[]),
+
+  -- Linked and unlinked by the translations spec; nothing else may assert them.
+  (612, 'Draft to link', 'song', null, null, null, array[
+    '{"type":"verse","repetition":false,"content":[{"text":"A line to translate","chords":"C"}]}'
+  ]::jsonb[]),
+
+  (613, 'Brouillon à lier', 'song', null, null, null, array[
+    '{"type":"verse","repetition":false,"content":[{"text":"Une ligne à traduire","chords":"C"}]}'
+  ]::jsonb[]),
+
+  -- The translations spec creates a new French translation of it on every run.
+  (614, 'Translate me', 'song', null, null, null, array[
+    '{"type":"verse","repetition":false,"content":[{"text":"A line to translate","chords":"G"}]}'
   ]::jsonb[]);
+
+update public.songs set language = 'en' where id in (610, 611, 612, 614);
+update public.songs set translation_group = '6c1f0c2e-6f43-4d55-9d8e-2b7a3f1e9a10' where id in (609, 610);
 
 insert into public.song_tag (song_id, tag_id) values
   (601, 901), (601, 902), (602, 903), (605, 901);

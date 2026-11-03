@@ -1,4 +1,5 @@
-import type { Strophe, StropheNote } from "@/assets/types";
+import type { SongLanguage, Strophe, StropheNote } from "@/assets/types";
+import { songLanguageAtom } from "@/components/Contexts/SettingsContext";
 import { queryKeys } from "@/utils/queryKeys";
 import {
 	preserveFreshNotes,
@@ -12,11 +13,14 @@ import supabase, {
 	allSongsQuery,
 	allTaggedSongsQuery,
 	allTagsQuery,
+	linkTranslationsMutation,
+	newSongMutation,
 	ordinaireDetailQuery,
 	songEditMutation,
 	songStrophesMutation,
 	songStrophesQuery,
 	taggedSongQuery,
+	unlinkTranslationMutation,
 } from "@/utils/supabase";
 import type {
 	AllOrdinaireSongs,
@@ -31,7 +35,8 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useAtomValue } from "jotai";
+import { useEffect, useMemo, useRef } from "react";
 import toast from "react-hot-toast";
 import type { Database } from "../../../database.types";
 
@@ -63,6 +68,24 @@ const taggedSongQueryOptions = (songId: number) => ({
 	staleTime: 5 * 60 * 1000,
 	gcTime: 24 * 60 * 60 * 1000,
 });
+
+const useInSettingLanguage = <T extends { language: string }>(
+	songs: T[] | undefined,
+) => {
+	const language = useAtomValue(songLanguageAtom);
+	return useMemo(
+		() => songs?.filter((song) => song.language === language),
+		[songs, language],
+	);
+};
+
+/** The song list restricted to the language chosen in Préférences. */
+export const useSongsInSettingLanguage = () =>
+	useInSettingLanguage(useAllSongs().data);
+
+/** The refrain list restricted to the language chosen in Préférences. */
+export const useRefrainsInSettingLanguage = () =>
+	useInSettingLanguage(useAllRefrains().data);
 
 export const useTaggedSong = (songId: number | undefined) =>
 	useQuery({
@@ -308,6 +331,22 @@ export const useSetStropheNote = () => {
 	});
 };
 
+const toListEntry = ({
+	id,
+	title,
+	type,
+	language,
+	translation_group,
+	tags,
+}: AllTaggedSongs[number]) => ({
+	id,
+	title,
+	type,
+	language,
+	translation_group,
+	tags,
+});
+
 /**
  * Prefetches all song details in a single batch query and seeds
  * each individual song into the TanStack Query cache.
@@ -340,17 +379,13 @@ export const usePrefetchAllSongs = () => {
 				// Seed the song list cache (only songs, stripped to list fields)
 				queryClient.setQueryData(
 					queryKeys.songs.list(),
-					data
-						.filter((s) => (s.type ?? "song") === "song")
-						.map(({ id, title, type, tags }) => ({ id, title, type, tags })),
+					data.filter((s) => (s.type ?? "song") === "song").map(toListEntry),
 				);
 
 				// Seed the refrain list cache
 				queryClient.setQueryData(
 					queryKeys.songs.refrainList(),
-					data
-						.filter((s) => s.type === "refrain")
-						.map(({ id, title, type, tags }) => ({ id, title, type, tags })),
+					data.filter((s) => s.type === "refrain").map(toListEntry),
 				);
 
 				// Seed the ordinaire song list cache
@@ -380,6 +415,7 @@ export const usePrefetchAllSongs = () => {
 type SaveSongEditVariables = {
 	songId: number;
 	title: string;
+	language: SongLanguage;
 	sheetMusicUrl: string | null;
 	strophes: Strophe[];
 	tagIds: number[];
@@ -392,7 +428,12 @@ function patchListEntry<T extends { id: number; title: string; tags: unknown }>(
 ) {
 	return entries?.map((entry) =>
 		entry.id === saved.id
-			? { ...entry, title: saved.title, tags: saved.tags }
+			? {
+					...entry,
+					title: saved.title,
+					tags: saved.tags,
+					...("language" in entry && { language: saved.language }),
+				}
 			: entry,
 	);
 }
@@ -421,6 +462,7 @@ export const useSaveSongEdit = () => {
 		mutationFn: async ({
 			songId,
 			title,
+			language,
 			sheetMusicUrl,
 			strophes,
 			tagIds,
@@ -435,6 +477,7 @@ export const useSaveSongEdit = () => {
 
 			const { error: songError } = await songEditMutation(songId, {
 				title,
+				language,
 				sheet_music_url: sheetMusicUrl,
 				strophes: merged,
 			});
@@ -524,12 +567,27 @@ export const useSongsRealtimeSync = () => {
 						entries?.map((s) =>
 							s.id === row.id ? { ...s, title: row.title } : s,
 						);
+					const listPatch = <
+						T extends { id: number; title: string; language: string },
+					>(
+						entries: T[] | undefined,
+					) =>
+						entries?.map((s) =>
+							s.id === row.id
+								? {
+										...s,
+										title: row.title,
+										language: row.language,
+										translation_group: row.translation_group,
+									}
+								: s,
+						);
 					queryClient.setQueryData<AllSongs>(queryKeys.songs.list(), (old) =>
-						titlePatch(old),
+						listPatch(old),
 					);
 					queryClient.setQueryData<AllRefrains>(
 						queryKeys.songs.refrainList(),
-						(old) => titlePatch(old),
+						(old) => listPatch(old),
 					);
 					queryClient.setQueryData<AllOrdinaireSongs>(
 						queryKeys.songs.ordinaireList(),
@@ -544,3 +602,79 @@ export const useSongsRealtimeSync = () => {
 		};
 	}, [queryClient]);
 };
+
+/**
+ * A song's translation, read from the song list cache so it costs no request
+ * and works offline: `undefined` while that list loads, `null` when there is
+ * none. Only `song`-type rows are in that list, which is why translations are
+ * a song-only feature.
+ */
+export const useSongTranslation = (
+	song: { id: number; translation_group: string | null } | undefined,
+) => {
+	const { data: songs } = useAllSongs();
+	const group = song?.translation_group;
+	const songId = song?.id;
+	return useMemo(() => {
+		if (!songs || !song) return undefined;
+		if (!group) return null;
+		return (
+			songs.find((s) => s.translation_group === group && s.id !== songId) ??
+			null
+		);
+	}, [songs, song, group, songId]);
+};
+
+/**
+ * Every song cache is invalidated rather than patched: the two rows that
+ * changed live in several list projections and in their detail entries.
+ */
+const useTranslationMutation = <TVariables>(
+	mutationFn: (variables: TVariables) => Promise<{ error: unknown }>,
+	errorMessage: string,
+) => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async (variables: TVariables) => {
+			const { error } = await mutationFn(variables);
+			if (error) throw error;
+		},
+		onSuccess: () =>
+			queryClient.invalidateQueries({ queryKey: queryKeys.songs.all() }),
+		onError: () => toast.error(errorMessage),
+	});
+};
+
+export const useLinkTranslation = () =>
+	useTranslationMutation(
+		({ songId, otherId }: { songId: number; otherId: number }) =>
+			linkTranslationsMutation(songId, otherId),
+		"Traduction non liée",
+	);
+
+/** Creates the song in the other language, already linked; resolves to its id. */
+export const useCreateTranslation = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: async ({
+			songId,
+			title,
+			language,
+		}: { songId: number; title: string; language: SongLanguage }) => {
+			const created = await newSongMutation(title, language);
+			if (created.error) throw created.error;
+			const linked = await linkTranslationsMutation(songId, created.data.id);
+			if (linked.error) throw linked.error;
+			return created.data.id;
+		},
+		onSuccess: () =>
+			queryClient.invalidateQueries({ queryKey: queryKeys.songs.all() }),
+		onError: () => toast.error("Chant traduit non créé"),
+	});
+};
+
+export const useUnlinkTranslation = () =>
+	useTranslationMutation(
+		(songId: number) => unlinkTranslationMutation(songId),
+		"Traduction non déliée",
+	);

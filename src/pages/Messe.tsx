@@ -25,7 +25,7 @@ import {
 } from "@heroicons/react/16/solid";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 interface LiturgicalInformation {
@@ -318,6 +318,11 @@ function Messe() {
 	const queryClient = useQueryClient();
 
 	const { data: allSongs } = useAllTaggedSongs();
+	// The mass is in French, so English songs are never proposed for it.
+	const frenchSongs = useMemo(
+		() => allSongs?.filter((song) => song.language === "fr"),
+		[allSongs],
+	);
 	const { data: ordinaires } = useAllOrdinaires();
 	const { data: ordinaireSongs } = useAllOrdinaireSongs();
 	const {
@@ -365,14 +370,14 @@ function Messe() {
 	};
 
 	const handleSuggest = () => {
-		if (messeData && allSongs) {
-			suggest(messeData, allSongs);
+		if (messeData && frenchSongs) {
+			suggest(messeData, frenchSongs);
 		}
 	};
 
 	const handleRegenerate = () => {
-		if (messeData && allSongs) {
-			regenerate(messeData, allSongs);
+		if (messeData && frenchSongs) {
+			regenerate(messeData, frenchSongs);
 		}
 	};
 
@@ -654,7 +659,7 @@ function Messe() {
 								<button
 									type="button"
 									onClick={handleSuggest}
-									disabled={!allSongs || suggestionsLoading}
+									disabled={!frenchSongs || suggestionsLoading}
 									className="flex items-center place-self-center gap-2 px-4 py-2 bg-jubilateBlue-500 hover:bg-jubilateBlue-600 disabled:opacity-50 text-white rounded-lg font-medium"
 								>
 									<SparklesIcon className="w-5 h-5" />

@@ -54,3 +54,5 @@ export interface Incipit {
 	abc?: string;
 	image_path?: string;
 }
+
+export type SongLanguage = "fr" | "en";

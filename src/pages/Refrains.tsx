@@ -1,20 +1,23 @@
 import { PageHeader, SongItem, useLeader } from "@/components";
+import { songLanguageAtom } from "@/components/Contexts/SettingsContext";
 import {
 	UnifiedSearchInput,
 	UnifiedSearchResults,
 } from "@/components/UnifiedSearch/UnifiedSearch";
 import { useUnifiedSearch } from "@/components/UnifiedSearch/useUnifiedSearch";
-import { useAllRefrains } from "@/hooks/queries/useSongQueries";
+import { useRefrainsInSettingLanguage } from "@/hooks/queries/useSongQueries";
 import { queryKeys } from "@/utils/queryKeys";
 import { newRefrainMutation } from "@/utils/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
+import { useAtomValue } from "jotai";
 import { useMemo } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 
 export function Refrains() {
-	const { data: refrainsData } = useAllRefrains();
+	const refrainsData = useRefrainsInSettingLanguage();
+	const language = useAtomValue(songLanguageAtom);
 	const queryClient = useQueryClient();
 
 	const refrains = useMemo(
@@ -29,7 +32,7 @@ export function Refrains() {
 	const createNewRefrain = async (suggestedTitle?: string) => {
 		const title = prompt("Titre du refrain", suggestedTitle ?? "");
 		if (!title) return;
-		const { error, data } = await newRefrainMutation(title);
+		const { error, data } = await newRefrainMutation(title, language);
 		if (error) {
 			toast.error(`Erreur lors de la création du refrain: ${error.message}`);
 		} else {

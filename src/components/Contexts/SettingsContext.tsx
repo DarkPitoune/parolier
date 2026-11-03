@@ -1,3 +1,4 @@
+import type { SongLanguage } from "@/assets/types";
 import { atom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 
@@ -42,6 +43,14 @@ export const showPerformanceNotesAtom = atomWithStorage(
 	createJSONStorage(() => localStorage),
 	{ getOnInit: true },
 );
+// getOnInit: without it someone on English sees the French list for a frame.
+export const songLanguageAtom = atomWithStorage<SongLanguage>(
+	"settings.language",
+	"fr",
+	createJSONStorage(() => localStorage),
+	{ getOnInit: true },
+);
+
 export type ThemeMode = "system" | "dark" | "light";
 export const themeModeAtom = atomWithStorage<ThemeMode>(
 	"settings.themeMode",

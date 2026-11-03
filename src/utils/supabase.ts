@@ -1,4 +1,4 @@
-import type { Strophe } from "@/assets/types";
+import type { SongLanguage, Strophe } from "@/assets/types";
 import { type QueryData, createClient } from "@supabase/supabase-js";
 import type { Json } from "../../database-generated.types";
 import type { Database } from "../../database.types";
@@ -15,7 +15,9 @@ export const analyticsSong = async (songId: number) =>
 export const allSongsQuery = async () =>
 	supabase
 		.from("songs")
-		.select("title, id, type, tags (id, name, svg, color)")
+		.select(
+			"title, id, type, language, translation_group, tags (id, name, svg, color)",
+		)
 		.eq("type", "song")
 		.order("id");
 export type AllSongs = QueryData<ReturnType<typeof allSongsQuery>>;
@@ -23,7 +25,9 @@ export type AllSongs = QueryData<ReturnType<typeof allSongsQuery>>;
 export const allRefrainsQuery = async () =>
 	supabase
 		.from("songs")
-		.select("title, id, type, tags (id, name, svg, color)")
+		.select(
+			"title, id, type, language, translation_group, tags (id, name, svg, color)",
+		)
 		.eq("type", "refrain")
 		.order("id");
 export type AllRefrains = QueryData<ReturnType<typeof allRefrainsQuery>>;
@@ -60,14 +64,15 @@ export type SongStrophesMutation = QueryData<
 >;
 
 /**
- * Writes the editor-owned fields (title, sheet music, strophes). Callers
- * must merge in whatever notes are currently on the server first — see
+ * Writes the editor-owned fields (title, language, sheet music, strophes).
+ * Callers must merge in whatever notes are currently on the server first — see
  * useSaveSongEdit, which does the read-merge-write via preserveFreshNotes.
  */
 export const songEditMutation = async (
 	songId: number,
 	fields: {
 		title: string;
+		language: SongLanguage;
 		sheet_music_url: string | null;
 		strophes: Strophe[];
 	},
@@ -98,7 +103,7 @@ export const setlistQuery = async (setlistId: string) =>
 		.from("setlist_items")
 		.select(
 			`id,
-			songs (id, title, type, tags (id, name, svg, color)),
+			songs (id, title, type, language, translation_group, tags (id, name, svg, color)),
 			text, position, show_text_on_slide,
 			texts (id, title, content, created_at),
 			setlists (id, name)`,
@@ -132,22 +137,27 @@ export type AllSetlistItems = QueryData<
 	ReturnType<typeof allSetlistItemsQuery>
 >;
 
-export const newSongMutation = async (title: string) =>
+export const newSongMutation = async (title: string, language: SongLanguage) =>
 	supabase
 		.from("songs")
 		.insert({
 			title,
+			language,
 			strophes: [{ content: [{ text: "Louons Dieu", chords: "C" }] }],
 		})
 		.select()
 		.single();
 export type NewSongMutation = QueryData<ReturnType<typeof newSongMutation>>;
 
-export const newRefrainMutation = async (title: string) =>
+export const newRefrainMutation = async (
+	title: string,
+	language: SongLanguage,
+) =>
 	supabase
 		.from("songs")
 		.insert({
 			title,
+			language,
 			type: "refrain",
 			strophes: [{ content: [{ text: "", chords: "" }] }],
 		})
@@ -156,6 +166,12 @@ export const newRefrainMutation = async (title: string) =>
 export type NewRefrainMutation = QueryData<
 	ReturnType<typeof newRefrainMutation>
 >;
+
+export const linkTranslationsMutation = async (a: number, b: number) =>
+	supabase.rpc("link_translations", { a, b });
+
+export const unlinkTranslationMutation = async (songId: number) =>
+	supabase.rpc("unlink_translation", { song: songId });
 
 export const allSetlistsQuery = async () =>
 	supabase.from("setlists").select().order("created_at", { ascending: false });

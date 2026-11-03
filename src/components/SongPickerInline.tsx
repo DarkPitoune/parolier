@@ -1,4 +1,4 @@
-import { useAllSongs } from "@/hooks/queries/useSongQueries";
+import { useSongsInSettingLanguage } from "@/hooks/queries/useSongQueries";
 import type { AllSongs } from "@/utils/supabase";
 import clsx from "clsx";
 import Fuse from "fuse.js";
@@ -16,14 +16,14 @@ type SongPickerInlineProps = {
 };
 
 const SongPickerInline = ({ onSongSelect }: SongPickerInlineProps) => {
-	const { data: songsData } = useAllSongs();
+	const songsData = useSongsInSettingLanguage();
 	const songs = useMemo(() => songsData ?? [], [songsData]);
 	const [filteredSongs, setFilteredSongs] = useState<AllSongs>([]);
 	const [selectedSongId, setSelectedSongId] = useState<number | null>(null);
 
 	// Sync filteredSongs when songs load
 	useEffect(() => {
-		if (songs.length > 0) setFilteredSongs(songs);
+		setFilteredSongs(songs);
 	}, [songs]);
 
 	// Auto-scroll to selected song when it changes

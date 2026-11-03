@@ -1,4 +1,4 @@
-import type { Strophe } from "@/assets/types";
+import type { SongLanguage, Strophe } from "@/assets/types";
 import type { AllTaggedSongs } from "@/utils/supabase";
 
 export type VeilleeDuration = 30 | 45 | 60 | 90;
@@ -189,12 +189,16 @@ function extractExcerpt(strophes: Strophe[]): string {
 		.slice(0, EXCERPT_LENGTH);
 }
 
+/** A veillée is sung in one language, so only that language is offered. */
 export function compactVeilleeSongs(
 	songs: AllTaggedSongs,
 	hints: Map<number, UsageCounts>,
+	language: SongLanguage,
 ): CompactVeilleeSong[] {
 	return songs
-		.filter((song) => (song.type ?? "song") === "song")
+		.filter(
+			(song) => (song.type ?? "song") === "song" && song.language === language,
+		)
 		.map((song) => ({
 			id: song.id,
 			title: song.title,

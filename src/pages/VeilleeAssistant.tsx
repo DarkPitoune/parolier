@@ -1,5 +1,8 @@
 import { PageHeader } from "@/components";
-import { isDarkAtom } from "@/components/Contexts/SettingsContext";
+import {
+	isDarkAtom,
+	songLanguageAtom,
+} from "@/components/Contexts/SettingsContext";
 import { useSetlistHistory } from "@/hooks/queries/useSetlistQueries";
 import { useAllTaggedSongs } from "@/hooks/queries/useSongQueries";
 import {
@@ -387,12 +390,13 @@ const VeilleeAssistant = () => {
 		document.title = "Préparer une veillée - Parolier";
 	}, []);
 
+	const language = useAtomValue(songLanguageAtom);
 	const songs = useMemo(
 		() =>
 			allSongs
-				? compactVeilleeSongs(allSongs, usageHints(history, allSongs))
+				? compactVeilleeSongs(allSongs, usageHints(history, allSongs), language)
 				: null,
-		[allSongs, history],
+		[allSongs, history, language],
 	);
 	const titles = useMemo(
 		() => new Map(allSongs?.map((s) => [s.id, s.title])),

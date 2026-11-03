@@ -11,6 +11,7 @@ import supabase, {
 import { PageHeader, TextInput } from "@/components";
 import { songEditorHelpOpen } from "@/components/Contexts/SettingsContext";
 import { TagChip } from "@/components/TagChip";
+import { TranslationsSection } from "@/components/TranslationsSection";
 import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import {
 	ArrowDownIcon,
@@ -71,7 +72,7 @@ const SongEditor = () => {
 
 	const handleSave = () => {
 		if (!song) return;
-		const { strophes, title, sheet_music_url } = song;
+		const { strophes, title, language, sheet_music_url } = song;
 
 		const cleanedStrophes = sanitizeStrophes(
 			strophes.map((strophe) => ({
@@ -86,6 +87,7 @@ const SongEditor = () => {
 		saveSongEdit.mutate({
 			songId: song.id,
 			title: sanitizeNbspString(title),
+			language,
 			sheetMusicUrl: sheet_music_url,
 			strophes: cleanedStrophes,
 			tagIds: selectedTags,
@@ -537,6 +539,8 @@ const SongEditor = () => {
 							onChange={(value) => handleChange("title", value)}
 						/>
 					</div>
+
+					{song.type === "song" && <TranslationsSection songId={song.id} />}
 
 					{/* PDF Sheet Music Section */}
 					<div className="border p-4 rounded-md border-jubilateBlue-100 dark:border-slate-500">

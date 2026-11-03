@@ -281,31 +281,37 @@ export type Database = {
         Row: {
           id: number
           incipits: Json | null
+          language: string
           ordinaire_id: number | null
           ordinaire_role: string | null
           sheet_music_url: string | null
           strophes: Json[] | null
           title: string
+          translation_group: string | null
           type: string
         }
         Insert: {
           id?: number
           incipits?: Json | null
+          language?: string
           ordinaire_id?: number | null
           ordinaire_role?: string | null
           sheet_music_url?: string | null
           strophes?: Json[] | null
           title: string
+          translation_group?: string | null
           type?: string
         }
         Update: {
           id?: number
           incipits?: Json | null
+          language?: string
           ordinaire_id?: number | null
           ordinaire_role?: string | null
           sheet_music_url?: string | null
           strophes?: Json[] | null
           title?: string
+          translation_group?: string | null
           type?: string
         }
         Relationships: [
@@ -372,6 +378,8 @@ export type Database = {
           title: string
         }[]
       }
+      link_translations: { Args: { a: number; b: number }; Returns: string }
+      unlink_translation: { Args: { song: number }; Returns: undefined }
     }
     Enums: {
       event_type: "get_song"

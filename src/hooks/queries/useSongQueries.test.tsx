@@ -10,6 +10,7 @@ import {
 	usePrefetchAllSongs,
 	useSaveSongEdit,
 	useSetStropheNote,
+	useSongTranslation,
 	useSongsRealtimeSync,
 	useTaggedSong,
 	useTaggedSongs,
@@ -450,6 +451,7 @@ describe("useSaveSongEdit", () => {
 			result.current.mutate({
 				songId: 1,
 				title: "Titre",
+				language: "fr",
 				sheetMusicUrl: null,
 				strophes: draftStrophes,
 				tagIds: [],
@@ -484,6 +486,7 @@ describe("useSaveSongEdit", () => {
 			result.current.mutate({
 				songId: 1,
 				title: "Titre",
+				language: "fr",
 				sheetMusicUrl: null,
 				strophes: draftStrophes,
 				tagIds: [],
@@ -563,5 +566,39 @@ describe("useSongsRealtimeSync", () => {
 		unmount();
 
 		expect(mockChannel.unsubscribe).toHaveBeenCalled();
+	});
+});
+
+describe("useSongTranslation", () => {
+	const list = [
+		{
+			id: 1,
+			title: "Saint",
+			language: "fr",
+			translation_group: "g1",
+			tags: [],
+		},
+		{ id: 2, title: "Holy", language: "en", translation_group: "g1", tags: [] },
+		{ id: 3, title: "Seul", language: "fr", translation_group: null, tags: [] },
+	];
+
+	const render = (song: { id: number; translation_group: string | null }) => {
+		vi.mocked(allSongsQuery).mockResolvedValue({
+			data: list,
+			error: null,
+		} as never);
+		const { wrapper } = createWrapper();
+		return renderHook(() => useSongTranslation(song), { wrapper });
+	};
+
+	it("returns the other song of the group", async () => {
+		const { result } = render({ id: 1, translation_group: "g1" });
+		await waitFor(() => expect(result.current?.id).toBe(2));
+	});
+
+	it("is undefined while the list loads, then null for a song with no group", async () => {
+		const { result } = render({ id: 3, translation_group: null });
+		expect(result.current).toBeUndefined();
+		await waitFor(() => expect(result.current).toBeNull());
 	});
 });

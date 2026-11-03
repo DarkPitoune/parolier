@@ -1,5 +1,6 @@
 export const queryKeys = {
 	songs: {
+		all: () => ["songs"] as const,
 		list: () => ["songs", "list"] as const,
 		refrainList: () => ["songs", "refrainList"] as const,
 		ordinaireList: () => ["songs", "ordinaireList"] as const,

@@ -75,10 +75,17 @@ describe("buildTemplate", () => {
 	});
 });
 
-const song = (id: number, tags: string[], type = "song", strophes = []) => ({
+const song = (
+	id: number,
+	tags: string[],
+	type = "song",
+	strophes = [],
+	language = "fr",
+) => ({
 	id,
 	title: `Song ${id}`,
 	type,
+	language,
 	strophes,
 	tags: tags.map((name, i) => ({ id: i, name, svg: null, color: null })),
 });
@@ -160,6 +167,7 @@ describe("compactVeilleeSongs", () => {
 		const compact = compactVeilleeSongs(
 			withCd,
 			new Map([[1, { adoration: 2 }]]),
+			"fr",
 		);
 		expect(compact).toHaveLength(1);
 		expect(compact[0]).toMatchObject({
@@ -167,6 +175,19 @@ describe("compactVeilleeSongs", () => {
 			tags: ["CD 1", "Louange"],
 			usedAs: { adoration: 2 },
 		});
+	});
+
+	it("keeps only songs in the requested language", () => {
+		const both = [
+			song(1, []),
+			song(2, [], "song", [], "en"),
+		] as unknown as AllTaggedSongs;
+		expect(compactVeilleeSongs(both, new Map(), "fr").map((s) => s.id)).toEqual(
+			[1],
+		);
+		expect(compactVeilleeSongs(both, new Map(), "en").map((s) => s.id)).toEqual(
+			[2],
+		);
 	});
 
 	it("excerpts the chorus then the first verse", () => {
@@ -186,6 +207,7 @@ describe("compactVeilleeSongs", () => {
 				] as never),
 			] as unknown as AllTaggedSongs,
 			new Map(),
+			"fr",
 		);
 		expect(compact.excerpt).toBe("Refrain\nCouplet");
 	});

@@ -1,3 +1,4 @@
+import type { SongLanguage } from "@/assets/types";
 import {
 	addChorusAtom,
 	fontSizeAtom,
@@ -9,6 +10,7 @@ import {
 	type FontSize,
 	type ThemeMode,
 	showPerformanceNotesAtom,
+	songLanguageAtom,
 	tonalityAtom,
 } from "@/components/Contexts/SettingsContext";
 import { queryKeys } from "@/utils/queryKeys";
@@ -35,7 +37,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -106,11 +108,12 @@ function GlobalSidePanel({
 function NavigationContent() {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
+	const language = useAtomValue(songLanguageAtom);
 
 	const createNewSong = async () => {
 		const title = prompt("Titre de la chanson");
 		if (!title) return;
-		const { error, data } = await newSongMutation(title);
+		const { error, data } = await newSongMutation(title, language);
 		if (error) {
 			toast.error(`Erreur lors de la création de la chanson: ${error.message}`);
 		} else {
@@ -205,6 +208,17 @@ function NavigationContent() {
 	);
 }
 
+const flag = (emoji: string) => (
+	<span aria-hidden="true" className="text-lg leading-none">
+		{emoji}
+	</span>
+);
+
+const LANGUAGE_OPTIONS: SegmentedOption<SongLanguage>[] = [
+	{ value: "fr", label: "Français", icon: flag("🇫🇷") },
+	{ value: "en", label: "English", icon: flag("🇬🇧") },
+];
+
 const THEME_MODES: SegmentedOption<ThemeMode>[] = [
 	{
 		value: "system",
@@ -237,6 +251,7 @@ function SettingsContent() {
 		showPerformanceNotesAtom,
 	);
 	const [tonality, setTonality] = useAtom(tonalityAtom);
+	const [language, setLanguage] = useAtom(songLanguageAtom);
 	const [refreshing, setRefreshing] = useState(false);
 
 	const refreshApp = async () => {
@@ -315,6 +330,16 @@ function SettingsContent() {
 
 				<SettingsSection label="En groupe">
 					<LeaderSetting />
+				</SettingsSection>
+
+				<SettingsSection label="Répertoire">
+					<SettingRow ariaLabel="song language choice" name="Langue des chants">
+						<SettingSegmented
+							value={language}
+							options={LANGUAGE_OPTIONS}
+							onChange={setLanguage}
+						/>
+					</SettingRow>
 				</SettingsSection>
 			</div>
 

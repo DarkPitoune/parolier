@@ -9,7 +9,10 @@ import {
 	UnifiedSearchResults,
 } from "@/components/UnifiedSearch/UnifiedSearch";
 import { useUnifiedSearch } from "@/components/UnifiedSearch/useUnifiedSearch";
-import { useAllSongs, useAllTags } from "@/hooks/queries/useSongQueries";
+import {
+	useAllTags,
+	useSongsInSettingLanguage,
+} from "@/hooks/queries/useSongQueries";
 import supabase, { type AllSongs } from "@/utils/supabase";
 import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import clsx from "clsx";
@@ -19,7 +22,7 @@ import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 
 function Index() {
-	const { data: songsData } = useAllSongs();
+	const songsData = useSongsInSettingLanguage();
 	const { data: tagsData } = useAllTags();
 
 	const songs = useMemo(

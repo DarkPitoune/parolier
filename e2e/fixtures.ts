@@ -18,6 +18,19 @@ export const SONGS = {
 	 * else may assert this row's contents.
 	 */
 	editable: { id: 608, title: "Brouillon", firstLine: "Ligne de brouillon" },
+	/** French half of a seeded translation pair with `translatedEn`. */
+	translatedFr: { id: 609, title: "Saint, saint, saint" },
+	translatedEn: { id: 610, title: "Holy, Holy, Holy" },
+	/** English, with no translation. */
+	englishOnly: { id: 611, title: "Amazing Grace" },
+	/**
+	 * Linked to `linkTargetFr` and unlinked again by the translations spec.
+	 * Nothing else may assert either row's translations.
+	 */
+	linkSourceEn: { id: 612, title: "Draft to link" },
+	linkTargetFr: { id: 613, title: "Brouillon à lier" },
+	/** English; the translations spec creates a new French song from it each run. */
+	createSourceEn: { id: 614, title: "Translate me" },
 } as const;
 
 export const TEXTS = {

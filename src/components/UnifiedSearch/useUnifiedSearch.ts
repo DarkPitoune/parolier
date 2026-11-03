@@ -3,8 +3,8 @@ import { type BibleVerse, useBible } from "@/hooks/queries/useBibleQueries";
 import { useAllSetlists } from "@/hooks/queries/useSetlistQueries";
 import {
 	useAllOrdinaires,
-	useAllRefrains,
-	useAllSongs,
+	useRefrainsInSettingLanguage,
+	useSongsInSettingLanguage,
 } from "@/hooks/queries/useSongQueries";
 import { useAllTexts } from "@/hooks/queries/useTextQueries";
 import { normalize } from "@/utils/normalize";
@@ -150,8 +150,8 @@ export const useUnifiedSearch = (currentSection: Section) => {
 		[setQuery],
 	);
 
-	const { data: songsData } = useAllSongs();
-	const { data: refrainsData } = useAllRefrains();
+	const songsData = useSongsInSettingLanguage();
+	const refrainsData = useRefrainsInSettingLanguage();
 	const { data: textsData } = useAllTexts();
 	const { data: setlistsData } = useAllSetlists();
 	const { data: ordinairesData } = useAllOrdinaires();

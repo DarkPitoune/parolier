@@ -1,4 +1,9 @@
-import { useAllSongs, useTaggedSong } from "@/hooks/queries/useSongQueries";
+import type { SongLanguage } from "@/assets/types";
+import {
+	useAllSongs,
+	useSongsInSettingLanguage,
+	useTaggedSong,
+} from "@/hooks/queries/useSongQueries";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import type { AllSongs } from "@/utils/supabase";
 import { XMarkIcon } from "@heroicons/react/24/outline";
@@ -16,19 +21,32 @@ import { SongViewer } from "./SongViewer";
 
 type SongPickerProps = {
 	handleClose: (songId?: number) => void;
+	/** Must be referentially stable, or the list resets on every render. */
+	excludeIds?: readonly number[];
+	/** Overrides the Préférences language. */
+	language?: SongLanguage;
 };
 
-const SongPicker = ({ handleClose }: SongPickerProps) => {
+const SongPicker = ({ handleClose, excludeIds, language }: SongPickerProps) => {
 	const isMobile = useIsMobile();
-	const { data: songsData } = useAllSongs();
-	const songs = useMemo(() => songsData ?? [], [songsData]);
+	const { data: allSongs } = useAllSongs();
+	const songsInSettingLanguage = useSongsInSettingLanguage();
+	const songs = useMemo(
+		() =>
+			(
+				(language
+					? allSongs?.filter((song) => song.language === language)
+					: songsInSettingLanguage) ?? []
+			).filter((song) => !excludeIds?.includes(song.id)),
+		[allSongs, songsInSettingLanguage, excludeIds, language],
+	);
 	const [filteredSongs, setFilteredSongs] = useState<AllSongs>([]);
 	const [selectedSongId, setSelectedSongId] = useState<number | null>(null);
 	const { data: selectedSong } = useTaggedSong(selectedSongId ?? undefined);
 
 	// Sync filteredSongs when songs load
 	useEffect(() => {
-		if (songs.length > 0) setFilteredSongs(songs);
+		setFilteredSongs(songs);
 	}, [songs]);
 
 	const scrollToSelectedSong = useCallback(() => {
