@@ -1,0 +1,24 @@
+{
+	"name": "parolier-bot",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"scripts": {
+		"dev": "node build.mjs && node --env-file=.env dist/bot.js",
+		"build": "node build.mjs",
+		"typecheck": "tsc --noEmit",
+		"test": "vitest run"
+	},
+	"dependencies": {
+		"@mistralai/mistralai": "^3.5.0",
+		"@supabase/supabase-js": "^2.118.0",
+		"grammy": "^1.46.0",
+		"zod": "^4.6.7"
+	},
+	"devDependencies": {
+		"@types/node": "^26.6.6",
+		"esbuild": "^0.28.2",
+		"typescript": "^7.0.2",
+		"vitest": "^5.1.0"
+	}
+}

@@ -226,6 +226,44 @@ export type Database = {
         }
         Relationships: []
       }
+      song_revisions: {
+        Row: {
+          created_at: string
+          id: number
+          language: string
+          song_id: number
+          source: string | null
+          strophes: Json[] | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          language: string
+          song_id: number
+          source?: string | null
+          strophes?: Json[] | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          language?: string
+          song_id?: number
+          source?: string | null
+          strophes?: Json[] | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "song_revisions_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       song_tag: {
         Row: {
           song_id: number
@@ -379,6 +417,7 @@ export type Database = {
         }[]
       }
       link_translations: { Args: { a: number; b: number }; Returns: string }
+      undo_song_edit: { Args: { p_song_id: number }; Returns: Json }
       unlink_translation: { Args: { song: number }; Returns: undefined }
     }
     Enums: {

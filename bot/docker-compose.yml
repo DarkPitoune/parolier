@@ -1,0 +1,10 @@
+services:
+  parolier-helpers:
+    image: pitouneh/parolier-helpers:latest
+    container_name: parolier-helpers
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      CATALOGUE_PATH: /catalogue/index.html
+    volumes:
+      - /srv/static/parolier-import:/catalogue:ro
