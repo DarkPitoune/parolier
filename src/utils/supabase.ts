@@ -1,7 +1,12 @@
 import type { SongLanguage, Strophe } from "@/assets/types";
-import { type QueryData, createClient } from "@supabase/supabase-js";
+import {
+	FunctionsHttpError,
+	type QueryData,
+	createClient,
+} from "@supabase/supabase-js";
 import type { Json } from "../../database-generated.types";
 import type { Database } from "../../database.types";
+import type { AelfMesseData } from "./aelf";
 
 export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -571,6 +576,24 @@ export type AllTexts = QueryData<ReturnType<typeof allTextsQuery>>;
 export const textQuery = async (textId: number) =>
 	supabase.from("texts").select("*").eq("id", textId).single();
 export type Text = QueryData<ReturnType<typeof textQuery>>;
+
+/**
+ * api.aelf.org sends no CORS headers, so the browser can't call it directly;
+ * the `aelf-messe` edge function relays it server-side.
+ */
+export const aelfMesseQuery = async (date: string): Promise<AelfMesseData> => {
+	const { data, error } = await supabase.functions.invoke<AelfMesseData>(
+		"aelf-messe",
+		{ body: { date } },
+	);
+	if (error instanceof FunctionsHttpError && error.context.status === 404) {
+		throw new Error("Aucune donnée disponible pour cette date");
+	}
+	if (error || !data) {
+		throw new Error("Erreur lors de la récupération des données");
+	}
+	return data;
+};
 
 // Mass suggestions cache
 export const massSuggestionsQuery = async (date: string) =>

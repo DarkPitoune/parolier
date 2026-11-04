@@ -15,14 +15,13 @@ interface CompactSong {
 
 interface LiturgicalData {
   date: string;
-  temps_liturgique: string;
+  celebration: string;
+  details: string[];
+  temps_liturgique: string | null;
   couleur: string;
-  fete: string | null;
-  memoire: string | null;
-  semaine: string;
-  jour: string;
   lectures: Array<{
-    titre: string;
+    type: string;
+    titre: string | null;
     ref: string;
     contenu: string;
     refrain_psalmique?: string;
@@ -125,17 +124,18 @@ Reponds UNIQUEMENT en JSON :
 function buildUserMessage(data: LiturgicalData, songs: CompactSong[]): string {
   const lines: string[] = [
     `Date : ${data.date}`,
-    `Temps liturgique : ${data.temps_liturgique}`,
-    `Couleur liturgique : ${data.couleur}`,
-    `Fete : ${data.fete || "Aucune"}`,
-    `Memoire : ${data.memoire || "Aucune"}`,
-    `Semaine : ${data.semaine} - ${data.jour}`,
-    "",
-    "LECTURES DU JOUR :",
+    `Jour liturgique : ${data.celebration}`,
   ];
+  if (data.details.length > 0) {
+    lines.push(`Celebration : ${data.details.join(" - ")}`);
+  }
+  if (data.temps_liturgique) {
+    lines.push(`Temps liturgique : ${data.temps_liturgique}`);
+  }
+  lines.push(`Couleur liturgique : ${data.couleur}`, "", "LECTURES DU JOUR :");
 
   for (const lecture of data.lectures) {
-    lines.push(`\n  ${lecture.titre} (${lecture.ref})`);
+    lines.push(`\n  ${lecture.titre ?? lecture.type} (${lecture.ref})`);
     lines.push(`  ${lecture.contenu}`);
     if (lecture.refrain_psalmique) {
       lines.push(`  Refrain psalmique : ${lecture.refrain_psalmique}`);
@@ -169,53 +169,46 @@ serve(async (req) => {
       throw new Error("liturgicalData and compactSongs are required");
     }
 
-    const claudeApiKey = Deno.env.get("CLAUDE_API_KEY");
-    if (!claudeApiKey) {
-      throw new Error("Claude API key not configured");
+    const mistralApiKey = Deno.env.get("MISTRAL_API_KEY");
+    if (!mistralApiKey) {
+      throw new Error("Mistral API key not configured");
     }
 
     const userMessage = buildUserMessage(liturgicalData, compactSongs);
 
-    const claudeResponse = await fetch(
-      "https://api.anthropic.com/v1/messages",
+    const mistralResponse = await fetch(
+      "https://api.mistral.ai/v1/chat/completions",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": claudeApiKey,
-          "anthropic-version": "2023-06-01",
+          Authorization: `Bearer ${mistralApiKey}`,
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: "mistral-small-latest",
           max_tokens: 2000,
-          system: SYSTEM_PROMPT,
+          response_format: { type: "json_object" },
           messages: [
-            {
-              role: "user",
-              content: userMessage,
-            },
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: userMessage },
           ],
         }),
       }
     );
 
-    if (!claudeResponse.ok) {
-      const error = await claudeResponse.text();
-      throw new Error(`Claude API error: ${error}`);
+    if (!mistralResponse.ok) {
+      const error = await mistralResponse.text();
+      throw new Error(`Mistral API error: ${error}`);
     }
 
-    const claudeData = await claudeResponse.json();
-    const responseText = claudeData.content[0].text;
+    const mistralData = await mistralResponse.json();
+    const responseText = mistralData.choices[0].message.content;
 
     let parsed: { liturgicalSummary: string; suggestions: SongSuggestion[] };
     try {
-      const jsonMatch =
-        responseText.match(/```json\n([\s\S]*?)\n```/) ||
-        responseText.match(/\{[\s\S]*\}/);
-      const jsonText = jsonMatch ? jsonMatch[1] || jsonMatch[0] : responseText;
-      parsed = JSON.parse(jsonText.trim());
+      parsed = JSON.parse(responseText);
     } catch {
-      console.error("Failed to parse Claude response:", responseText);
+      console.error("Failed to parse Mistral response:", responseText);
       throw new Error("Failed to parse AI response");
     }
 

@@ -1,3 +1,4 @@
+import type { AelfMesseData } from "@/utils/aelf";
 import {
 	type CompactSong,
 	type LiturgicalPayload,
@@ -26,29 +27,8 @@ interface SuggestResponse {
 	error?: string;
 }
 
-interface MesseInfo {
-	informations: {
-		date: string;
-		temps_liturgique: string;
-		couleur: string;
-		fete?: string;
-		mémoire?: string;
-		semaine: string;
-		jour: string;
-	};
-	messes: Array<{
-		lectures: Array<{
-			titre: string;
-			ref: string;
-			contenu: string;
-			refrain_psalmique?: string;
-			verset_evangile?: string;
-		}>;
-	}>;
-}
-
 async function callEdgeFunction(
-	messeData: MesseInfo,
+	messeData: AelfMesseData,
 	allSongs: AllTaggedSongs,
 ): Promise<{
 	suggestions: SongSuggestion[];
@@ -98,7 +78,7 @@ export function useMasseSuggestions() {
 	const [error, setError] = useState<string | null>(null);
 
 	const suggest = useCallback(
-		async (messeData: MesseInfo, allSongs: AllTaggedSongs) => {
+		async (messeData: AelfMesseData, allSongs: AllTaggedSongs) => {
 			setLoading(true);
 			setError(null);
 			setSuggestions(null);
@@ -138,7 +118,7 @@ export function useMasseSuggestions() {
 	);
 
 	const regenerate = useCallback(
-		async (messeData: MesseInfo, allSongs: AllTaggedSongs) => {
+		async (messeData: AelfMesseData, allSongs: AllTaggedSongs) => {
 			setLoading(true);
 			setError(null);
 			setSuggestions(null);

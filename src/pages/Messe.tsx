@@ -8,6 +8,11 @@ import {
 	type SongSuggestion,
 	useMasseSuggestions,
 } from "@/hooks/useMasseSuggestions";
+import {
+	type AelfLecture,
+	type AelfMesseData,
+	celebrationDetails,
+} from "@/utils/aelf";
 import { queryKeys } from "@/utils/queryKeys";
 import {
 	CREED_TITLES,
@@ -15,6 +20,7 @@ import {
 	type MesseReading,
 	type MesseSong,
 	type OrdinaireRole,
+	aelfMesseQuery,
 	newMesseSetlistMutation,
 } from "@/utils/supabase";
 import { Switch } from "@headlessui/react";
@@ -27,37 +33,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
-interface LiturgicalInformation {
-	date: string;
-	zone_liturgique: string;
-	couleur: string;
-	temps_liturgique: string;
-	semaine: string;
-	jour: string;
-	fete?: string;
-	mémoire?: string;
-}
-
-interface Lecture {
-	type: string;
-	refrain_psalmique?: string;
-	titre: string;
-	contenu: string;
-	ref: string;
-	intro_lue?: string;
-	verset_evangile?: string;
-}
-
-interface MesseSchedule {
-	nom: string;
-	lectures: Lecture[];
-}
-
-interface MesseData {
-	informations: LiturgicalInformation;
-	messes: MesseSchedule[];
-}
 
 const ROLE_LABELS: Record<SongSuggestion["role"], string> = {
 	entree: "Chant d'entrée",
@@ -143,7 +118,7 @@ const LECTURE_LABELS: Record<MesseReading["slot"], string> = {
  * persisted as setlist text steps. Unknown lecture types are skipped, and only
  * the first gospel (forme longue) is kept when several are returned.
  */
-function buildMesseReadings(lectures: Lecture[]): MesseReading[] {
+function buildMesseReadings(lectures: AelfLecture[]): MesseReading[] {
 	const readings: MesseReading[] = [];
 	let hasGospel = false;
 	for (const lecture of lectures) {
@@ -303,7 +278,7 @@ function Messe() {
 		const today = new Date();
 		return today.toISOString().split("T")[0];
 	});
-	const [messeData, setMesseData] = useState<MesseData | null>(null);
+	const [messeData, setMesseData] = useState<AelfMesseData | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [creatingMesse, setCreatingMesse] = useState(false);
@@ -340,18 +315,7 @@ function Messe() {
 		setError(null);
 
 		try {
-			const response = await fetch(
-				`https://api.aelf.org/v1/messes/${date}/france`,
-			);
-
-			if (!response.ok) {
-				if (response.status === 404) {
-					throw new Error("Aucune donnée disponible pour cette date");
-				}
-				throw new Error("Erreur lors de la récupération des données");
-			}
-
-			const data = await response.json();
+			const data = await aelfMesseQuery(date);
 			setMesseData(data);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Une erreur est survenue");
@@ -537,14 +501,24 @@ function Messe() {
 										)}
 									</span>
 								</div>
-								<div>
+								<div className="col-span-full">
 									<span className="font-medium text-gray-700 dark:text-gray-300">
-										Temps liturgique :
+										Jour liturgique :
 									</span>
 									<span className="ml-2 text-gray-900 dark:text-gray-100">
-										{messeData.informations.temps_liturgique}
+										{messeData.informations.ligne1}
 									</span>
 								</div>
+								{messeData.informations.temps_liturgique && (
+									<div>
+										<span className="font-medium text-gray-700 dark:text-gray-300">
+											Temps liturgique :
+										</span>
+										<span className="ml-2 text-gray-900 dark:text-gray-100">
+											{messeData.informations.temps_liturgique}
+										</span>
+									</div>
+								)}
 								<div>
 									<span className="font-medium text-gray-700 dark:text-gray-300">
 										Couleur :
@@ -553,23 +527,13 @@ function Messe() {
 										{messeData.informations.couleur}
 									</span>
 								</div>
-								{messeData.informations.fete && (
+								{celebrationDetails(messeData.informations).length > 0 && (
 									<div className="col-span-full">
 										<span className="font-medium text-gray-700 dark:text-gray-300">
-											Fête :
+											Célébration :
 										</span>
 										<span className="ml-2 text-gray-900 dark:text-gray-100">
-											{messeData.informations.fete}
-										</span>
-									</div>
-								)}
-								{messeData.informations.mémoire && (
-									<div className="col-span-full">
-										<span className="font-medium text-gray-700 dark:text-gray-300">
-											Mémoire :
-										</span>
-										<span className="ml-2 text-gray-900 dark:text-gray-100">
-											{messeData.informations.mémoire}
+											{celebrationDetails(messeData.informations).join(" — ")}
 										</span>
 									</div>
 								)}

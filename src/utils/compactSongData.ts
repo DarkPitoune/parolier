@@ -1,4 +1,9 @@
 import type { Strophe } from "@/assets/types";
+import {
+	type AelfInformations,
+	type AelfLecture,
+	celebrationDetails,
+} from "@/utils/aelf";
 import type { AllTaggedSongs } from "@/utils/supabase";
 
 export interface CompactSong {
@@ -10,14 +15,13 @@ export interface CompactSong {
 
 export interface LiturgicalPayload {
 	date: string;
-	temps_liturgique: string;
+	celebration: string;
+	details: string[];
+	temps_liturgique: string | null;
 	couleur: string;
-	fete: string | null;
-	memoire: string | null;
-	semaine: string;
-	jour: string;
 	lectures: Array<{
-		titre: string;
+		type: string;
+		titre: string | null;
 		ref: string;
 		contenu: string;
 		refrain_psalmique?: string;
@@ -68,32 +72,17 @@ export function compactSongs(songs: AllTaggedSongs): CompactSong[] {
 }
 
 export function extractLiturgicalPayload(
-	informations: {
-		date: string;
-		temps_liturgique: string;
-		couleur: string;
-		fete?: string;
-		mémoire?: string;
-		semaine: string;
-		jour: string;
-	},
-	lectures: Array<{
-		titre: string;
-		ref: string;
-		contenu: string;
-		refrain_psalmique?: string;
-		verset_evangile?: string;
-	}>,
+	informations: AelfInformations,
+	lectures: AelfLecture[],
 ): LiturgicalPayload {
 	return {
 		date: informations.date,
+		celebration: informations.ligne1,
+		details: celebrationDetails(informations),
 		temps_liturgique: informations.temps_liturgique,
 		couleur: informations.couleur,
-		fete: informations.fete ?? null,
-		memoire: informations.mémoire ?? null,
-		semaine: informations.semaine,
-		jour: informations.jour,
 		lectures: lectures.map((l) => ({
+			type: l.type,
 			titre: l.titre,
 			ref: l.ref,
 			contenu: stripHtml(l.contenu),
