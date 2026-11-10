@@ -6,6 +6,7 @@ import { Catalogue } from "../catalogue";
 import { makeDb } from "../supabase";
 import { catalogueTools } from "./catalogue";
 import { SongIndex, type ToolContext } from "./context";
+import { ordinaireTools } from "./ordinaires";
 import { setlistTools } from "./setlists";
 import { songTools } from "./songs";
 
@@ -50,9 +51,12 @@ describe.runIf(url && key)("tools against the local Supabase stack", () => {
 		songIndex: new SongIndex(),
 	};
 	const tools = Object.fromEntries(
-		[...songTools(ctx), ...catalogueTools(ctx), ...setlistTools(ctx)].map(
-			(t) => [t.name, t],
-		),
+		[
+			...songTools(ctx),
+			...catalogueTools(ctx),
+			...ordinaireTools(ctx),
+			...setlistTools(ctx),
+		].map((t) => [t.name, t]),
 	);
 	const call = async (name: string, input: unknown) => {
 		const tool = tools[name];
@@ -227,5 +231,60 @@ describe.runIf(url && key)("tools against the local Supabase stack", () => {
 			created: false,
 			reason: "likely_duplicate",
 		});
+	});
+
+	it("builds a Mass ordinary part by part, one part per role", async () => {
+		const existing = await call("create_ordinaire", {
+			name: "messe de saint jean",
+		});
+		expect(existing).toMatchObject({ created: false, id: 701 });
+		const [hit] = await call("search_songs", { query: "messe de saint jean" });
+		expect(hit).toMatchObject({ id: 604, type: "ordinaire" });
+
+		const created = await call("create_ordinaire", {
+			name: `Messe de lumière ${run}`,
+		});
+		expect(created).toMatchObject({
+			created: true,
+			url: expect.stringContaining("/ordinaires/"),
+		});
+		const part = await call("add_ordinaire_part", {
+			ordinaire_id: created.id,
+			role: "kyrie",
+			cid: 75434,
+		});
+		expect(part).toMatchObject({ created: true, role: "kyrie" });
+		const song = await call("get_song", { id: part.song_id });
+		expect(song).toMatchObject({
+			title: "Kyrie",
+			type: "ordinaire",
+			ordinaire: { id: created.id, role: "kyrie" },
+		});
+		expect(song.strophes[0].content[0]).toEqual(entryLine);
+
+		const again = await call("add_ordinaire_part", {
+			ordinaire_id: created.id,
+			role: "kyrie",
+			strophes: [
+				{
+					type: "verse",
+					repetition: false,
+					content: [{ text: "Kyrie eleison", chords: "" }],
+				},
+			],
+		});
+		expect(again).toMatchObject({
+			created: false,
+			reason: "role_taken",
+			song_id: part.song_id,
+		});
+
+		const [listed] = (await call("list_ordinaires", {})).filter(
+			(o: { id: number }) => o.id === created.id,
+		);
+		expect(listed.parts).toEqual([
+			{ song_id: part.song_id, role: "kyrie", title: "Kyrie" },
+		]);
+		expect(listed.missing_roles).not.toContain("kyrie");
 	});
 });

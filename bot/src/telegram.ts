@@ -27,6 +27,7 @@ import {
 import { makeDb } from "./supabase";
 import { catalogueTools } from "./tools/catalogue";
 import { SongIndex, type ToolContext } from "./tools/context";
+import { ordinaireTools } from "./tools/ordinaires";
 import { setlistTools } from "./tools/setlists";
 import { songTools } from "./tools/songs";
 import { webTools } from "./tools/web";
@@ -220,6 +221,7 @@ export function startBot(config: Config, catalogue: Catalogue): Bot {
 				tools: [
 					...songTools(ctx),
 					...catalogueTools(ctx),
+					...ordinaireTools(ctx),
 					...setlistTools(ctx),
 					...webTools(mistral),
 				],

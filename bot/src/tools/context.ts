@@ -45,12 +45,16 @@ export class SongIndex {
 async function readSongs(db: Db): Promise<Indexed<IndexedSong>[]> {
 	const { data, error } = await db
 		.from("songs")
-		.select("id, title, language, type, strophes, song_tag (tags (name))");
+		.select(
+			"id, title, language, type, strophes, ordinaires (name), song_tag (tags (name))",
+		);
 	if (error) throw new Error(`Reading songs: ${error.message}`);
 	return (data ?? []).map((row) =>
 		indexItem({
 			id: row.id,
-			title: row.title,
+			title: row.ordinaires
+				? `${row.ordinaires.name} - ${row.title}`
+				: row.title,
 			language: row.language,
 			type: row.type,
 			strophes: row.strophes,
@@ -70,6 +74,8 @@ export interface ToolContext {
 
 export const songUrl = (ctx: ToolContext, id: number) =>
 	`${ctx.appUrl}/songs/${id}`;
+export const ordinaireUrl = (ctx: ToolContext, id: number) =>
+	`${ctx.appUrl}/ordinaires/${id}`;
 export const setlistUrl = (ctx: ToolContext, id: number) =>
 	`${ctx.appUrl}/setlists/${id}`;
 

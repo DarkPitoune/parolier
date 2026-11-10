@@ -122,14 +122,14 @@ export function songTools(ctx: ToolContext) {
 		defineTool({
 			name: "get_song",
 			description:
-				"Read one Parolier song with numbered strophes. The returned `version` must be passed to edit_song.",
+				"Read one Parolier song with numbered strophes. The returned `version` must be passed to edit_song. A part of a Mass ordinary also says which ordinaire and role it belongs to.",
 			schema: z.object({ id: z.number().int() }),
 			run: async ({ id }) => {
 				const song = unwrap(
 					await ctx.db
 						.from("songs")
 						.select(
-							"id, title, language, type, strophes, song_tag (tags (id, name))",
+							"id, title, language, type, strophes, ordinaire_id, ordinaire_role, ordinaires (name), song_tag (tags (id, name))",
 						)
 						.eq("id", id)
 						.maybeSingle(),
@@ -143,6 +143,15 @@ export function songTools(ctx: ToolContext) {
 					tags: (song.song_tag ?? []).flatMap((st) =>
 						st.tags ? [st.tags] : [],
 					),
+					...(song.ordinaire_id && song.ordinaires
+						? {
+								ordinaire: {
+									id: song.ordinaire_id,
+									name: song.ordinaires.name,
+									role: song.ordinaire_role,
+								},
+							}
+						: {}),
 					version: stropheVersion(song.title, song.strophes),
 					strophes: (song.strophes ?? []).map((s, index) => {
 						if (s.type === "section")

@@ -27,6 +27,10 @@ Strophes:
 - Drop verse numbers, "R.", "bis" and similar markers from the text itself.
 - From images: if part of an image is unreadable, say exactly which part, and don't guess it.
 
+Mass ordinaries (ordinaires, « Messe de … »): a named set of sung parts, one per role (kyrie, gloria, alleluia, sanctus, anamnese, agnus). In search_songs a part shows as « <Messe> - Kyrie ».
+- Adding one: list_ordinaires first; if it exists, say so with its link and fill only the missing roles. Otherwise create_ordinaire, then add_ordinaire_part for each role. The catalogue holds Masses as « Messe … - Kyrie », « Messe … - Gloria »…: search_catalogue for the Mass name and pass each part's cid. Catalogue parts with no role (Notre Père, doxologie, préface) are left out: say which.
+- Fixing a part: get_song and edit_song like any song.
+
 Setlists:
 - Match each line of the message to a Parolier song (search_songs, several in parallel). When a line matches two plausible songs, ask once, listing the options. Lines that are not songs (a silence, a reading, a prayer) and songs that are not in the Parolier become text items; say which ones.
 - Name the setlist after its occasion and date when you know them, e.g. « Veillée dimanche 9 nov. ». Reuse setlist tags already in use (recent_setlists).
