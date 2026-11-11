@@ -1,5 +1,9 @@
 import type { Line, Strophe } from "@/assets/types";
-import { useSaveSongEdit } from "@/hooks/queries/useSongQueries";
+import {
+	useSaveSongEdit,
+	useSongTranslation,
+	useTaggedSong,
+} from "@/hooks/queries/useSongQueries";
 import { sanitizeNbspString, sanitizeStrophes } from "@/utils/sanitizeNbsp";
 import supabase, {
 	allTagsQuery,
@@ -10,6 +14,7 @@ import supabase, {
 
 import { PageHeader, TextInput } from "@/components";
 import { songEditorHelpOpen } from "@/components/Contexts/SettingsContext";
+import { LanguageSegmented } from "@/components/LanguageSegmented";
 import { TagChip } from "@/components/TagChip";
 import { TranslationsSection } from "@/components/TranslationsSection";
 import { ChevronRightIcon } from "@heroicons/react/16/solid";
@@ -69,6 +74,8 @@ const SongEditor = () => {
 	}, [songId]);
 
 	const saveSongEdit = useSaveSongEdit();
+	const { data: cachedSong } = useTaggedSong(song?.id);
+	const translation = useSongTranslation(cachedSong);
 
 	const handleSave = () => {
 		if (!song) return;
@@ -538,6 +545,24 @@ const SongEditor = () => {
 							value={song.title}
 							onChange={(value) => handleChange("title", value)}
 						/>
+						<div className="flex items-center justify-between gap-3 pt-3">
+							<span className="text-sm sm:text-base font-medium">Langue :</span>
+							{/* The database allows one song per language in a translation pair. */}
+							<fieldset
+								disabled={!!translation}
+								title={
+									translation
+										? "Déliez la traduction pour changer la langue"
+										: undefined
+								}
+								className="disabled:opacity-50"
+							>
+								<LanguageSegmented
+									value={song.language}
+									onChange={(value) => handleChange("language", value)}
+								/>
+							</fieldset>
+						</div>
 					</div>
 
 					{song.type === "song" && <TranslationsSection songId={song.id} />}

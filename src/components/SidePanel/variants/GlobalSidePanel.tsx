@@ -1,4 +1,3 @@
-import type { SongLanguage } from "@/assets/types";
 import {
 	addChorusAtom,
 	fontSizeAtom,
@@ -41,6 +40,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { LanguageSegmented } from "../../LanguageSegmented";
 import { SidePanel } from "../SidePanel";
 import { LeaderSetting } from "./SettingsSidePanel/LeaderSetting";
 import {
@@ -208,17 +208,6 @@ function NavigationContent() {
 	);
 }
 
-const flag = (emoji: string) => (
-	<span aria-hidden="true" className="text-lg leading-none">
-		{emoji}
-	</span>
-);
-
-const LANGUAGE_OPTIONS: SegmentedOption<SongLanguage>[] = [
-	{ value: "fr", label: "Français", icon: flag("🇫🇷") },
-	{ value: "en", label: "English", icon: flag("🇬🇧") },
-];
-
 const THEME_MODES: SegmentedOption<ThemeMode>[] = [
 	{
 		value: "system",
@@ -334,11 +323,7 @@ function SettingsContent() {
 
 				<SettingsSection label="Répertoire">
 					<SettingRow ariaLabel="song language choice" name="Langue des chants">
-						<SettingSegmented
-							value={language}
-							options={LANGUAGE_OPTIONS}
-							onChange={setLanguage}
-						/>
+						<LanguageSegmented value={language} onChange={setLanguage} />
 					</SettingRow>
 				</SettingsSection>
 			</div>
